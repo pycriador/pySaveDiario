@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<section class="dashboard-hero">
+  <h1>Olá, {{ current_user.display_name }}!</h1>
+  <p>
+    Aqui você acompanha suas listas, ofertas monitoradas e templates prontos para disparo
+    nas redes sociais.
+  </p>
+  <div class="stats">
+    <div>
+      <strong>{{ wishlists|length }}</strong>
+      <span>Wishlists</span>
+    </div>
+    <div>
+      <strong>{{ offers|length }}</strong>
+      <span>Novas ofertas</span>
+    </div>
+    <div>
+      <strong>{{ current_user.role.value|capitalize }}</strong>
+      <span>Papel</span>
+    </div>
+  </div>
+</section>
+
+<section class="grid two">
+  <div class="panel">
+    <h2>Minhas wishlists</h2>
+    {% for wishlist in wishlists %}
+    <article>
+      <h3>{{ wishlist.name }}</h3>
+      <p>Visibilidade: {{ wishlist.visibility.value }}</p>
+      <p>{{ wishlist.notes or "Sem anotações" }}</p>
+    </article>
+    {% else %}
+    <p>Crie uma wishlist via interface ou pela API em /api/wishlists.</p>
+    {% endfor %}
+  </div>
+
+  <div class="panel">
+    <h2>Ofertas recentes</h2>
+    {% for offer in offers %}
+    <article>
+      <h3>{{ offer.product.name if offer.product else 'Oferta' }}</h3>
+      <p>{{ offer.vendor_name }} · {{ offer.currency }} {{ '%.2f'|format(offer.price_value) }}</p>
+      <small>
+        Atualizado em
+        {{ offer.updated_at.strftime('%d/%m/%Y %H:%M') if offer.updated_at else 'Sem data' }}
+      </small>
+    </article>
+    {% else %}
+    <p>Nenhuma oferta cadastrada ainda.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}
+

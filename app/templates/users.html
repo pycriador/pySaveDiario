@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block title %}Usuários{% endblock %}
+
+{% block content %}
+<section>
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+    <div>
+      <p class="eyebrow">Equipe e perfis públicos</p>
+      <h1 class="mb-0">Usuários cadastrados</h1>
+    </div>
+    <form method="get" class="d-flex align-items-end gap-2">
+      <div>
+        <label class="form-label text-uppercase small mb-1" for="role">Filtrar por papel</label>
+        <select class="form-select" name="role" id="role" onchange="this.form.submit()">
+          <option value="">Todos</option>
+          <option value="admin" {{ 'selected' if request.args.get('role') == 'admin' else '' }}>Administradores</option>
+          <option value="editor" {{ 'selected' if request.args.get('role') == 'editor' else '' }}>Editores</option>
+          <option value="member" {{ 'selected' if request.args.get('role') == 'member' else '' }}>Membros</option>
+        </select>
+      </div>
+    </form>
+  </div>
+
+  {% if can_manage %}
+  <div class="form-card">
+    <div class="form-card-header">
+      <div>
+        <h2>Novo usuário</h2>
+        <p class="muted">Usuários entram automaticamente no grupo Visitantes.</p>
+      </div>
+      <button
+        class="btn btn-outline-secondary btn-sm"
+        type="button"
+        data-bs-toggle="collapse"
+        data-bs-target="#createUserCollapse"
+        aria-expanded="false"
+      >
+        Alternar formulário
+      </button>
+    </div>
+    <div class="collapse show" id="createUserCollapse">
+      <form method="post" class="row g-3">
+        {{ user_form.hidden_tag() }}
+        <div class="col-md-6">
+          <label class="form-label" for="{{ user_form.display_name.id }}">Nome exibido</label>
+          {{ user_form.display_name(class="form-control") }}
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="{{ user_form.email.id }}">E-mail</label>
+          {{ user_form.email(class="form-control") }}
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="{{ user_form.password.id }}">Senha</label>
+          {{ user_form.password(class="form-control") }}
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="{{ user_form.role.id }}">Papel</label>
+          {{ user_form.role(class="form-select") }}
+        </div>
+        <div class="col-12 text-end">
+          {{ user_form.submit_user(class="btn btn-primary px-4") }}
+        </div>
+      </form>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="grid three">
+    {% for user in users %}
+    <article class="panel user-card">
+      <header>
+        <h3>{{ user.display_name }}</h3>
+        <span class="tag">{{ user.role.value }}</span>
+      </header>
+      <p>{{ user.email }}</p>
+      <p class="muted">Status: {{ "Ativo" if user.is_active else "Inativo" }}</p>
+      <p>{{ user.bio or "Sem bio ainda." }}</p>
+
+      {% if current_user.is_authenticated and current_user.role == role_enum.ADMIN and action_form %}
+      <div class="user-actions">
+        <form method="post" action="{{ url_for('web.user_action') }}">
+          {{ action_form.csrf_token }}
+          <input type="hidden" name="user_id" value="{{ user.id }}" />
+          <input type="hidden" name="action" value="reset_password" />
+          <button class="btn btn-outline-secondary btn-sm" type="submit">Resetar senha</button>
+        </form>
+
+        <form method="post" action="{{ url_for('web.user_action') }}">
+          {{ action_form.csrf_token }}
+          <input type="hidden" name="user_id" value="{{ user.id }}" />
+          <input type="hidden" name="action" value="toggle_active" />
+          <button class="btn btn-outline-secondary btn-sm" type="submit">
+            {{ "Reativar" if not user.is_active else "Inativar" }}
+          </button>
+        </form>
+
+        {% if user.role != role_enum.ADMIN %}
+        <form method="post" action="{{ url_for('web.user_action') }}">
+          {{ action_form.csrf_token }}
+          <input type="hidden" name="user_id" value="{{ user.id }}" />
+          <input type="hidden" name="action" value="promote_admin" />
+          <button class="btn btn-outline-secondary btn-sm" type="submit">Tornar admin</button>
+        </form>
+        {% endif %}
+
+        {% if user.id != current_user.id %}
+        <form
+          method="post"
+          action="{{ url_for('web.user_action') }}"
+          id="delete-form-{{ user.id }}"
+          class="delete-user-form"
+        >
+          {{ action_form.csrf_token }}
+          <input type="hidden" name="user_id" value="{{ user.id }}" />
+          <input type="hidden" name="action" value="delete" />
+          <button
+            class="btn btn-outline-danger btn-sm trigger-delete"
+            type="button"
+            data-user-name="{{ user.display_name }}"
+            data-form-id="delete-form-{{ user.id }}"
+          >
+            Excluir
+          </button>
+        </form>
+        {% endif %}
+      </div>
+      {% endif %}
+    </article>
+    {% else %}
+    <p>Nenhum usuário disponível.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}
+
