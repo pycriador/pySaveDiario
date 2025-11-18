@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Entrar · pySave Diário{% endblock %}
+
+{% block content %}
+<section class="auth-card">
+  <h1>Entrar</h1>
+  <p>Acesse o painel para gerenciar usuários, ofertas, grupos e templates.</p>
+  <form method="post">
+    {{ form.hidden_tag() }}
+    <label for="email">E-mail</label>
+    {{ form.email(class="input") }}
+    {% for error in form.email.errors %}
+    <small class="error">{{ error }}</small>
+    {% endfor %}
+
+    <label for="password">Senha</label>
+    {{ form.password(class="input") }}
+    {% for error in form.password.errors %}
+    <small class="error">{{ error }}</small>
+    {% endfor %}
+
+    {{ form.submit(class="btn full") }}
+  </form>
+  <p class="muted">Para APIs use HTTP Basic Auth ou Bearer token em /api/auth/.</p>
+</section>
+{% endblock %}
+

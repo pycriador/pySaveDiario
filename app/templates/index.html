@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}pySave Diário · Central de Ofertas{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <div>
+    <p class="eyebrow">Supervisione ofertas e listas em um único painel</p>
+    <h1>Central moderna para curadoria de produtos, templates e publicações.</h1>
+    <p class="lead">
+      Gerencie equipes, modelos de postagem e wishlists inteligentes. A API REST expõe cada recurso,
+      permitindo integrações com apps móveis, bots ou automações de preço por URL.
+    </p>
+    <div class="hero-actions">
+      <a class="btn" href="{{ url_for('web.login') }}">Começar agora</a>
+      <a class="btn btn-ghost" href="{{ url_for('web.offers') }}">Explorar ofertas</a>
+    </div>
+  </div>
+  <div class="hero-card">
+    <h3>Resumo do projeto</h3>
+    <ul>
+      <li>Autenticação por sessão, Basic Auth ou token Bearer.</li>
+      <li>CRUD de usuários, grupos, wishlists e templates via API.</li>
+      <li>Filtros por fornecedor, preço ou produto direto pela URL.</li>
+      <li>Namespaces globais para redes sociais e atributos das ofertas.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="grid two">
+  <article class="panel">
+    <h3>Usuários e papéis claros</h3>
+    <p>Organize administradores, editores e membros com permissões objetivas.</p>
+    <a href="{{ url_for('web.users') }}">Ver usuários</a>
+  </article>
+  <article class="panel">
+    <h3>Templates prontos para redes sociais</h3>
+    <p>Gere posts com botões de compartilhamento para Instagram, Facebook, WhatsApp ou Telegram.</p>
+    <a href="{{ url_for('web.share_templates') }}">Biblioteca de templates</a>
+  </article>
+</section>
+
+<section class="listing">
+  <header>
+    <h2>Ofertas em destaque</h2>
+    <a href="{{ url_for('web.offers') }}">Ver todas</a>
+  </header>
+  <div class="grid three">
+    {% for offer in offers %}
+    <article class="panel card">
+      <h3>{{ offer.product.name if offer.product else 'Oferta' }}</h3>
+      <p class="price">
+        {{ offer.currency }} {{ '%.2f'|format(offer.price_value) }} · {{ offer.vendor_name }}
+      </p>
+      <p>{{ offer.product.description if offer.product else 'Oferta recém adicionada.' }}</p>
+      {% if offer.offer_url %}
+      <a class="btn btn-ghost" href="{{ offer.offer_url }}" target="_blank" rel="noreferrer">Ver oferta</a>
+      {% endif %}
+    </article>
+    {% else %}
+    <p>Ainda não existem ofertas destacadas.</p>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="templates-highlight">
+  <h2>Escolha um template e publique em segundos</h2>
+  <div class="grid two">
+    {% for template in templates %}
+    <div class="panel">
+      <h3>{{ template.name }}</h3>
+      <p>{{ template.description or 'Template pronto para compartilhamento.' }}</p>
+      <p class="channels">Canais: {{ template.channels }}</p>
+    </div>
+    {% else %}
+    <p>Cadastre templates na área administrativa.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}
+

@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{% block title %}pySave Diário{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+      crossorigin="anonymous"
+    />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+    {% block head %}{% endblock %}
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="navbar navbar-expand-lg navbar-dark top-nav">
+        <div class="container">
+          <a class="navbar-brand" href="{{ url_for('web.index') }}">pySave Diário</a>
+          <button
+            class="navbar-toggler"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#primaryNav"
+            aria-controls="primaryNav"
+            aria-expanded="false"
+            aria-label="Alternar navegação"
+          >
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="primaryNav">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+              <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('web.users') }}">Usuários</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('web.groups') }}">Grupos</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('web.offers') }}">Ofertas</a>
+              </li>
+              {% if current_user.is_authenticated %}
+              <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('web.share_templates') }}">Templates</a>
+              </li>
+              {% endif %}
+            </ul>
+            <div class="d-flex align-items-center gap-2">
+              {% if current_user.is_authenticated %}
+              <a class="btn btn-outline-light btn-sm" href="{{ url_for('web.dashboard') }}">Painel</a>
+              <a class="btn btn-outline-light btn-sm" href="{{ url_for('web.logout') }}">Sair</a>
+              {% else %}
+              <a class="btn btn-primary btn-sm" href="{{ url_for('web.login') }}">Entrar</a>
+              {% endif %}
+              <button class="theme-toggle" type="button" id="themeToggle" aria-label="Alternar tema">
+                <span class="sun">☀️</span>
+                <span class="moon">🌙</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="toast-container position-fixed top-0 end-0 p-3" id="toastZone">
+      {% for category, message in messages %}
+      {% set toast_type = 'primary' %}
+      {% if category == 'success' %}
+      {% set toast_type = 'success' %}
+      {% elif category == 'danger' %}
+      {% set toast_type = 'danger' %}
+      {% elif category == 'warning' %}
+      {% set toast_type = 'warning' %}
+      {% elif category == 'info' %}
+      {% set toast_type = 'info' %}
+      {% endif %}
+      <div
+        class="toast align-items-center text-bg-{{ toast_type }} border-0"
+        role="alert"
+        aria-live="assertive"
+        aria-atomic="true"
+        data-bs-delay="4500"
+      >
+        <div class="d-flex">
+          <div class="toast-body">{{ message }}</div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Fechar"></button>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <main class="container py-4">{% block content %}{% endblock %}</main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <p>pySave Diário · Central inteligente de ofertas e wishlists</p>
+        <small>API pronta para automações · Compartilhamento rápido para as redes sociais</small>
+      </div>
+    </footer>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+      crossorigin="anonymous"
+    ></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <div
+      class="modal fade"
+      id="confirmModal"
+      tabindex="-1"
+      aria-labelledby="confirmModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="confirmModalLabel">Confirmar exclusão</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+          </div>
+          <div class="modal-body">
+            Tem certeza que deseja excluir este registro?
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="button" class="btn btn-danger" id="confirmModalBtn">Excluir</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% block scripts %}{% endblock %}
+  </body>
+</html>
+
