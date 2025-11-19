@@ -3,25 +3,49 @@
 
 {% block content %}
 <section class="auth-card">
-  <h1>Entrar</h1>
-  <p>Acesse o painel para gerenciar usuários, ofertas, grupos e templates.</p>
+  <div class="text-center mb-4">
+    <div style="font-size: 3rem; color: var(--accent-primary); margin-bottom: 1rem;">
+      <i class="bi bi-shield-lock-fill"></i>
+    </div>
+    <h1>Entrar</h1>
+    <p class="muted">Acesse o painel para gerenciar usuários, ofertas, grupos e templates.</p>
+  </div>
+  
   <form method="post">
     {{ form.hidden_tag() }}
-    <label for="email">E-mail</label>
-    {{ form.email(class="input") }}
-    {% for error in form.email.errors %}
-    <small class="error">{{ error }}</small>
-    {% endfor %}
+    
+    <div class="mb-3">
+      <label for="email" class="form-label">
+        <i class="bi bi-envelope"></i> E-mail
+      </label>
+      {{ form.email(class="form-control", placeholder="seu@email.com") }}
+      {% for error in form.email.errors %}
+      <small class="text-danger d-block mt-1">
+        <i class="bi bi-exclamation-circle"></i> {{ error }}
+      </small>
+      {% endfor %}
+    </div>
 
-    <label for="password">Senha</label>
-    {{ form.password(class="input") }}
-    {% for error in form.password.errors %}
-    <small class="error">{{ error }}</small>
-    {% endfor %}
+    <div class="mb-3">
+      <label for="password" class="form-label">
+        <i class="bi bi-lock"></i> Senha
+      </label>
+      {{ form.password(class="form-control", placeholder="••••••••") }}
+      {% for error in form.password.errors %}
+      <small class="text-danger d-block mt-1">
+        <i class="bi bi-exclamation-circle"></i> {{ error }}
+      </small>
+      {% endfor %}
+    </div>
 
-    {{ form.submit(class="btn full") }}
+    {{ form.submit(class="btn btn-primary full") }}
   </form>
-  <p class="muted">Para APIs use HTTP Basic Auth ou Bearer token em /api/auth/.</p>
+  
+  <div class="text-center mt-4 p-3" style="background: var(--panel-solid); border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+    <small class="muted">
+      <i class="bi bi-info-circle"></i>
+      Para APIs use HTTP Basic Auth ou Bearer token em /api/auth/
+    </small>
+  </div>
 </section>
 {% endblock %}
-

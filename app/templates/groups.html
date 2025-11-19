@@ -5,72 +5,69 @@
 <section>
   <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
     <div>
-      <p class="eyebrow">Times e comunidades</p>
+      <p class="eyebrow"><i class="bi bi-collection-fill"></i> Times e comunidades</p>
       <h1 class="mb-0">Grupos de curadoria</h1>
     </div>
+    {% if can_manage %}
+    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#createGroupModal">
+      <i class="bi bi-plus-circle-fill"></i> Novo grupo
+    </button>
+    {% endif %}
   </div>
-
-  {% if can_manage %}
-  <div class="form-card">
-    <div class="form-card-header">
-      <h2>Novo grupo</h2>
-      <p class="muted">Administradores podem criar grupos customizados.</p>
-    </div>
-    <form method="post" class="row g-3">
-      {{ form.hidden_tag() }}
-      <div class="col-md-6">
-        <label class="form-label" for="{{ form.name.id }}">Nome</label>
-        {{ form.name(class="form-control") }}
-      </div>
-      <div class="col-md-6">
-        <label class="form-label" for="{{ form.slug.id }}">Slug</label>
-        {{ form.slug(class="form-control", placeholder="Opcional (visitantes, administradores)") }}
-      </div>
-      <div class="col-12">
-        <label class="form-label" for="{{ form.description.id }}">Descrição</label>
-        {{ form.description(class="form-control") }}
-      </div>
-      <div class="col-12 text-end">
-        {{ form.submit_group(class="btn btn-primary px-4") }}
-      </div>
-    </form>
-  </div>
-  {% endif %}
 
   <div class="grid two">
     {% for group in groups %}
     <article class="panel group-card">
-      <div class="d-flex justify-content-between align-items-start gap-2">
+      <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
         <div>
-          <h3 class="mb-1">{{ group.name }}</h3>
+          <h3 class="mb-1">
+            <i class="bi bi-folder-fill"></i>
+            {{ group.name }}
+          </h3>
           <p class="muted mb-2">{{ group.description or "Grupo sem descrição" }}</p>
-          <small class="text-uppercase text-muted">Slug: {{ group.slug }}</small>
+          <small class="text-uppercase text-muted">
+            <i class="bi bi-tag"></i> Slug: {{ group.slug }}
+          </small>
         </div>
-        <span class="badge bg-primary bg-opacity-25 text-white">{{ group.members|length }} membros</span>
+        <span class="badge bg-primary bg-opacity-25 text-white">
+          <i class="bi bi-people"></i> {{ group.members|length }}
+        </span>
       </div>
 
       {% if group.members %}
-      <ul class="list-group list-group-flush mt-3">
-        {% for member in group.members %}
-        <li class="list-group-item d-flex justify-content-between align-items-center">
-          <div>
-            <strong>{{ member.display_name }}</strong>
-            <small class="d-block muted">{{ member.email }}</small>
-          </div>
-          {% if can_manage %}
-          <form method="post" class="ms-3">
-            {{ member_form.csrf_token }}
-            <input type="hidden" name="group_id" value="{{ group.id }}" />
-            <input type="hidden" name="user_id" value="{{ member.id }}" />
-            <input type="hidden" name="action" value="remove" />
-            <button class="btn btn-outline-danger btn-sm">Remover</button>
-          </form>
-          {% endif %}
-        </li>
-        {% endfor %}
-      </ul>
+      <div class="mt-3">
+        <h6 class="text-uppercase text-muted mb-2" style="font-size: 0.75rem; letter-spacing: 0.1em;">
+          <i class="bi bi-person-lines-fill"></i> Membros
+        </h6>
+        <ul class="list-group list-group-flush">
+          {% for member in group.members %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+              <strong>
+                <i class="bi bi-person-circle"></i>
+                {{ member.display_name }}
+              </strong>
+              <small class="d-block muted">{{ member.email }}</small>
+            </div>
+            {% if can_manage %}
+            <form method="post" class="ms-3">
+              {{ member_form.csrf_token }}
+              <input type="hidden" name="group_id" value="{{ group.id }}" />
+              <input type="hidden" name="user_id" value="{{ member.id }}" />
+              <input type="hidden" name="action" value="remove" />
+              <button class="btn btn-outline-danger btn-sm">
+                <i class="bi bi-x-circle"></i> Remover
+              </button>
+            </form>
+            {% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
       {% else %}
-      <p class="muted mt-3">Nenhum membro associado ainda.</p>
+      <p class="muted mt-3">
+        <i class="bi bi-info-circle"></i> Nenhum membro associado ainda.
+      </p>
       {% endif %}
 
       {% if can_manage %}
@@ -82,10 +79,14 @@
           <select class="form-select" name="user_id" required>
             <option value="">Adicionar usuário...</option>
             {% for user in available_users.get(group.id, []) %}
-            <option value="{{ user.id }}">{{ user.display_name }} · {{ user.email }}</option>
+            <option value="{{ user.id }}">
+              {{ user.display_name }} · {{ user.email }}
+            </option>
             {% endfor %}
           </select>
-          <button class="btn btn-primary" type="submit">Adicionar</button>
+          <button class="btn btn-primary" type="submit">
+            <i class="bi bi-plus-lg"></i> Adicionar
+          </button>
         </div>
       </form>
       {% endif %}
@@ -95,5 +96,52 @@
     {% endfor %}
   </div>
 </section>
-{% endblock %}
 
+<!-- Modal: Criar Novo Grupo -->
+{% if can_manage %}
+<div class="modal fade" id="createGroupModal" tabindex="-1" aria-labelledby="createGroupModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="createGroupModalLabel">
+          <i class="bi bi-plus-circle-fill"></i> Novo grupo
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <p class="muted mb-3">Administradores podem criar grupos customizados.</p>
+        <form method="post" id="createGroupForm" class="row g-3">
+          {{ form.hidden_tag() }}
+          <div class="col-md-6">
+            <label class="form-label" for="{{ form.name.id }}">
+              <i class="bi bi-folder"></i> Nome
+            </label>
+            {{ form.name(class="form-control", placeholder="Nome do grupo") }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="{{ form.slug.id }}">
+              <i class="bi bi-tag"></i> Slug
+            </label>
+            {{ form.slug(class="form-control", placeholder="visitantes, administradores") }}
+          </div>
+          <div class="col-12">
+            <label class="form-label" for="{{ form.description.id }}">
+              <i class="bi bi-text-paragraph"></i> Descrição
+            </label>
+            {{ form.description(class="form-control", rows="3", placeholder="Descrição do grupo") }}
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+          <i class="bi bi-x-circle"></i> Cancelar
+        </button>
+        <button type="submit" form="createGroupForm" class="btn btn-primary">
+          <i class="bi bi-check-circle"></i> Criar grupo
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

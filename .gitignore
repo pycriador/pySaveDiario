@@ -1,0 +1,163 @@
+# ========================================
+# pySave Diário - Git Ignore
+# ========================================
+
+# === Python ===
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# === Virtual Environments ===
+venv/
+.venv/
+ENV/
+env/
+.env/
+env.bak/
+venv.bak/
+
+# === Flask ===
+instance/
+.webassets-cache
+
+# === Database ===
+*.db
+*.sqlite
+*.sqlite3
+app.db
+instance/*.db
+instance/*.sqlite
+
+# === Environment Variables ===
+.env
+.env.local
+.env.*.local
+*.env
+
+# === IDE ===
+# VSCode
+.vscode/
+*.code-workspace
+
+# PyCharm
+.idea/
+*.iml
+*.iws
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# === OS ===
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+
+# === Logs ===
+*.log
+logs/
+*.log.*
+
+# === Testing ===
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+.hypothesis/
+
+# === Migrations (opcional - descomente se quiser ignorar) ===
+# migrations/versions/*.py
+# !migrations/versions/__init__.py
+
+# === Static Files (se forem gerados) ===
+# app/static/dist/
+# app/static/build/
+
+# === Documentation ===
+docs/_build/
+site/
+
+# === Temporary Files ===
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+
+# === Security ===
+*.pem
+*.key
+*.cert
+secrets.json
+credentials.json
+
+# === Package Managers ===
+node_modules/
+package-lock.json
+yarn.lock
+
+# === Jupyter Notebooks ===
+.ipynb_checkpoints/
+*.ipynb
+
+# === mypy ===
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# === Pyre ===
+.pyre/
+
+# === Celery ===
+celerybeat-schedule
+celerybeat.pid
+
+# === Local Configuration ===
+local_settings.py
+config.local.py
+
+# === Backup Files ===
+*.backup
+*.old
+

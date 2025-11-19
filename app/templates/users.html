@@ -5,75 +5,57 @@
 <section>
   <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
     <div>
-      <p class="eyebrow">Equipe e perfis públicos</p>
+      <p class="eyebrow"><i class="bi bi-people-fill"></i> Equipe e perfis públicos</p>
       <h1 class="mb-0">Usuários cadastrados</h1>
     </div>
-    <form method="get" class="d-flex align-items-end gap-2">
-      <div>
-        <label class="form-label text-uppercase small mb-1" for="role">Filtrar por papel</label>
-        <select class="form-select" name="role" id="role" onchange="this.form.submit()">
-          <option value="">Todos</option>
-          <option value="admin" {{ 'selected' if request.args.get('role') == 'admin' else '' }}>Administradores</option>
-          <option value="editor" {{ 'selected' if request.args.get('role') == 'editor' else '' }}>Editores</option>
-          <option value="member" {{ 'selected' if request.args.get('role') == 'member' else '' }}>Membros</option>
-        </select>
-      </div>
-    </form>
-  </div>
-
-  {% if can_manage %}
-  <div class="form-card">
-    <div class="form-card-header">
-      <div>
-        <h2>Novo usuário</h2>
-        <p class="muted">Usuários entram automaticamente no grupo Visitantes.</p>
-      </div>
-      <button
-        class="btn btn-outline-secondary btn-sm"
-        type="button"
-        data-bs-toggle="collapse"
-        data-bs-target="#createUserCollapse"
-        aria-expanded="false"
-      >
-        Alternar formulário
+    <div class="d-flex gap-2 flex-wrap">
+      {% if can_manage %}
+      <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#createUserModal">
+        <i class="bi bi-person-plus-fill"></i> Novo usuário
       </button>
-    </div>
-    <div class="collapse show" id="createUserCollapse">
-      <form method="post" class="row g-3">
-        {{ user_form.hidden_tag() }}
-        <div class="col-md-6">
-          <label class="form-label" for="{{ user_form.display_name.id }}">Nome exibido</label>
-          {{ user_form.display_name(class="form-control") }}
-        </div>
-        <div class="col-md-6">
-          <label class="form-label" for="{{ user_form.email.id }}">E-mail</label>
-          {{ user_form.email(class="form-control") }}
-        </div>
-        <div class="col-md-6">
-          <label class="form-label" for="{{ user_form.password.id }}">Senha</label>
-          {{ user_form.password(class="form-control") }}
-        </div>
-        <div class="col-md-6">
-          <label class="form-label" for="{{ user_form.role.id }}">Papel</label>
-          {{ user_form.role(class="form-select") }}
-        </div>
-        <div class="col-12 text-end">
-          {{ user_form.submit_user(class="btn btn-primary px-4") }}
+      {% endif %}
+      <form method="get" class="d-flex align-items-end gap-2">
+        <div>
+          <label class="form-label text-uppercase small mb-1" for="role">
+            <i class="bi bi-funnel"></i> Filtrar por papel
+          </label>
+          <select class="form-select" name="role" id="role" onchange="this.form.submit()">
+            <option value="">Todos</option>
+            <option value="admin" {{ 'selected' if request.args.get('role') == 'admin' else '' }}>Administradores</option>
+            <option value="editor" {{ 'selected' if request.args.get('role') == 'editor' else '' }}>Editores</option>
+            <option value="member" {{ 'selected' if request.args.get('role') == 'member' else '' }}>Membros</option>
+          </select>
         </div>
       </form>
     </div>
   </div>
-  {% endif %}
 
   <div class="grid three">
     {% for user in users %}
     <article class="panel user-card">
       <header>
-        <h3>{{ user.display_name }}</h3>
-        <span class="tag">{{ user.role.value }}</span>
+        <div>
+          <h3>
+            <i class="bi bi-person-circle"></i>
+            {{ user.display_name }}
+          </h3>
+          <span class="tag">
+            {% if user.role.value == 'admin' %}
+            <i class="bi bi-shield-fill-check"></i>
+            {% elif user.role.value == 'editor' %}
+            <i class="bi bi-pencil-fill"></i>
+            {% else %}
+            <i class="bi bi-person-fill"></i>
+            {% endif %}
+            {{ user.role.value }}
+          </span>
+        </div>
       </header>
-      <p>{{ user.email }}</p>
-      <p class="muted">Status: {{ "Ativo" if user.is_active else "Inativo" }}</p>
+      <p><i class="bi bi-envelope"></i> {{ user.email }}</p>
+      <p class="muted">
+        <i class="bi bi-{{ 'check-circle-fill' if user.is_active else 'x-circle-fill' }}"></i>
+        Status: {{ "Ativo" if user.is_active else "Inativo" }}
+      </p>
       <p>{{ user.bio or "Sem bio ainda." }}</p>
 
       {% if current_user.is_authenticated and current_user.role == role_enum.ADMIN and action_form %}
@@ -82,7 +64,9 @@
           {{ action_form.csrf_token }}
           <input type="hidden" name="user_id" value="{{ user.id }}" />
           <input type="hidden" name="action" value="reset_password" />
-          <button class="btn btn-outline-secondary btn-sm" type="submit">Resetar senha</button>
+          <button class="btn btn-outline-secondary btn-sm" type="submit">
+            <i class="bi bi-key"></i> Resetar senha
+          </button>
         </form>
 
         <form method="post" action="{{ url_for('web.user_action') }}">
@@ -90,6 +74,7 @@
           <input type="hidden" name="user_id" value="{{ user.id }}" />
           <input type="hidden" name="action" value="toggle_active" />
           <button class="btn btn-outline-secondary btn-sm" type="submit">
+            <i class="bi bi-{{ 'check-circle' if not user.is_active else 'pause-circle' }}"></i>
             {{ "Reativar" if not user.is_active else "Inativar" }}
           </button>
         </form>
@@ -99,28 +84,31 @@
           {{ action_form.csrf_token }}
           <input type="hidden" name="user_id" value="{{ user.id }}" />
           <input type="hidden" name="action" value="promote_admin" />
-          <button class="btn btn-outline-secondary btn-sm" type="submit">Tornar admin</button>
+          <button class="btn btn-outline-secondary btn-sm" type="submit">
+            <i class="bi bi-arrow-up-circle"></i> Tornar admin
+          </button>
         </form>
         {% endif %}
 
         {% if user.id != current_user.id %}
+        <button
+          class="btn btn-outline-danger btn-sm trigger-delete"
+          type="button"
+          data-user-name="{{ user.display_name }}"
+          data-form-id="delete-form-{{ user.id }}"
+        >
+          <i class="bi bi-trash"></i> Excluir
+        </button>
         <form
           method="post"
           action="{{ url_for('web.user_action') }}"
           id="delete-form-{{ user.id }}"
           class="delete-user-form"
+          style="display: none;"
         >
           {{ action_form.csrf_token }}
           <input type="hidden" name="user_id" value="{{ user.id }}" />
           <input type="hidden" name="action" value="delete" />
-          <button
-            class="btn btn-outline-danger btn-sm trigger-delete"
-            type="button"
-            data-user-name="{{ user.display_name }}"
-            data-form-id="delete-form-{{ user.id }}"
-          >
-            Excluir
-          </button>
         </form>
         {% endif %}
       </div>
@@ -131,5 +119,58 @@
     {% endfor %}
   </div>
 </section>
-{% endblock %}
 
+<!-- Modal: Criar Novo Usuário -->
+{% if can_manage %}
+<div class="modal fade" id="createUserModal" tabindex="-1" aria-labelledby="createUserModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="createUserModalLabel">
+          <i class="bi bi-person-plus-fill"></i> Novo usuário
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <p class="muted mb-3">Usuários entram automaticamente no grupo Visitantes.</p>
+        <form method="post" id="createUserForm" class="row g-3">
+          {{ user_form.hidden_tag() }}
+          <div class="col-md-6">
+            <label class="form-label" for="{{ user_form.display_name.id }}">
+              <i class="bi bi-person"></i> Nome exibido
+            </label>
+            {{ user_form.display_name(class="form-control", placeholder="Nome completo") }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="{{ user_form.email.id }}">
+              <i class="bi bi-envelope"></i> E-mail
+            </label>
+            {{ user_form.email(class="form-control", placeholder="usuario@email.com") }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="{{ user_form.password.id }}">
+              <i class="bi bi-lock"></i> Senha
+            </label>
+            {{ user_form.password(class="form-control", placeholder="Mínimo 6 caracteres") }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="{{ user_form.role.id }}">
+              <i class="bi bi-shield"></i> Papel
+            </label>
+            {{ user_form.role(class="form-select") }}
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+          <i class="bi bi-x-circle"></i> Cancelar
+        </button>
+        <button type="submit" form="createUserForm" class="btn btn-primary">
+          <i class="bi bi-check-circle"></i> Criar usuário
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

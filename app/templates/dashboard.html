@@ -3,56 +3,132 @@
 
 {% block content %}
 <section class="dashboard-hero">
-  <h1>Olá, {{ current_user.display_name }}!</h1>
-  <p>
-    Aqui você acompanha suas listas, ofertas monitoradas e templates prontos para disparo
-    nas redes sociais.
-  </p>
+  <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-3">
+    <div>
+      <h1 class="mb-2">
+        <i class="bi bi-speedometer2"></i>
+        Olá, {{ current_user.display_name }}!
+      </h1>
+      <p class="lead mb-0">
+        Aqui você acompanha suas listas, ofertas monitoradas e templates prontos para disparo nas redes sociais.
+      </p>
+    </div>
+  </div>
+  
   <div class="stats">
     <div>
       <strong>{{ wishlists|length }}</strong>
-      <span>Wishlists</span>
+      <span><i class="bi bi-heart"></i> Wishlists</span>
     </div>
     <div>
       <strong>{{ offers|length }}</strong>
-      <span>Novas ofertas</span>
+      <span><i class="bi bi-tag"></i> Novas ofertas</span>
     </div>
     <div>
       <strong>{{ current_user.role.value|capitalize }}</strong>
-      <span>Papel</span>
+      <span><i class="bi bi-shield"></i> Papel</span>
     </div>
   </div>
 </section>
 
 <section class="grid two">
   <div class="panel">
-    <h2>Minhas wishlists</h2>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2 class="mb-0">
+        <i class="bi bi-heart-fill"></i>
+        Minhas wishlists
+      </h2>
+      <span class="badge bg-primary bg-opacity-25 text-white">
+        {{ wishlists|length }}
+      </span>
+    </div>
+    
     {% for wishlist in wishlists %}
-    <article>
-      <h3>{{ wishlist.name }}</h3>
-      <p>Visibilidade: {{ wishlist.visibility.value }}</p>
-      <p>{{ wishlist.notes or "Sem anotações" }}</p>
+    <article class="mb-3 p-3" style="background: var(--panel-solid); border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+      <div class="d-flex justify-content-between align-items-start mb-2">
+        <h3 style="font-size: 1.1rem; margin-bottom: 0.25rem;">
+          <i class="bi bi-bookmark-fill"></i>
+          {{ wishlist.name }}
+        </h3>
+        <span class="tag">
+          <i class="bi bi-eye{{ '-slash' if wishlist.visibility.value == 'private' else '' }}"></i>
+          {{ wishlist.visibility.value }}
+        </span>
+      </div>
+      <p class="muted mb-0" style="font-size: 0.9rem;">
+        {{ wishlist.notes or "Sem anotações" }}
+      </p>
     </article>
     {% else %}
-    <p>Crie uma wishlist via interface ou pela API em /api/wishlists.</p>
+    <div class="text-center py-4">
+      <i class="bi bi-inbox" style="font-size: 2.5rem; color: var(--text-muted);"></i>
+      <p class="muted mt-2">Crie uma wishlist via interface ou pela API em /api/wishlists.</p>
+    </div>
     {% endfor %}
   </div>
 
   <div class="panel">
-    <h2>Ofertas recentes</h2>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2 class="mb-0">
+        <i class="bi bi-tags-fill"></i>
+        Ofertas recentes
+      </h2>
+      <span class="badge bg-primary bg-opacity-25 text-white">
+        {{ offers|length }}
+      </span>
+    </div>
+    
     {% for offer in offers %}
-    <article>
-      <h3>{{ offer.product.name if offer.product else 'Oferta' }}</h3>
-      <p>{{ offer.vendor_name }} · {{ offer.currency }} {{ '%.2f'|format(offer.price_value) }}</p>
-      <small>
-        Atualizado em
-        {{ offer.updated_at.strftime('%d/%m/%Y %H:%M') if offer.updated_at else 'Sem data' }}
-      </small>
+    <article class="mb-3 p-3" style="background: var(--panel-solid); border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+      <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem;">
+        <i class="bi bi-box-seam"></i>
+        {{ offer.product.name if offer.product else 'Oferta' }}
+      </h3>
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <p class="mb-1" style="font-size: 1.25rem; font-weight: 700; color: var(--accent-primary);">
+            <i class="bi bi-tag-fill"></i>
+            {{ offer.currency }} {{ '%.2f'|format(offer.price_value) }}
+          </p>
+          <p class="muted mb-0" style="font-size: 0.85rem;">
+            <i class="bi bi-shop"></i> {{ offer.vendor_name }}
+          </p>
+        </div>
+        {% if offer.updated_at %}
+        <small class="text-muted">
+          <i class="bi bi-clock"></i>
+          {{ offer.updated_at.strftime('%d/%m/%Y') }}
+        </small>
+        {% endif %}
+      </div>
     </article>
     {% else %}
-    <p>Nenhuma oferta cadastrada ainda.</p>
+    <div class="text-center py-4">
+      <i class="bi bi-inbox" style="font-size: 2.5rem; color: var(--text-muted);"></i>
+      <p class="muted mt-2">Nenhuma oferta cadastrada ainda.</p>
+    </div>
     {% endfor %}
   </div>
 </section>
-{% endblock %}
 
+<section class="panel mt-4">
+  <h2 class="mb-3">
+    <i class="bi bi-speedometer"></i>
+    Ações rápidas
+  </h2>
+  <div class="d-flex flex-wrap gap-2">
+    <a class="btn btn-outline-light btn-sm" href="{{ url_for('web.users') }}">
+      <i class="bi bi-people"></i> Gerenciar usuários
+    </a>
+    <a class="btn btn-outline-light btn-sm" href="{{ url_for('web.groups') }}">
+      <i class="bi bi-collection"></i> Ver grupos
+    </a>
+    <a class="btn btn-outline-light btn-sm" href="{{ url_for('web.offers') }}">
+      <i class="bi bi-tag"></i> Explorar ofertas
+    </a>
+    <a class="btn btn-outline-light btn-sm" href="{{ url_for('web.share_templates') }}">
+      <i class="bi bi-file-earmark-text"></i> Gerenciar templates
+    </a>
+  </div>
+</section>
+{% endblock %}

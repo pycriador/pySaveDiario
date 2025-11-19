@@ -5,101 +5,198 @@
 <section>
   <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
     <div>
-      <p class="eyebrow">Comparador multi lojistas</p>
+      <p class="eyebrow"><i class="bi bi-tags-fill"></i> Comparador multi lojistas</p>
       <h1 class="mb-0">Ofertas acompanhadas</h1>
       <p class="muted mb-0">Filtre via URL ou formulário para descobrir preços por vendedor.</p>
     </div>
-    <form class="d-flex flex-wrap gap-2" method="get">
-      <input class="form-control" type="text" name="vendor" placeholder="Vendedor" value="{{ request.args.get('vendor','') }}" />
-      <input class="form-control" type="text" name="product" placeholder="Slug do produto" value="{{ request.args.get('product','') }}" />
-      <input class="form-control" type="number" step="0.01" name="min_price" placeholder="Preço min" value="{{ request.args.get('min_price','') }}" />
-      <input class="form-control" type="number" step="0.01" name="max_price" placeholder="Preço máx" value="{{ request.args.get('max_price','') }}" />
-      <button class="btn btn-primary">Filtrar</button>
+    {% if can_manage %}
+    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#createOfferModal">
+      <i class="bi bi-plus-circle-fill"></i> Nova oferta
+    </button>
+    {% endif %}
+  </div>
+
+  <!-- Filtros -->
+  <div class="form-card mb-4">
+    <form class="row g-3" method="get">
+      <div class="col-md-3">
+        <label class="form-label" for="vendor">
+          <i class="bi bi-shop"></i> Vendedor
+        </label>
+        <input class="form-control" type="text" name="vendor" id="vendor" placeholder="Nome do vendedor" value="{{ request.args.get('vendor','') }}" />
+      </div>
+      <div class="col-md-3">
+        <label class="form-label" for="product">
+          <i class="bi bi-box"></i> Slug do produto
+        </label>
+        <input class="form-control" type="text" name="product" id="product" placeholder="slug-produto" value="{{ request.args.get('product','') }}" />
+      </div>
+      <div class="col-md-2">
+        <label class="form-label" for="min_price">
+          <i class="bi bi-currency-dollar"></i> Preço mín
+        </label>
+        <input class="form-control" type="number" step="0.01" name="min_price" id="min_price" placeholder="0.00" value="{{ request.args.get('min_price','') }}" />
+      </div>
+      <div class="col-md-2">
+        <label class="form-label" for="max_price">
+          <i class="bi bi-currency-dollar"></i> Preço máx
+        </label>
+        <input class="form-control" type="number" step="0.01" name="max_price" id="max_price" placeholder="999.99" value="{{ request.args.get('max_price','') }}" />
+      </div>
+      <div class="col-md-2 d-flex align-items-end">
+        <button class="btn btn-primary w-100" type="submit">
+          <i class="bi bi-search"></i> Filtrar
+        </button>
+      </div>
     </form>
   </div>
 
-  {% if can_manage %}
-  <div class="form-card mb-4">
-    <div class="form-card-header">
-      <div>
-        <h2>Nova oferta</h2>
-        <p class="muted mb-0">Produtos repetidos podem coexistir com vendedores e preços diferentes.</p>
-      </div>
-      <button
-        class="btn btn-outline-secondary btn-sm"
-        type="button"
-        data-bs-toggle="collapse"
-        data-bs-target="#offerFormCollapse"
-        aria-expanded="false"
-      >
-        Alternar formulário
-      </button>
-    </div>
-    <div class="collapse show" id="offerFormCollapse">
-      <form method="post" class="row g-3 mt-2">
-        {{ form.hidden_tag() }}
-        <div class="col-md-6">
-          <label class="form-label" for="{{ form.product_name.id }}">Nome do produto</label>
-          {{ form.product_name(class="form-control") }}
-        </div>
-        <div class="col-md-6">
-          <label class="form-label" for="{{ form.product_slug.id }}">Slug do produto</label>
-          {{ form.product_slug(class="form-control") }}
-        </div>
-        <div class="col-md-6">
-          <label class="form-label" for="{{ form.vendor_name.id }}">Vendedor</label>
-          {{ form.vendor_name(class="form-control") }}
-        </div>
-        <div class="col-md-3">
-          <label class="form-label" for="{{ form.price.id }}">Preço</label>
-          {{ form.price(class="form-control") }}
-        </div>
-        <div class="col-md-3">
-          <label class="form-label" for="{{ form.currency.id }}">Moeda</label>
-          {{ form.currency(class="form-control") }}
-        </div>
-        <div class="col-md-6">
-          <label class="form-label" for="{{ form.category.id }}">Categoria</label>
-          {{ form.category(class="form-control") }}
-        </div>
-        <div class="col-md-6">
-          <label class="form-label" for="{{ form.manufacturer.id }}">Fabricante</label>
-          {{ form.manufacturer(class="form-control") }}
-        </div>
-        <div class="col-md-6">
-          <label class="form-label" for="{{ form.offer_url.id }}">URL da oferta</label>
-          {{ form.offer_url(class="form-control") }}
-        </div>
-        <div class="col-md-6">
-          <label class="form-label" for="{{ form.expires_at.id }}">Expira em</label>
-          {{ form.expires_at(class="form-control", placeholder="2025-12-31T12:00") }}
-        </div>
-        <div class="col-12">
-          <label class="form-label" for="{{ form.product_description.id }}">Descrição do produto</label>
-          {{ form.product_description(class="form-control", rows="2") }}
-        </div>
-        <div class="col-12 text-end">
-          {{ form.submit_offer(class="btn btn-primary px-4") }}
-        </div>
-      </form>
-    </div>
-  </div>
-  {% endif %}
-
+  <!-- Grid de Ofertas -->
   <div class="grid three">
     {% for offer in offers %}
     <article class="panel card">
-      <h3>{{ offer.product.name if offer.product else 'Oferta' }}</h3>
-      <p>{{ offer.vendor_name }} · {{ offer.currency }} {{ '%.2f'|format(offer.price_value) }}</p>
-      <p>{{ offer.product.description if offer.product else "Sem descrição" }}</p>
+      <div class="d-flex justify-content-between align-items-start mb-2">
+        <h3 style="font-size: 1.25rem;">
+          <i class="bi bi-box-seam"></i>
+          {{ offer.product.name if offer.product else 'Oferta' }}
+        </h3>
+      </div>
+      
+      <div class="price mb-2">
+        <i class="bi bi-tag-fill"></i>
+        {{ offer.currency }} {{ '%.2f'|format(offer.price_value) }}
+      </div>
+      
+      <p class="mb-2">
+        <i class="bi bi-shop"></i>
+        <strong>{{ offer.vendor_name }}</strong>
+      </p>
+      
+      <p class="muted" style="font-size: 0.9rem; min-height: 3rem;">
+        {{ offer.product.description if offer.product else "Sem descrição" }}
+      </p>
+      
       {% if offer.offer_url %}
-      <a class="btn btn-outline-light btn-sm" href="{{ offer.offer_url }}" target="_blank">Ver detalhes</a>
+      <a class="btn btn-outline-light btn-sm w-100 mt-2" href="{{ offer.offer_url }}" target="_blank" rel="noopener noreferrer">
+        <i class="bi bi-box-arrow-up-right"></i> Ver detalhes
+      </a>
       {% endif %}
     </article>
     {% else %}
-    <p>Nenhuma oferta encontrada para esse filtro.</p>
+    <div class="col-12">
+      <div class="panel text-center py-5">
+        <i class="bi bi-inbox" style="font-size: 3rem; color: var(--text-muted);"></i>
+        <p class="mt-3 muted">Nenhuma oferta encontrada para esse filtro.</p>
+      </div>
+    </div>
     {% endfor %}
   </div>
 </section>
-{% endblock %}
 
+<!-- Modal: Criar Nova Oferta -->
+{% if can_manage %}
+<div class="modal fade" id="createOfferModal" tabindex="-1" aria-labelledby="createOfferModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="createOfferModalLabel">
+          <i class="bi bi-plus-circle-fill"></i> Nova oferta
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <p class="muted mb-3">Produtos repetidos podem coexistir com vendedores e preços diferentes.</p>
+        <form method="post" id="createOfferForm" class="row g-3">
+          {{ form.hidden_tag() }}
+          
+          <div class="col-12">
+            <h6 class="text-uppercase text-muted mb-3" style="font-size: 0.75rem; letter-spacing: 0.1em;">
+              <i class="bi bi-box"></i> Informações do Produto
+            </h6>
+          </div>
+          
+          <div class="col-md-6">
+            <label class="form-label" for="{{ form.product_name.id }}">
+              <i class="bi bi-box-seam"></i> Nome do produto
+            </label>
+            {{ form.product_name(class="form-control", placeholder="Ex: iPhone 15 Pro Max") }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="{{ form.product_slug.id }}">
+              <i class="bi bi-link-45deg"></i> Slug do produto
+            </label>
+            {{ form.product_slug(class="form-control", placeholder="iphone-15-pro-max") }}
+          </div>
+          
+          <div class="col-12">
+            <label class="form-label" for="{{ form.product_description.id }}">
+              <i class="bi bi-text-paragraph"></i> Descrição do produto
+            </label>
+            {{ form.product_description(class="form-control", rows="2", placeholder="Descrição detalhada do produto") }}
+          </div>
+          
+          <div class="col-12 mt-4">
+            <h6 class="text-uppercase text-muted mb-3" style="font-size: 0.75rem; letter-spacing: 0.1em;">
+              <i class="bi bi-shop"></i> Informações da Oferta
+            </h6>
+          </div>
+          
+          <div class="col-md-6">
+            <label class="form-label" for="{{ form.vendor_name.id }}">
+              <i class="bi bi-shop"></i> Vendedor
+            </label>
+            {{ form.vendor_name(class="form-control", placeholder="Ex: Amazon") }}
+          </div>
+          <div class="col-md-3">
+            <label class="form-label" for="{{ form.price.id }}">
+              <i class="bi bi-cash"></i> Preço
+            </label>
+            {{ form.price(class="form-control", placeholder="0.00") }}
+          </div>
+          <div class="col-md-3">
+            <label class="form-label" for="{{ form.currency.id }}">
+              <i class="bi bi-currency-exchange"></i> Moeda
+            </label>
+            {{ form.currency(class="form-control", placeholder="BRL") }}
+          </div>
+          
+          <div class="col-md-6">
+            <label class="form-label" for="{{ form.offer_url.id }}">
+              <i class="bi bi-link"></i> URL da oferta
+            </label>
+            {{ form.offer_url(class="form-control", placeholder="https://...") }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="{{ form.expires_at.id }}">
+              <i class="bi bi-calendar-event"></i> Expira em
+            </label>
+            {{ form.expires_at(class="form-control", placeholder="2025-12-31T12:00") }}
+          </div>
+          
+          <div class="col-md-6">
+            <label class="form-label" for="{{ form.category.id }}">
+              <i class="bi bi-tag"></i> Categoria
+            </label>
+            {{ form.category(class="form-control", placeholder="Eletrônicos") }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="{{ form.manufacturer.id }}">
+              <i class="bi bi-building"></i> Fabricante
+            </label>
+            {{ form.manufacturer(class="form-control", placeholder="Apple") }}
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+          <i class="bi bi-x-circle"></i> Cancelar
+        </button>
+        <button type="submit" form="createOfferForm" class="btn btn-primary">
+          <i class="bi bi-check-circle"></i> Criar oferta
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
