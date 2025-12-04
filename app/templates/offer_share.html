@@ -821,40 +821,109 @@ html[data-theme="dark"] .btn-primary {
   color: white !important;
 }
 
-/* Instagram button - gradient without border */
+/* Social buttons - all with colored backgrounds */
+
+/* WhatsApp */
+.social-btn-whatsapp {
+  background: #25d366 !important;
+  color: white !important;
+  border: none !important;
+}
+
+.social-btn-whatsapp:hover {
+  background: #20ba5a !important;
+  color: white !important;
+}
+
+.social-btn-whatsapp.active {
+  background: #1da851 !important;
+  color: white !important;
+  box-shadow: 0 0 0 3px rgba(37, 211, 102, 0.3);
+}
+
+/* Facebook */
+.social-btn-facebook {
+  background: #1877f2 !important;
+  color: white !important;
+  border: none !important;
+}
+
+.social-btn-facebook:hover {
+  background: #166fe5 !important;
+  color: white !important;
+}
+
+.social-btn-facebook.active {
+  background: #1467d8 !important;
+  color: white !important;
+  box-shadow: 0 0 0 3px rgba(24, 119, 242, 0.3);
+}
+
+/* Twitter */
+.social-btn-twitter {
+  background: #1da1f2 !important;
+  color: white !important;
+  border: none !important;
+}
+
+.social-btn-twitter:hover {
+  background: #1a94da !important;
+  color: white !important;
+}
+
+.social-btn-twitter.active {
+  background: #1787c2 !important;
+  color: white !important;
+  box-shadow: 0 0 0 3px rgba(29, 161, 242, 0.3);
+}
+
+/* Instagram */
 .social-btn-instagram {
-  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%) !important;
   color: white !important;
   border: none !important;
 }
 
 .social-btn-instagram:hover {
-  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%) !important;
   color: white !important;
   opacity: 0.9;
 }
 
 .social-btn-instagram.active {
-  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%) !important;
   color: white !important;
   box-shadow: 0 0 0 3px rgba(225, 48, 108, 0.3);
 }
 
-body[data-theme="dark"] .social-btn-instagram,
-html[data-theme="dark"] .social-btn-instagram {
-  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+/* Telegram */
+.social-btn-telegram {
+  background: #0088cc !important;
   color: white !important;
   border: none !important;
 }
 
-body[data-theme="dark"] .social-btn-instagram:hover,
-html[data-theme="dark"] .social-btn-instagram:hover {
-  opacity: 0.9;
+.social-btn-telegram:hover {
+  background: #007ab8 !important;
+  color: white !important;
 }
 
-body[data-theme="dark"] .social-btn-instagram.active,
-html[data-theme="dark"] .social-btn-instagram.active {
-  box-shadow: 0 0 0 3px rgba(225, 48, 108, 0.3);
+.social-btn-telegram.active {
+  background: #006ca5 !important;
+  color: white !important;
+  box-shadow: 0 0 0 3px rgba(0, 136, 204, 0.3);
+}
+
+/* Ensure all social buttons have white text */
+.social-btn {
+  color: white !important;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+body[data-theme="dark"] .social-btn,
+html[data-theme="dark"] .social-btn {
+  color: white !important;
 }
 </style>
 
