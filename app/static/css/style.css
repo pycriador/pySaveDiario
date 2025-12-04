@@ -87,7 +87,7 @@ a:hover {
 .site-header {
   position: sticky;
   top: 0;
-  z-index: 1000;
+  z-index: 9999 !important;
   backdrop-filter: blur(20px) saturate(180%);
   background: rgba(15, 23, 42, 0.75);
   border-bottom: 1px solid var(--border-color);
@@ -102,6 +102,7 @@ a:hover {
 .top-nav {
   background: transparent;
   padding: 0.5rem 0;
+  z-index: 9999 !important;
 }
 
 .navbar-brand {
@@ -632,9 +633,29 @@ h3 { font-size: 1.5rem; }
   filter: invert(0);
 }
 
+/* === Z-Index Hierarchy === */
+/* 
+  10000+ : Reserved
+  9999   : Navbar (always on top)
+  9998   : Toast notifications (below navbar)
+  9997   : Modals
+  1050   : Bootstrap modals (default)
+  1040   : Bootstrap dropdowns (default)
+  1000-  : Other elements
+*/
+
+/* Ensure navbar is ALWAYS on top */
+nav.navbar,
+.navbar,
+.top-nav,
+.navbar-collapse {
+  z-index: 9999 !important;
+}
+
 /* === Toasts === */
 .toast-container {
-  z-index: 1100;
+  z-index: 1050 !important;
+  top: 70px !important; /* Position below navbar */
 }
 
 .toast {
@@ -947,6 +968,7 @@ body.modal-open {
   box-shadow: var(--shadow-lg);
   padding: 0.5rem 0;
   margin-top: 0.5rem;
+  z-index: 9999 !important;
 }
 
 .dropdown-item {

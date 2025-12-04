@@ -1,0 +1,249 @@
+{# 
+  HTML Editor Component using Quill.js
+  
+  Usage:
+  Include this file in your template
+  
+  Then call: initEditor('field_id', 'initial_content')
+#}
+
+<!-- Quill.js CSS -->
+<link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
+
+<style>
+/* Custom Quill Theme - Light */
+.ql-toolbar.ql-snow {
+  border: 1px solid var(--border-color) !important;
+  border-bottom: none !important;
+  background: var(--panel-solid) !important;
+  border-radius: 8px 8px 0 0 !important;
+}
+
+.ql-container.ql-snow {
+  border: 1px solid var(--border-color) !important;
+  background: var(--bg-secondary) !important;
+  border-radius: 0 0 8px 8px !important;
+  font-size: 14px !important;
+}
+
+.ql-editor {
+  min-height: 150px;
+  max-height: 400px;
+  overflow-y: auto;
+  color: var(--text-primary) !important;
+}
+
+.ql-editor.ql-blank::before {
+  color: var(--text-muted) !important;
+  font-style: italic;
+}
+
+/* Toolbar buttons - Light theme */
+.ql-toolbar .ql-stroke {
+  stroke: var(--text-primary) !important;
+}
+
+.ql-toolbar .ql-fill {
+  fill: var(--text-primary) !important;
+}
+
+.ql-toolbar .ql-picker-label {
+  color: var(--text-primary) !important;
+}
+
+.ql-toolbar button:hover,
+.ql-toolbar button:focus,
+.ql-toolbar button.ql-active {
+  color: var(--bs-primary) !important;
+}
+
+.ql-toolbar button:hover .ql-stroke,
+.ql-toolbar button.ql-active .ql-stroke {
+  stroke: var(--bs-primary) !important;
+}
+
+.ql-toolbar button:hover .ql-fill,
+.ql-toolbar button.ql-active .ql-fill {
+  fill: var(--bs-primary) !important;
+}
+
+/* Picker dropdown */
+.ql-picker-options {
+  background: var(--panel-solid) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 6px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+.ql-picker-item {
+  color: var(--text-primary) !important;
+}
+
+.ql-picker-item:hover {
+  background: rgba(var(--bs-primary-rgb), 0.1) !important;
+  color: var(--bs-primary) !important;
+}
+
+/* Dark theme specific adjustments */
+body[data-theme="dark"] .ql-toolbar.ql-snow {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+body[data-theme="dark"] .ql-container.ql-snow {
+  background: #1a1a1a !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+body[data-theme="dark"] .ql-editor {
+  color: #e5e5e5 !important;
+}
+
+body[data-theme="dark"] .ql-editor.ql-blank::before {
+  color: #6b7280 !important;
+}
+
+body[data-theme="dark"] .ql-toolbar .ql-stroke {
+  stroke: #e5e5e5 !important;
+}
+
+body[data-theme="dark"] .ql-toolbar .ql-fill {
+  fill: #e5e5e5 !important;
+}
+
+body[data-theme="dark"] .ql-toolbar .ql-picker-label {
+  color: #e5e5e5 !important;
+}
+
+body[data-theme="dark"] .ql-toolbar button:hover .ql-stroke,
+body[data-theme="dark"] .ql-toolbar button.ql-active .ql-stroke {
+  stroke: #60a5fa !important;
+}
+
+body[data-theme="dark"] .ql-toolbar button:hover .ql-fill,
+body[data-theme="dark"] .ql-toolbar button.ql-active .ql-fill {
+  fill: #60a5fa !important;
+}
+
+body[data-theme="dark"] .ql-picker-options {
+  background: #2a2a2a !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+body[data-theme="dark"] .ql-picker-item {
+  color: #e5e5e5 !important;
+}
+
+body[data-theme="dark"] .ql-picker-item:hover {
+  background: rgba(96, 165, 250, 0.2) !important;
+  color: #60a5fa !important;
+}
+
+/* Scrollbar styling for editor */
+.ql-editor::-webkit-scrollbar {
+  width: 8px;
+}
+
+.ql-editor::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+  border-radius: 4px;
+}
+
+.ql-editor::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+.ql-editor::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+body[data-theme="dark"] .ql-editor::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+body[data-theme="dark"] .ql-editor::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Hide original textarea when editor is initialized */
+.editor-hidden {
+  display: none !important;
+}
+</style>
+
+<!-- Quill.js JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
+
+<script>
+// Initialize Quill editor
+function initEditor(fieldId, initialContent = '', placeholder = 'Digite aqui...') {
+  const textarea = document.getElementById(fieldId);
+  if (!textarea) {
+    console.error(`Textarea with id '${fieldId}' not found`);
+    return null;
+  }
+  
+  // Create editor container
+  const editorContainer = document.createElement('div');
+  editorContainer.id = fieldId + '_editor';
+  editorContainer.className = 'quill-editor-container';
+  
+  // Insert editor before textarea
+  textarea.parentNode.insertBefore(editorContainer, textarea);
+  
+  // Hide textarea
+  textarea.classList.add('editor-hidden');
+  
+  // Initialize Quill
+  const quill = new Quill('#' + fieldId + '_editor', {
+    theme: 'snow',
+    placeholder: placeholder,
+    modules: {
+      toolbar: [
+        [{ 'header': [1, 2, 3, false] }],
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+        [{ 'color': [] }, { 'background': [] }],
+        ['link'],
+        ['clean']
+      ]
+    }
+  });
+  
+  // Set initial content
+  if (initialContent) {
+    quill.setText(initialContent);
+  }
+  
+  // Sync Quill content to textarea on change (plain text only, no HTML)
+  quill.on('text-change', function() {
+    textarea.value = quill.getText();
+  });
+  
+  // Also sync on form submit
+  const form = textarea.closest('form');
+  if (form) {
+    form.addEventListener('submit', function() {
+      textarea.value = quill.getText();
+    });
+  }
+  
+  return quill;
+}
+
+// Initialize all editors on page load
+let editors = {};
+
+document.addEventListener('DOMContentLoaded', function() {
+  // Auto-detect textareas with class 'html-editor'
+  document.querySelectorAll('textarea.html-editor').forEach(textarea => {
+    const fieldId = textarea.id;
+    const initialContent = textarea.value || '';
+    const placeholder = textarea.getAttribute('placeholder') || 'Digite aqui...';
+    
+    editors[fieldId] = initEditor(fieldId, initialContent, placeholder);
+  });
+});
+</script>
+

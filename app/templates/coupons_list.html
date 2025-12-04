@@ -16,6 +16,73 @@
     {% endif %}
   </div>
 
+  <!-- Filters Section -->
+  <div class="panel mb-4">
+    <form method="get" id="filterForm" class="row g-3">
+      <div class="col-md-4">
+        <label class="form-label" for="search">
+          <i class="bi bi-search"></i> Buscar
+        </label>
+        <input type="text" class="form-control" name="search" id="search" 
+               placeholder="Código do cupom..." 
+               value="{{ request.args.get('search', '') }}">
+      </div>
+      
+      <div class="col-md-3">
+        <label class="form-label" for="seller">
+          <i class="bi bi-shop"></i> Vendedor
+        </label>
+        <select class="form-select" name="seller" id="seller">
+          <option value="">Todos</option>
+          {% for seller in sellers %}
+          <option value="{{ seller.id }}" {% if request.args.get('seller', type=int) == seller.id %}selected{% endif %}>
+            {{ seller.name }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      
+      <div class="col-md-3">
+        <label class="form-label" for="discount_type">
+          <i class="bi bi-percent"></i> Tipo de Desconto
+        </label>
+        <select class="form-select" name="discount_type" id="discount_type">
+          <option value="">Todos</option>
+          <option value="percentage" {% if request.args.get('discount_type') == 'percentage' %}selected{% endif %}>
+            Porcentagem (%)
+          </option>
+          <option value="fixed" {% if request.args.get('discount_type') == 'fixed' %}selected{% endif %}>
+            Valor Fixo (R$)
+          </option>
+        </select>
+      </div>
+      
+      <div class="col-md-2 d-flex align-items-end">
+        <button type="submit" class="btn btn-primary w-100">
+          <i class="bi bi-funnel"></i> Filtrar
+        </button>
+      </div>
+      
+      <div class="col-md-12">
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" name="active_only" id="active_only" 
+                 value="true" {% if request.args.get('active_only', 'true') == 'true' %}checked{% endif %}>
+          <label class="form-check-label" for="active_only">
+            <i class="bi bi-check-circle"></i> Mostrar apenas cupons ativos
+          </label>
+        </div>
+      </div>
+      
+      {% if request.args.get('search') or request.args.get('seller') or request.args.get('discount_type') or request.args.get('active_only') == 'false' %}
+      <div class="col-12">
+        <a href="{{ url_for('web.coupons') }}" class="btn btn-sm btn-outline-secondary">
+          <i class="bi bi-x-circle"></i> Limpar Filtros
+        </a>
+      </div>
+      {% endif %}
+    </form>
+  </div>
+
   {% if coupons %}
   <!-- Grid de Cupons -->
   <div class="grid three">
@@ -45,10 +112,33 @@
         </div>
       </div>
       
+      <!-- Discount Info -->
+      {% if coupon.discount_value %}
+      <p class="mb-2 coupon-description">
+        <i class="bi bi-percent"></i>
+        <strong>Desconto:</strong>
+        {% if coupon.discount_type == 'percentage' %}
+          {{ coupon.discount_value }}%
+          {% if coupon.max_discount_value %}
+            <span class="text-muted">(máx R$ {{ "%.2f"|format(coupon.max_discount_value) }})</span>
+          {% endif %}
+        {% else %}
+          R$ {{ "%.2f"|format(coupon.discount_value) }}
+        {% endif %}
+      </p>
+      {% endif %}
+      
+      {% if coupon.min_purchase_value %}
+      <p class="mb-2 coupon-description">
+        <i class="bi bi-cart-check"></i>
+        <strong>Compra mínima:</strong> R$ {{ "%.2f"|format(coupon.min_purchase_value) }}
+      </p>
+      {% endif %}
+      
       {% if coupon.expires_at %}
       <p class="mb-2 coupon-description">
         <i class="bi bi-calendar-event"></i>
-        Expira em: {{ coupon.expires_at.strftime('%d/%m/%Y às %H:%M') }}
+        <strong>Expira em:</strong> {{ coupon.expires_at.strftime('%d/%m/%Y às %H:%M') }}
       </p>
       {% else %}
       <p class="mb-2 coupon-description">
@@ -416,6 +506,48 @@ function confirmDelete(type, id, name) {
   // Show modal
   modal.show();
 }
+
+// Dynamic filters
+document.addEventListener('DOMContentLoaded', function() {
+  const searchInput = document.getElementById('search');
+  const sellerSelect = document.getElementById('seller');
+  const discountTypeSelect = document.getElementById('discount_type');
+  const activeOnlyCheckbox = document.getElementById('active_only');
+  
+  function applyFilters() {
+    const params = new URLSearchParams();
+    
+    const search = searchInput.value.trim();
+    const seller = sellerSelect.value;
+    const discountType = discountTypeSelect.value;
+    const activeOnly = activeOnlyCheckbox.checked;
+    
+    if (search) params.append('search', search);
+    if (seller) params.append('seller', seller);
+    if (discountType) params.append('discount_type', discountType);
+    if (!activeOnly) params.append('active_only', 'false');
+    
+    const url = `${window.location.pathname}${params.toString() ? '?' + params.toString() : ''}`;
+    window.location.href = url;
+  }
+  
+  // Apply filters on input change (with debounce for search)
+  let searchTimeout;
+  searchInput.addEventListener('input', function() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(applyFilters, 500);
+  });
+  
+  sellerSelect.addEventListener('change', applyFilters);
+  discountTypeSelect.addEventListener('change', applyFilters);
+  activeOnlyCheckbox.addEventListener('change', applyFilters);
+  
+  // Prevent form submit (we handle it via JS)
+  document.getElementById('filterForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    applyFilters();
+  });
+});
 </script>
 {% endblock %}
 

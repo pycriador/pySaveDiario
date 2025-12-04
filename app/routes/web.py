@@ -8,6 +8,7 @@ from flask import Blueprint, abort, flash, jsonify, redirect, render_template, r
 from flask_login import current_user, login_required, login_user, logout_user
 
 from ..extensions import csrf, db
+from ..utils.upload import save_image, delete_image
 from ..forms import (
     GroupCreateForm,
     GroupMemberForm,
@@ -63,12 +64,49 @@ def api_documentation():
 
 @web_bp.route("/")
 def index():
-    offers = Offer.query.order_by(Offer.created_at.desc()).limit(6).all()
+    from datetime import datetime
+    
+    # Get recent offers (only from active sellers)
+    offers = Offer.query.outerjoin(Seller, Offer.seller_id == Seller.id)\
+        .filter(
+            db.or_(
+                Seller.active == True,
+                Offer.seller_id.is_(None)
+            )
+        ).order_by(Offer.created_at.desc()).limit(6).all()
     templates = Template.query.limit(4).all()
+    
+    # Calculate statistics
+    total_offers = Offer.query.count()
+    total_coupons = Coupon.query.filter_by(active=True).count()
+    total_templates = Template.query.count()
+    
+    # Active offers (not expired)
+    active_offers = Offer.query.filter(
+        db.or_(
+            Offer.expires_at.is_(None),
+            Offer.expires_at > datetime.now()
+        )
+    ).count()
+    
+    # Calculate total savings (sum of discounts)
+    total_savings = 0
+    offers_with_discount = Offer.query.filter(Offer.old_price.isnot(None)).all()
+    for offer in offers_with_discount:
+        if offer.old_price and offer.price:
+            savings = float(offer.old_price) - float(offer.price)
+            if savings > 0:
+                total_savings += savings
+    
     return render_template(
         "index.html",
         offers=offers,
         templates=templates,
+        total_offers=total_offers,
+        total_coupons=total_coupons,
+        total_templates=total_templates,
+        active_offers=active_offers,
+        total_savings=total_savings,
     )
 
 
@@ -98,7 +136,14 @@ def logout():
 @web_bp.route("/dashboard")
 @login_required
 def dashboard():
-    offers = Offer.query.order_by(Offer.created_at.desc()).limit(5).all()
+    # Get recent offers (only from active sellers)
+    offers = Offer.query.outerjoin(Seller, Offer.seller_id == Seller.id)\
+        .filter(
+            db.or_(
+                Seller.active == True,
+                Offer.seller_id.is_(None)
+            )
+        ).order_by(Offer.created_at.desc()).limit(5).all()
     wishlists = Wishlist.query.filter_by(owner_id=current_user.id).all()
     return render_template(
         "dashboard.html",
@@ -109,14 +154,47 @@ def dashboard():
 
 @web_bp.route("/usuarios", methods=["GET", "POST"])
 def users():
-    role = request.args.get("role")
+    # Get filter parameters from URL
+    search = request.args.get("search", "").strip()
+    role_filter = request.args.get("role", "")
+    active_only = request.args.get("active_only", "true").lower() == "true"
+    
+    # Build query
     query = User.query
-    if role:
+    
+    # Apply search filter (email, name, social media)
+    if search:
+        search_pattern = f"%{search}%"
+        query = query.filter(
+            db.or_(
+                User.email.ilike(search_pattern),
+                User.display_name.ilike(search_pattern),
+                User.phone.ilike(search_pattern),
+                User.address.ilike(search_pattern),
+                User.website.ilike(search_pattern),
+                User.instagram.ilike(search_pattern),
+                User.facebook.ilike(search_pattern),
+                User.twitter.ilike(search_pattern),
+                User.linkedin.ilike(search_pattern),
+                User.youtube.ilike(search_pattern),
+                User.tiktok.ilike(search_pattern),
+            )
+        )
+    
+    # Apply role filter
+    if role_filter:
         try:
-            query = query.filter_by(role=RoleEnum(role))
+            query = query.filter_by(role=RoleEnum(role_filter))
         except ValueError:
-            role = None
+            role_filter = ""
+    
+    # Apply active filter
+    if active_only:
+        query = query.filter_by(is_active=True)
+    
+    # Get results
     users = query.order_by(User.created_at.desc()).all()
+    
     action_form = UserActionForm() if current_user.is_authenticated else None
     user_form = UserCreateForm(prefix="user")
     can_manage = current_user.is_authenticated and current_user.role == RoleEnum.ADMIN
@@ -130,6 +208,15 @@ def users():
                 email=email,
                 display_name=user_form.display_name.data,
                 role=RoleEnum(user_form.role.data),
+                phone=user_form.phone.data if user_form.phone.data else None,
+                address=user_form.address.data if user_form.address.data else None,
+                website=user_form.website.data if user_form.website.data else None,
+                instagram=user_form.instagram.data if user_form.instagram.data else None,
+                facebook=user_form.facebook.data if user_form.facebook.data else None,
+                twitter=user_form.twitter.data if user_form.twitter.data else None,
+                linkedin=user_form.linkedin.data if user_form.linkedin.data else None,
+                youtube=user_form.youtube.data if user_form.youtube.data else None,
+                tiktok=user_form.tiktok.data if user_form.tiktok.data else None,
             )
             new_user.set_password(user_form.password.data)
             visitor_group = Group.query.filter_by(slug="visitantes").first()
@@ -150,7 +237,94 @@ def users():
         user_form=user_form,
         can_manage=can_manage,
         role_enum=RoleEnum,
+        # Filter parameters
+        search=search,
+        role_filter=role_filter,
+        active_only=active_only,
     )
+
+
+@web_bp.route("/usuarios/<int:user_id>/editar", methods=["GET", "POST"])
+@login_required
+def edit_user(user_id):
+    """Edit user page"""
+    user = User.query.get_or_404(user_id)
+    
+    # Permission check: user can edit own profile, or admin can edit any
+    if current_user.id != user.id and current_user.role != RoleEnum.ADMIN:
+        flash("Você não tem permissão para editar este usuário.", "danger")
+        return redirect(url_for("web.users"))
+    
+    # CRITICAL: Check if user is editing themselves
+    is_editing_self = (current_user.id == user.id)
+    
+    # CRITICAL: Store original role to prevent accidental changes
+    original_user_role = user.role
+    original_current_user_role = current_user.role
+    
+    from ..forms import UserEditForm
+    form = UserEditForm(obj=user)
+    
+    # If user is editing own profile, remove role and is_active fields to prevent tampering
+    if is_editing_self:
+        if hasattr(form, 'role'):
+            delattr(form, 'role')
+        if hasattr(form, 'is_active'):
+            delattr(form, 'is_active')
+    
+    if form.validate_on_submit():
+        # Check if email is already taken by another user
+        if form.email.data != user.email:
+            existing = User.query.filter_by(email=form.email.data).first()
+            if existing:
+                flash("E-mail já em uso por outro usuário.", "warning")
+                return render_template("user_edit.html", form=form, user=user)
+        
+        # Update basic fields
+        user.display_name = form.display_name.data
+        user.email = form.email.data
+        
+        # Update password if provided
+        if form.password.data:
+            if form.password.data != form.confirm_password.data:
+                flash("As senhas não coincidem.", "warning")
+                return render_template("user_edit.html", form=form, user=user)
+            user.set_password(form.password.data)
+        
+        # CRITICAL: Only admin can change role, but NEVER allow changing own role
+        if current_user.role == RoleEnum.ADMIN and not is_editing_self:
+            # Admin editing another user - allow role change
+            user.role = RoleEnum(form.role.data)
+        elif is_editing_self:
+            # User editing own profile - NEVER change role
+            user.role = original_user_role
+            print(f"🔒 PROTECTION: Prevented self role change for {user.email}")
+        
+        # Update contact information
+        user.phone = form.phone.data if form.phone.data else None
+        user.address = form.address.data if form.address.data else None
+        user.website = form.website.data if form.website.data else None
+        
+        # Update social media
+        user.instagram = form.instagram.data if form.instagram.data else None
+        user.facebook = form.facebook.data if form.facebook.data else None
+        user.twitter = form.twitter.data if form.twitter.data else None
+        user.linkedin = form.linkedin.data if form.linkedin.data else None
+        user.youtube = form.youtube.data if form.youtube.data else None
+        user.tiktok = form.tiktok.data if form.tiktok.data else None
+        
+        # CRITICAL: Flush and verify current_user wasn't modified
+        db.session.flush()
+        
+        if current_user.role != original_current_user_role:
+            print(f"⚠️  WARNING: current_user.role changed from {original_current_user_role} to {current_user.role}! Reverting...")
+            current_user.role = original_current_user_role
+        
+        db.session.commit()
+        flash(f"Usuário '{user.display_name}' atualizado com sucesso!", "success")
+        return redirect(url_for("web.users"))
+    
+    return render_template("user_edit.html", form=form, user=user)
 
 
 @web_bp.route("/usuarios/acao", methods=["POST"])
@@ -328,6 +502,15 @@ def offers():
             )
         )
     
+    # Filter to show only offers from active sellers
+    query = query.outerjoin(Seller, Offer.seller_id == Seller.id)\
+        .filter(
+            db.or_(
+                Seller.active == True,
+                Offer.seller_id.is_(None)
+            )
+        )
+    
     offers = query.order_by(Offer.created_at.desc()).all()
     
     can_manage = current_user.is_authenticated and current_user.role in (RoleEnum.ADMIN, RoleEnum.EDITOR)
@@ -417,6 +600,15 @@ def create_offer():
             manufacturer_obj = Manufacturer.query.get(form.manufacturer_id.data)
             manufacturer_name = manufacturer_obj.name if manufacturer_obj else None
         
+        # Handle image upload
+        image_url = None
+        if form.product_image.data:
+            success, filepath, error_msg = save_image(form.product_image.data, 'products')
+            if success:
+                image_url = filepath
+            else:
+                flash(f"Erro ao fazer upload da imagem: {error_msg}", "warning")
+        
         if not product_obj:
             product_obj = Product(
                 name=form.product_name.data,
@@ -424,9 +616,17 @@ def create_offer():
                 description=form.product_description.data,
                 category=category_name,
                 manufacturer=manufacturer_name,
+                image_url=image_url,
             )
             db.session.add(product_obj)
             db.session.flush()
+        else:
+            # Update existing product image if new one uploaded
+            if image_url:
+                # Delete old image if exists
+                if product_obj.image_url:
+                    delete_image(product_obj.image_url)
+                product_obj.image_url = image_url
 
         # Combine date and time fields into datetime
         expires_at = None
@@ -456,6 +656,10 @@ def create_offer():
             category_id=form.category_id.data if form.category_id.data and form.category_id.data > 0 else None,
             manufacturer_id=form.manufacturer_id.data if form.manufacturer_id.data and form.manufacturer_id.data > 0 else None,
             created_by=current_user if current_user.is_authenticated else None,
+            # Installment fields
+            installment_count=form.installment_count.data if form.installment_count.data else None,
+            installment_value=form.installment_value.data if form.installment_value.data else None,
+            installment_interest_free=form.installment_interest_free.data,
         )
         db.session.add(new_offer)
         db.session.commit()
@@ -506,12 +710,30 @@ def edit_offer(offer_id):
         form.currency.data = offer.currency
         form.offer_url.data = offer.offer_url
         
+        # Installment fields
+        form.installment_count.data = offer.installment_count
+        form.installment_value.data = float(offer.installment_value) if offer.installment_value else None
+        form.installment_interest_free.data = offer.installment_interest_free if offer.installment_interest_free is not None else True
+        
         # Split datetime into date and time fields
         if offer.expires_at:
             form.expires_date.data = offer.expires_at.date()
             form.expires_time.data = offer.expires_at.time()
 
     if request.method == "POST" and form.validate_on_submit():
+        # Handle image upload
+        if form.product_image.data:
+            success, filepath, error_msg = save_image(form.product_image.data, 'products')
+            if success:
+                # Delete old image if exists
+                if offer.product and offer.product.image_url:
+                    delete_image(offer.product.image_url)
+                # Update image URL
+                if offer.product:
+                    offer.product.image_url = filepath
+            else:
+                flash(f"Erro ao fazer upload da imagem: {error_msg}", "warning")
+        
         # Update product
         if offer.product:
             offer.product.name = form.product_name.data
@@ -542,6 +764,11 @@ def edit_offer(offer_id):
         offer.seller_id = form.seller_id.data if form.seller_id.data and form.seller_id.data > 0 else None
         offer.category_id = form.category_id.data if form.category_id.data and form.category_id.data > 0 else None
         offer.manufacturer_id = form.manufacturer_id.data if form.manufacturer_id.data and form.manufacturer_id.data > 0 else None
+        
+        # Update installment fields
+        offer.installment_count = form.installment_count.data if form.installment_count.data else None
+        offer.installment_value = form.installment_value.data if form.installment_value.data else None
+        offer.installment_interest_free = form.installment_interest_free.data
         
         # Combine date and time fields into datetime
         if form.expires_date.data:
@@ -581,16 +808,21 @@ def share_offer(offer_id):
     # Get all active templates
     templates = Template.query.order_by(Template.name).all()
     
-    # Get all active coupons
-    active_coupons = Coupon.query.filter_by(active=True).order_by(Coupon.code).all()
+    # Get active coupons from the same seller as the offer
+    active_coupons = Coupon.query.filter_by(
+        active=True,
+        seller_id=offer.seller_id
+    ).order_by(Coupon.code).all()
     
-    # Get social network configurations
-    social_configs_query = SocialNetworkConfig.query.filter_by(active=True).all()
+    # Get active social network configurations
+    social_networks = SocialNetworkConfig.query.filter_by(active=True).order_by(SocialNetworkConfig.network).all()
+    
+    # Create dict for JS (prefix/suffix)
     social_configs = {
         config.network.lower(): {
             'prefix_text': config.prefix_text or '',
             'suffix_text': config.suffix_text or ''
-        } for config in social_configs_query
+        } for config in social_networks
     }
     
     # Get all namespaces for display
@@ -602,9 +834,100 @@ def share_offer(offer_id):
                          offer=offer,
                          templates=templates,
                          active_coupons=active_coupons,
+                         social_networks=social_networks,
                          social_configs=social_configs,
                          namespaces=namespaces,
-                         selected_channel=selected_channel)
+                         selected_channel=selected_channel,
+                         user=current_user)
+
+
+@web_bp.route("/template-social-network/save", methods=["POST"])
+@csrf.exempt
+@login_required
+def save_custom_template():
+    """Save or update custom template for specific social network"""
+    from ..models import Template, TemplateSocialNetwork
+    
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({"message": "Nenhum dado recebido.", "success": False}), 400
+        
+        template_id = data.get("template_id")
+        social_network = data.get("social_network")
+        custom_body = data.get("custom_body")
+        
+        print(f"🔍 Recebido: template_id={template_id}, social_network={social_network}, custom_body length={len(custom_body) if custom_body else 0}")
+        
+        if not all([template_id, social_network, custom_body]):
+            return jsonify({
+                "message": "template_id, social_network e custom_body são obrigatórios.",
+                "success": False,
+                "received": {
+                    "template_id": template_id,
+                    "social_network": social_network,
+                    "custom_body": bool(custom_body)
+                }
+            }), 400
+        
+        # Verify template exists
+        template = Template.query.get(template_id)
+        if not template:
+            return jsonify({"message": "Template não encontrado."}), 404
+        
+        # Check if custom template already exists
+        existing = TemplateSocialNetwork.query.filter_by(
+            template_id=template_id,
+            social_network=social_network.lower()
+        ).first()
+        
+        if existing:
+            # Update existing
+            existing.custom_body = custom_body
+            from datetime import datetime
+            existing.updated_at = datetime.utcnow()
+            message = f"Template atualizado para {social_network}"
+        else:
+            # Create new
+            custom_template = TemplateSocialNetwork(
+                template_id=template_id,
+                social_network=social_network.lower(),
+                custom_body=custom_body
+            )
+            db.session.add(custom_template)
+            message = f"Template salvo para {social_network}"
+        
+        db.session.commit()
+        return jsonify({"message": message, "success": True}), 200
+    
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"message": f"Erro ao salvar: {str(e)}", "success": False}), 500
+
+
+@web_bp.route("/template-social-network/<int:template_id>/<social_network>", methods=["GET"])
+@csrf.exempt
+def get_custom_template(template_id: int, social_network: str):
+    """Get custom template for specific social network (public endpoint, no auth required)"""
+    from ..models import TemplateSocialNetwork
+    
+    try:
+        custom = TemplateSocialNetwork.query.filter_by(
+            template_id=template_id,
+            social_network=social_network.lower()
+        ).first()
+        
+        if not custom:
+            # Return 200 with found=false instead of 404
+            # This is not an error, just means no custom template exists yet
+            return jsonify({"message": "Usando template padrão", "found": False}), 200
+        
+        return jsonify({"data": custom.to_dict(), "found": True}), 200
+    
+    except Exception as e:
+        print(f"❌ Erro ao buscar template: {e}")
+        return jsonify({"message": f"Erro ao buscar: {str(e)}", "found": False}), 500
 
 
 @web_bp.route("/ofertas/<int:offer_id>/delete", methods=["POST"])
@@ -630,12 +953,48 @@ def delete_offer(offer_id):
 @web_bp.route("/cupons", methods=["GET"])
 @login_required
 def coupons():
-    """List all coupons"""
+    """List all coupons with filters"""
+    from datetime import datetime
+    
     if current_user.role not in (RoleEnum.ADMIN, RoleEnum.EDITOR):
         flash("Acesso permitido apenas para administradores e editores.", "warning")
         return redirect(url_for("web.index"))
     
-    coupons = Coupon.query.order_by(Coupon.created_at.desc()).all()
+    # Get filter parameters
+    search = request.args.get("search", "").strip()
+    seller_id = request.args.get("seller", type=int)
+    active_only = request.args.get("active_only", "true").lower() == "true"
+    discount_type = request.args.get("discount_type", "").strip()
+    
+    # Build query
+    query = Coupon.query
+    
+    # Filter by search term (code only)
+    if search:
+        query = query.filter(Coupon.code.ilike(f"%{search}%"))
+    
+    # Filter by seller
+    if seller_id:
+        query = query.filter(Coupon.seller_id == seller_id)
+    
+    # Filter by active status
+    if active_only:
+        query = query.filter(Coupon.active == True)
+    
+    # Filter by discount type
+    if discount_type:
+        query = query.filter(Coupon.discount_type == discount_type)
+    
+    # Filter to show only coupons from active sellers
+    query = query.outerjoin(Seller, Coupon.seller_id == Seller.id)\
+        .filter(
+            db.or_(
+                Seller.active == True,
+                Coupon.seller_id.is_(None)
+            )
+        )
+    
+    coupons = query.order_by(Coupon.created_at.desc()).all()
     can_manage = current_user.role in (RoleEnum.ADMIN, RoleEnum.EDITOR)
     
     # For share functionality
@@ -647,12 +1006,16 @@ def coupons():
     # Get social network configurations
     social_configs = SocialNetworkConfig.query.filter_by(active=True).all()
     
+    # Get all sellers for filter dropdown
+    sellers = Seller.query.filter_by(active=True).order_by(Seller.name).all()
+    
     return render_template("coupons_list.html", 
                          coupons=coupons, 
                          can_manage=can_manage,
                          templates=templates,
                          namespaces=namespaces,
-                         social_configs=social_configs)
+                         social_configs=social_configs,
+                         sellers=sellers)
 
 
 @web_bp.route("/cupons/novo", methods=["GET", "POST"])
@@ -691,6 +1054,10 @@ def create_coupon():
             code=form.code.data.upper(),  # Convert to uppercase
             active=form.active.data,
             expires_at=expires_at,
+            discount_type=form.discount_type.data if form.discount_type.data else 'percentage',
+            discount_value=form.discount_value.data if form.discount_value.data else None,
+            min_purchase_value=form.min_purchase_value.data if form.min_purchase_value.data else None,
+            max_discount_value=form.max_discount_value.data if form.max_discount_value.data else None,
             created_by=current_user
         )
         
@@ -722,6 +1089,10 @@ def edit_coupon(coupon_id):
         form.seller_id.data = coupon.seller_id
         form.code.data = coupon.code
         form.active.data = coupon.active
+        form.discount_type.data = coupon.discount_type or 'percentage'
+        form.discount_value.data = float(coupon.discount_value) if coupon.discount_value else None
+        form.min_purchase_value.data = float(coupon.min_purchase_value) if coupon.min_purchase_value else None
+        form.max_discount_value.data = float(coupon.max_discount_value) if coupon.max_discount_value else None
         
         # Split datetime into date and time fields
         if coupon.expires_at:
@@ -736,6 +1107,10 @@ def edit_coupon(coupon_id):
         coupon.seller_id = form.seller_id.data
         coupon.code = form.code.data.upper()
         coupon.active = form.active.data
+        coupon.discount_type = form.discount_type.data if form.discount_type.data else 'percentage'
+        coupon.discount_value = form.discount_value.data if form.discount_value.data else None
+        coupon.min_purchase_value = form.min_purchase_value.data if form.min_purchase_value.data else None
+        coupon.max_discount_value = form.max_discount_value.data if form.max_discount_value.data else None
         
         # Combine date and time fields into datetime
         if form.expires_date.data:
@@ -795,20 +1170,51 @@ def toggle_coupon_active(coupon_id):
 @web_bp.route("/templates", methods=["GET"])
 @login_required
 def share_templates():
-    """List all templates"""
+    """List all templates with filters"""
     if current_user.role not in (RoleEnum.ADMIN, RoleEnum.EDITOR):
         flash("Acesso permitido apenas para administradores e editores.", "warning")
         return redirect(url_for("web.dashboard"))
     
-    templates = Template.query.all()
+    # Get filter parameters
+    search = request.args.get("search", "").strip()
+    social_network = request.args.get("social_network", "").strip()
+    
+    # Build query
+    query = Template.query
+    
+    # Filter by search term (name, slug, description)
+    if search:
+        search_filter = db.or_(
+            Template.name.ilike(f"%{search}%"),
+            Template.slug.ilike(f"%{search}%"),
+            Template.description.ilike(f"%{search}%")
+        )
+        query = query.filter(search_filter)
+    
+    # Filter by social network
+    if social_network:
+        query = query.join(Template.social_networks).filter(
+            TemplateSocialNetwork.network.ilike(f"%{social_network}%")
+        )
+    
+    templates = query.order_by(Template.created_at.desc()).all()
     can_manage = current_user.role in (RoleEnum.ADMIN, RoleEnum.EDITOR)
     
     # Get available namespaces for template variables
     namespaces = Namespace.query.filter(
         Namespace.scope.in_([NamespaceScope.OFFER, NamespaceScope.COUPON, NamespaceScope.GLOBAL])
     ).order_by(Namespace.scope, Namespace.name).all()
+    
+    # Get all social networks for filter dropdown
+    social_networks = SocialNetworkConfig.query.filter_by(active=True).order_by(SocialNetworkConfig.network).all()
 
-    return render_template("templates_list.html", templates=templates, can_manage=can_manage, namespaces=namespaces)
+    return render_template(
+        "templates_list.html", 
+        templates=templates, 
+        can_manage=can_manage, 
+        namespaces=namespaces,
+        social_networks=social_networks
+    )
 
 
 @web_bp.route("/templates/novo", methods=["GET", "POST"])
@@ -977,6 +1383,7 @@ def admin_sellers():
             slug=slug_value,
             description=form.description.data,
             website=form.website.data,
+            color=form.color.data or '#6b7280',
             active=form.active.data,
         )
         db.session.add(seller)
@@ -1017,6 +1424,47 @@ def admin_seller_toggle(seller_id):
     status = "ativado" if seller.active else "desativado"
     flash(f"Vendedor '{seller.name}' {status} com sucesso!", "success")
     return redirect(url_for("web.admin_sellers"))
+
+
+@web_bp.route("/admin/sellers/<int:seller_id>/editar", methods=["GET", "POST"])
+@login_required
+def admin_seller_edit(seller_id):
+    """Edit seller page"""
+    if current_user.role not in (RoleEnum.ADMIN, RoleEnum.EDITOR):
+        flash("Acesso permitido apenas para administradores e editores.", "warning")
+        return redirect(url_for("web.admin_sellers"))
+    
+    seller = Seller.query.get_or_404(seller_id)
+    form = SellerForm(prefix="seller", obj=seller)
+    
+    if request.method == "GET":
+        form.name.data = seller.name
+        form.slug.data = seller.slug
+        form.description.data = seller.description
+        form.website.data = seller.website
+        form.color.data = seller.color
+        form.active.data = seller.active
+    
+    if request.method == "POST" and form.validate_on_submit():
+        # Check if slug is being changed and if new slug already exists
+        slug_value = slugify(form.slug.data)
+        if slug_value != seller.slug:
+            if Seller.query.filter_by(slug=slug_value).first():
+                flash("Já existe um vendedor com esse slug.", "warning")
+                return redirect(url_for("web.admin_seller_edit", seller_id=seller_id))
+        
+        seller.name = form.name.data
+        seller.slug = slug_value
+        seller.description = form.description.data
+        seller.website = form.website.data
+        seller.color = form.color.data or '#6b7280'
+        seller.active = form.active.data
+        
+        db.session.commit()
+        flash(f"Vendedor '{seller.name}' atualizado com sucesso!", "success")
+        return redirect(url_for("web.admin_sellers"))
+    
+    return render_template("admin/seller_edit.html", seller=seller, form=form)
 
 
 @web_bp.route("/admin/categories", methods=["GET", "POST"])
@@ -1081,6 +1529,45 @@ def admin_category_toggle(category_id):
     status = "ativada" if category.active else "desativada"
     flash(f"Categoria '{category.name}' {status} com sucesso!", "success")
     return redirect(url_for("web.admin_categories"))
+
+
+@web_bp.route("/admin/categories/<int:category_id>/editar", methods=["GET", "POST"])
+@login_required
+def admin_category_edit(category_id):
+    """Edit category page"""
+    if current_user.role not in (RoleEnum.ADMIN, RoleEnum.EDITOR):
+        flash("Acesso permitido apenas para administradores e editores.", "warning")
+        return redirect(url_for("web.admin_categories"))
+    
+    category = Category.query.get_or_404(category_id)
+    form = CategoryForm(prefix="category", obj=category)
+    
+    if request.method == "GET":
+        form.name.data = category.name
+        form.slug.data = category.slug
+        form.description.data = category.description
+        form.icon.data = category.icon
+        form.active.data = category.active
+    
+    if request.method == "POST" and form.validate_on_submit():
+        # Check if slug is being changed and if new slug already exists
+        slug_value = slugify(form.slug.data)
+        if slug_value != category.slug:
+            if Category.query.filter_by(slug=slug_value).first():
+                flash("Já existe uma categoria com esse slug.", "warning")
+                return redirect(url_for("web.admin_category_edit", category_id=category_id))
+        
+        category.name = form.name.data
+        category.slug = slug_value
+        category.description = form.description.data
+        category.icon = form.icon.data
+        category.active = form.active.data
+        
+        db.session.commit()
+        flash(f"Categoria '{category.name}' atualizada com sucesso!", "success")
+        return redirect(url_for("web.admin_categories"))
+    
+    return render_template("admin/category_edit.html", category=category, form=form)
 
 
 @web_bp.route("/admin/manufacturers", methods=["GET", "POST"])
@@ -1148,6 +1635,45 @@ def admin_manufacturer_toggle(manufacturer_id):
     return redirect(url_for("web.admin_manufacturers"))
 
 
+@web_bp.route("/admin/manufacturers/<int:manufacturer_id>/editar", methods=["GET", "POST"])
+@login_required
+def admin_manufacturer_edit(manufacturer_id):
+    """Edit manufacturer page"""
+    if current_user.role not in (RoleEnum.ADMIN, RoleEnum.EDITOR):
+        flash("Acesso permitido apenas para administradores e editores.", "warning")
+        return redirect(url_for("web.admin_manufacturers"))
+    
+    manufacturer = Manufacturer.query.get_or_404(manufacturer_id)
+    form = ManufacturerForm(prefix="manufacturer", obj=manufacturer)
+    
+    if request.method == "GET":
+        form.name.data = manufacturer.name
+        form.slug.data = manufacturer.slug
+        form.description.data = manufacturer.description
+        form.website.data = manufacturer.website
+        form.active.data = manufacturer.active
+    
+    if request.method == "POST" and form.validate_on_submit():
+        # Check if slug is being changed and if new slug already exists
+        slug_value = slugify(form.slug.data)
+        if slug_value != manufacturer.slug:
+            if Manufacturer.query.filter_by(slug=slug_value).first():
+                flash("Já existe um fabricante com esse slug.", "warning")
+                return redirect(url_for("web.admin_manufacturer_edit", manufacturer_id=manufacturer_id))
+        
+        manufacturer.name = form.name.data
+        manufacturer.slug = slug_value
+        manufacturer.description = form.description.data
+        manufacturer.website = form.website.data
+        manufacturer.active = form.active.data
+        
+        db.session.commit()
+        flash(f"Fabricante '{manufacturer.name}' atualizado com sucesso!", "success")
+        return redirect(url_for("web.admin_manufacturers"))
+    
+    return render_template("admin/manufacturer_edit.html", manufacturer=manufacturer, form=form)
+
+
 @web_bp.route("/admin/settings", methods=["GET", "POST"])
 @login_required
 def admin_settings():
@@ -1167,20 +1693,21 @@ def admin_settings():
     # Get current settings
     default_currency = AppSettings.get_default_currency()
     
-    # Available currencies
+    # Available currencies with symbols
+    from app.utils.currency import get_currency_symbol
     currencies = [
-        ('BRL', 'BRL - Real Brasileiro'),
-        ('USD', 'USD - Dólar Americano'),
-        ('EUR', 'EUR - Euro'),
-        ('GBP', 'GBP - Libra Esterlina'),
-        ('JPY', 'JPY - Iene Japonês'),
-        ('CAD', 'CAD - Dólar Canadense'),
-        ('AUD', 'AUD - Dólar Australiano'),
-        ('CHF', 'CHF - Franco Suíço'),
-        ('CNY', 'CNY - Yuan Chinês'),
-        ('ARS', 'ARS - Peso Argentino'),
-        ('MXN', 'MXN - Peso Mexicano'),
-        ('CLP', 'CLP - Peso Chileno'),
+        ('BRL', 'BRL - Real Brasileiro', get_currency_symbol('BRL')),
+        ('USD', 'USD - Dólar Americano', get_currency_symbol('USD')),
+        ('EUR', 'EUR - Euro', get_currency_symbol('EUR')),
+        ('GBP', 'GBP - Libra Esterlina', get_currency_symbol('GBP')),
+        ('JPY', 'JPY - Iene Japonês', get_currency_symbol('JPY')),
+        ('CAD', 'CAD - Dólar Canadense', get_currency_symbol('CAD')),
+        ('AUD', 'AUD - Dólar Australiano', get_currency_symbol('AUD')),
+        ('CHF', 'CHF - Franco Suíço', get_currency_symbol('CHF')),
+        ('CNY', 'CNY - Yuan Chinês', get_currency_symbol('CNY')),
+        ('ARS', 'ARS - Peso Argentino', get_currency_symbol('ARS')),
+        ('MXN', 'MXN - Peso Mexicano', get_currency_symbol('MXN')),
+        ('CLP', 'CLP - Peso Chileno', get_currency_symbol('CLP')),
     ]
     
     return render_template("admin/settings.html", 
@@ -1196,6 +1723,10 @@ def admin_social_networks():
         flash("Acesso permitido apenas para administradores.", "warning")
         return redirect(url_for("web.dashboard"))
     
+    # CRITICAL: Store current user's role to prevent accidental changes
+    original_user_role = current_user.role
+    original_user_id = current_user.id
+    
     # Get all social network configs
     configs = SocialNetworkConfig.query.all()
     form = SocialNetworkConfigForm()
@@ -1206,9 +1737,18 @@ def admin_social_networks():
         if network_id:
             # Update existing
             config = SocialNetworkConfig.query.get_or_404(network_id)
+            config.color = request.form.get('color', '#1877f2')
             config.prefix_text = request.form.get('prefix_text', '')
             config.suffix_text = request.form.get('suffix_text', '')
             config.active = 'active' in request.form
+            
+            # CRITICAL: Ensure current user's role is not changed
+            db.session.flush()  # Flush changes but don't commit yet
+            
+            # Verify current_user wasn't accidentally modified
+            if current_user.role != original_user_role:
+                print(f"⚠️  WARNING: User role changed from {original_user_role} to {current_user.role}! Reverting...")
+                current_user.role = original_user_role
             
             db.session.commit()
             flash(f"Configuração de {config.network.title()} atualizada com sucesso!", "success")
@@ -1221,11 +1761,19 @@ def admin_social_networks():
             else:
                 new_config = SocialNetworkConfig(
                     network=form.network.data.lower(),
+                    color=form.color.data or '#1877f2',
                     prefix_text=form.prefix_text.data or '',
                     suffix_text=form.suffix_text.data or '',
                     active=form.active.data
                 )
                 db.session.add(new_config)
+                
+                # CRITICAL: Flush and verify current_user wasn't modified
+                db.session.flush()
+                if current_user.role != original_user_role:
+                    print(f"⚠️  WARNING: User role changed from {original_user_role} to {current_user.role}! Reverting...")
+                    current_user.role = original_user_role
+                
                 db.session.commit()
                 flash(f"Rede social {form.network.data} adicionada com sucesso!", "success")
                 return redirect(url_for("web.admin_social_networks"))
@@ -1241,10 +1789,20 @@ def admin_social_network_delete(config_id):
         flash("Acesso permitido apenas para administradores.", "warning")
         return redirect(url_for("web.dashboard"))
     
+    # CRITICAL: Store current user's role to prevent accidental changes
+    original_user_role = current_user.role
+    
     config = SocialNetworkConfig.query.get_or_404(config_id)
     network_name = config.network.title()
     
     db.session.delete(config)
+    
+    # CRITICAL: Flush and verify current_user wasn't modified
+    db.session.flush()
+    if current_user.role != original_user_role:
+        print(f"⚠️  WARNING: User role changed from {original_user_role} to {current_user.role}! Reverting...")
+        current_user.role = original_user_role
+    
     db.session.commit()
     
     flash(f"Rede social {network_name} deletada com sucesso!", "success")
@@ -1280,6 +1838,7 @@ def quick_create_seller():
             slug=slug_value,
             description=data.get("description"),
             website=data.get("website"),
+            color=data.get("color", '#6b7280'),
             active=data.get("active", True),
         )
         

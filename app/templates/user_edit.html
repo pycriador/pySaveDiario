@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+{% block title %}Editar Usuário{% endblock %}
+
+{% block content %}
+<section>
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+    <div>
+      <p class="eyebrow"><i class="bi bi-person-circle"></i> Editar Usuário</p>
+      <h1 class="mb-0">{{ user.display_name }}</h1>
+      <p class="muted mb-0">Atualize as informações do perfil</p>
+    </div>
+    <a href="{{ url_for('web.users') }}" class="btn btn-outline-light btn-sm">
+      <i class="bi bi-arrow-left"></i> Voltar para Lista
+    </a>
+  </div>
+
+  <div class="panel">
+    <form method="post" class="row g-4">
+      {{ form.hidden_tag() }}
+      
+      <!-- Basic Information -->
+      <div class="col-12">
+        <h5 class="text-uppercase text-muted mb-3" style="font-size: 0.85rem; letter-spacing: 0.1em; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+          <i class="bi bi-person-badge"></i> Informações Básicas
+        </h5>
+      </div>
+      
+      <div class="col-md-6">
+        <label class="form-label" for="{{ form.display_name.id }}">
+          <i class="bi bi-person"></i> Nome Exibido *
+        </label>
+        {{ form.display_name(class="form-control", placeholder="Nome completo", required=True) }}
+      </div>
+      
+      <div class="col-md-6">
+        <label class="form-label" for="{{ form.email.id }}">
+          <i class="bi bi-envelope"></i> E-mail *
+        </label>
+        {{ form.email(class="form-control", placeholder="usuario@email.com", required=True, type="email") }}
+      </div>
+      
+      {% if current_user.id != user.id and current_user.role.value == 'admin' %}
+      <!-- Only show role field if admin is editing ANOTHER user -->
+      <div class="col-md-6">
+        <label class="form-label" for="{{ form.role.id }}">
+          <i class="bi bi-shield"></i> Papel
+        </label>
+        {{ form.role(class="form-select") }}
+        <small class="text-muted">
+          <i class="bi bi-info-circle"></i> Papel do usuário no sistema
+        </small>
+      </div>
+      {% else %}
+      <!-- Show current role as read-only badge -->
+      <div class="col-md-6">
+        <label class="form-label">
+          <i class="bi bi-shield"></i> Papel Atual
+        </label>
+        <div>
+          {% if user.role.value == 'admin' %}
+          <span class="badge bg-danger" style="font-size: 1rem; padding: 0.5rem 1rem;">
+            <i class="bi bi-star-fill"></i> Administrador
+          </span>
+          {% elif user.role.value == 'editor' %}
+          <span class="badge bg-primary" style="font-size: 1rem; padding: 0.5rem 1rem;">
+            <i class="bi bi-pencil-fill"></i> Editor
+          </span>
+          {% else %}
+          <span class="badge bg-secondary" style="font-size: 1rem; padding: 0.5rem 1rem;">
+            <i class="bi bi-person-fill"></i> Membro
+          </span>
+          {% endif %}
+        </div>
+        <small class="text-muted">
+          <i class="bi bi-lock"></i> Você não pode alterar seu próprio papel
+        </small>
+      </div>
+      {% endif %}
+      
+      <!-- Change Password -->
+      <div class="col-12 mt-4">
+        <h5 class="text-uppercase text-muted mb-3" style="font-size: 0.85rem; letter-spacing: 0.1em; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+          <i class="bi bi-key"></i> Alterar Senha (Opcional)
+        </h5>
+        <p class="text-muted mb-3">
+          <i class="bi bi-info-circle"></i> Deixe em branco se não quiser alterar a senha
+        </p>
+      </div>
+      
+      <div class="col-md-6">
+        <label class="form-label" for="{{ form.password.id }}">
+          <i class="bi bi-lock"></i> Nova Senha
+        </label>
+        {{ form.password(class="form-control", placeholder="Mínimo 6 caracteres", autocomplete="new-password") }}
+      </div>
+      
+      <div class="col-md-6">
+        <label class="form-label" for="{{ form.confirm_password.id }}">
+          <i class="bi bi-lock-fill"></i> Confirmar Nova Senha
+        </label>
+        {{ form.confirm_password(class="form-control", placeholder="Digite a senha novamente", autocomplete="new-password") }}
+      </div>
+      
+      <!-- Contact Information -->
+      <div class="col-12 mt-4">
+        <h5 class="text-uppercase text-muted mb-3" style="font-size: 0.85rem; letter-spacing: 0.1em; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+          <i class="bi bi-telephone"></i> Informações de Contato
+        </h5>
+      </div>
+      
+      <div class="col-md-6">
+        <label class="form-label" for="{{ form.phone.id }}">
+          <i class="bi bi-phone"></i> Celular
+        </label>
+        {{ form.phone(class="form-control", placeholder="(11) 98765-4321") }}
+        <small class="text-muted">
+          <i class="bi bi-info-circle"></i> Usado em namespaces globais: <code>{celular}</code>
+        </small>
+      </div>
+      
+      <div class="col-md-6">
+        <label class="form-label" for="{{ form.website.id }}">
+          <i class="bi bi-globe"></i> Website
+        </label>
+        {{ form.website(class="form-control", placeholder="https://seusite.com.br") }}
+        <small class="text-muted">
+          <i class="bi bi-info-circle"></i> Namespace: <code>{site}</code>
+        </small>
+      </div>
+      
+      <div class="col-12">
+        <label class="form-label" for="{{ form.address.id }}">
+          <i class="bi bi-geo-alt"></i> Endereço
+        </label>
+        {{ form.address(class="form-control", placeholder="Rua, número, bairro, cidade - UF") }}
+        <small class="text-muted">
+          <i class="bi bi-info-circle"></i> Namespace: <code>{endereco}</code>
+        </small>
+      </div>
+      
+      <!-- Social Media -->
+      <div class="col-12 mt-4">
+        <h5 class="text-uppercase text-muted mb-3" style="font-size: 0.85rem; letter-spacing: 0.1em; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+          <i class="bi bi-share"></i> Redes Sociais
+        </h5>
+        <p class="text-muted mb-3">
+          <i class="bi bi-info-circle"></i> Esses dados podem ser usados em templates via namespaces globais
+        </p>
+      </div>
+      
+      <div class="col-md-6">
+        <label class="form-label" for="{{ form.instagram.id }}">
+          <i class="bi bi-instagram"></i> Instagram
+        </label>
+        {{ form.instagram(class="form-control", placeholder="@usuario ou URL completa") }}
+        <small class="text-muted">Namespace: <code>{instagram}</code></small>
+      </div>
+      
+      <div class="col-md-6">
+        <label class="form-label" for="{{ form.facebook.id }}">
+          <i class="bi bi-facebook"></i> Facebook
+        </label>
+        {{ form.facebook(class="form-control", placeholder="@usuario ou URL completa") }}
+        <small class="text-muted">Namespace: <code>{facebook}</code></small>
+      </div>
+      
+      <div class="col-md-6">
+        <label class="form-label" for="{{ form.twitter.id }}">
+          <i class="bi bi-twitter-x"></i> Twitter/X
+        </label>
+        {{ form.twitter(class="form-control", placeholder="@usuario ou URL completa") }}
+        <small class="text-muted">Namespace: <code>{twitter}</code></small>
+      </div>
+      
+      <div class="col-md-6">
+        <label class="form-label" for="{{ form.linkedin.id }}">
+          <i class="bi bi-linkedin"></i> LinkedIn
+        </label>
+        {{ form.linkedin(class="form-control", placeholder="URL do perfil") }}
+        <small class="text-muted">Namespace: <code>{linkedin}</code></small>
+      </div>
+      
+      <div class="col-md-6">
+        <label class="form-label" for="{{ form.youtube.id }}">
+          <i class="bi bi-youtube"></i> YouTube
+        </label>
+        {{ form.youtube(class="form-control", placeholder="URL do canal") }}
+        <small class="text-muted">Namespace: <code>{youtube}</code></small>
+      </div>
+      
+      <div class="col-md-6">
+        <label class="form-label" for="{{ form.tiktok.id }}">
+          <i class="bi bi-tiktok"></i> TikTok
+        </label>
+        {{ form.tiktok(class="form-control", placeholder="@usuario ou URL completa") }}
+        <small class="text-muted">Namespace: <code>{tiktok}</code></small>
+      </div>
+      
+      <!-- Submit Buttons -->
+      <div class="col-12 mt-4">
+        <hr style="border-color: var(--border-color);">
+      </div>
+      
+      <div class="col-12 d-flex gap-2 justify-content-end">
+        <a href="{{ url_for('web.users') }}" class="btn btn-outline-secondary">
+          <i class="bi bi-x-circle"></i> Cancelar
+        </a>
+        <button type="submit" class="btn btn-primary">
+          <i class="bi bi-check-circle"></i> Salvar Alterações
+        </button>
+      </div>
+    </form>
+  </div>
+</section>
+{% endblock %}
+

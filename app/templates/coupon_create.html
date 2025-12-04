@@ -40,6 +40,60 @@
         </small>
       </div>
       
+      <!-- Desconto -->
+      <div class="col-12 mt-4">
+        <h5 class="text-uppercase text-muted mb-3" style="font-size: 0.85rem; letter-spacing: 0.1em; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+          <i class="bi bi-percent"></i> Desconto (Opcional)
+        </h5>
+      </div>
+      
+      <div class="col-md-6">
+        <label class="form-label" for="{{ form.discount_type.id }}">
+          <i class="bi bi-tag-fill"></i> Tipo de desconto
+        </label>
+        {{ form.discount_type(class="form-select", id="discount_type") }}
+        <small class="text-muted">
+          <i class="bi bi-info-circle"></i> Porcentagem (ex: 10%) ou Valor fixo (ex: R$ 50)
+        </small>
+      </div>
+      
+      <div class="col-md-4">
+        <label class="form-label" for="{{ form.discount_value.id }}">
+          <i class="bi bi-cash-coin"></i> Valor do desconto
+        </label>
+        {{ form.discount_value(class="form-control", placeholder="Ex: 10", step="0.01") }}
+        <small class="text-muted">
+          <i class="bi bi-info-circle"></i> <span id="discount-hint">10 para 10% de desconto</span>
+        </small>
+      </div>
+      
+      <div class="col-md-4">
+        <label class="form-label" for="{{ form.min_purchase_value.id }}">
+          <i class="bi bi-cart-check"></i> Compra mínima (opcional)
+        </label>
+        {{ form.min_purchase_value(class="form-control", placeholder="Ex: 100", step="0.01") }}
+        <small class="text-muted">
+          <i class="bi bi-info-circle"></i> Valor mínimo para aplicar cupom (ex: R$ 100)
+        </small>
+      </div>
+      
+      <div class="col-md-4">
+        <label class="form-label" for="{{ form.max_discount_value.id }}">
+          <i class="bi bi-shield-fill-check"></i> Desconto máximo (opcional)
+        </label>
+        {{ form.max_discount_value(class="form-control", placeholder="Ex: 70", step="0.01") }}
+        <small class="text-muted">
+          <i class="bi bi-info-circle"></i> Limite máximo de desconto em R$ (ex: 70 para máximo de R$ 70)
+        </small>
+      </div>
+      
+      <!-- Validade -->
+      <div class="col-12 mt-4">
+        <h5 class="text-uppercase text-muted mb-3" style="font-size: 0.85rem; letter-spacing: 0.1em; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+          <i class="bi bi-calendar"></i> Validade
+        </h5>
+      </div>
+      
       <div class="col-md-4">
         <label class="form-label" for="{{ form.expires_date.id }}">
           <i class="bi bi-calendar-event"></i> Data de expiração
@@ -180,6 +234,16 @@ document.getElementById('quickSellerName')?.addEventListener('input', function()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
   document.getElementById('quickSellerSlug').value = slug;
+});
+
+// Update discount hint based on type
+document.getElementById('discount_type')?.addEventListener('change', function() {
+  const hint = document.getElementById('discount-hint');
+  if (this.value === 'percentage') {
+    hint.textContent = '10 para 10% de desconto';
+  } else {
+    hint.textContent = 'R$ 50 para R$ 50,00 de desconto fixo';
+  }
 });
 
 </script>

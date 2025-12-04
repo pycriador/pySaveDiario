@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Editar Fabricante{% endblock %}
+
+{% block content %}
+<section>
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+    <div>
+      <p class="eyebrow"><i class="bi bi-tools"></i> Administração / Fabricantes</p>
+      <h1 class="mb-0">Editar Fabricante</h1>
+      <p class="muted mb-0">Atualize as informações do fabricante</p>
+    </div>
+    <div>
+      <a class="btn btn-outline-light btn-sm" href="{{ url_for('web.admin_manufacturers') }}">
+        <i class="bi bi-arrow-left"></i> Voltar
+      </a>
+    </div>
+  </div>
+
+  <div class="panel">
+    <form method="post" class="row g-4">
+      {{ form.hidden_tag() }}
+      
+      <div class="col-md-6">
+        <label class="form-label" for="{{ form.name.id }}">
+          <i class="bi bi-tools"></i> Nome do fabricante *
+        </label>
+        {{ form.name(class="form-control", placeholder="Ex: Sony") }}
+      </div>
+      
+      <div class="col-md-6">
+        <label class="form-label" for="{{ form.slug.id }}">
+          <i class="bi bi-link-45deg"></i> Slug *
+        </label>
+        {{ form.slug(class="form-control", placeholder="sony") }}
+        <small class="text-muted">Usado para URLs. Apenas letras minúsculas e hífens.</small>
+      </div>
+      
+      <div class="col-12">
+        <label class="form-label" for="{{ form.description.id }}">
+          <i class="bi bi-text-paragraph"></i> Descrição
+        </label>
+        {{ form.description(class="form-control", rows="3", placeholder="Descrição opcional") }}
+      </div>
+      
+      <div class="col-md-6">
+        <label class="form-label" for="{{ form.website.id }}">
+          <i class="bi bi-globe"></i> Website
+        </label>
+        {{ form.website(class="form-control", placeholder="https://exemplo.com") }}
+      </div>
+      
+      <div class="col-md-6">
+        <div class="form-check mt-4 pt-2">
+          {{ form.active(class="form-check-input") }}
+          <label class="form-check-label" for="{{ form.active.id }}">
+            Fabricante ativo
+          </label>
+        </div>
+      </div>
+      
+      <div class="col-12">
+        <hr class="my-4">
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-check-circle"></i> Salvar Alterações
+          </button>
+          <a href="{{ url_for('web.admin_manufacturers') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-x-circle"></i> Cancelar
+          </a>
+        </div>
+      </div>
+    </form>
+  </div>
+</section>
+{% endblock %}
+

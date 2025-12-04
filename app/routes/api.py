@@ -84,6 +84,15 @@ def register_user():
         email=data["email"],
         display_name=data["display_name"],
         role=role,
+        phone=data.get("phone"),
+        address=data.get("address"),
+        website=data.get("website"),
+        instagram=data.get("instagram"),
+        facebook=data.get("facebook"),
+        twitter=data.get("twitter"),
+        linkedin=data.get("linkedin"),
+        youtube=data.get("youtube"),
+        tiktok=data.get("tiktok"),
     )
     user.set_password(data["password"])
     db.session.add(user)
@@ -110,6 +119,66 @@ def get_user(user_id: int):
     current = token_auth.current_user()
     if current.id != user.id and current.role != RoleEnum.ADMIN:
         return {"message": "Acesso negado."}, 403
+    return user.to_dict()
+
+
+@api_bp.route("/users/<int:user_id>", methods=["PUT", "PATCH"])
+@token_auth.login_required
+def update_user(user_id: int):
+    """Update user information (own profile or admin)"""
+    user = User.query.get_or_404(user_id)
+    current = token_auth.current_user()
+    
+    # Permission check: user can update own profile, or admin can update any
+    if current.id != user.id and current.role != RoleEnum.ADMIN:
+        return {"message": "Acesso negado."}, 403
+    
+    data = request.get_json() or {}
+    
+    # Update fields if provided
+    if "display_name" in data:
+        user.display_name = data["display_name"]
+    
+    if "email" in data:
+        # Check if email is already taken by another user
+        existing = User.query.filter_by(email=data["email"]).first()
+        if existing and existing.id != user.id:
+            return {"message": "E-mail já em uso por outro usuário."}, 409
+        user.email = data["email"]
+    
+    if "password" in data:
+        user.set_password(data["password"])
+    
+    # Only admins can change roles
+    if "role" in data and current.role == RoleEnum.ADMIN:
+        try:
+            user.role = RoleEnum(data["role"])
+        except ValueError:
+            return {"message": "Papel inválido."}, 400
+    
+    # Update contact information
+    if "phone" in data:
+        user.phone = data["phone"]
+    if "address" in data:
+        user.address = data["address"]
+    if "website" in data:
+        user.website = data["website"]
+    
+    # Update social media
+    if "instagram" in data:
+        user.instagram = data["instagram"]
+    if "facebook" in data:
+        user.facebook = data["facebook"]
+    if "twitter" in data:
+        user.twitter = data["twitter"]
+    if "linkedin" in data:
+        user.linkedin = data["linkedin"]
+    if "youtube" in data:
+        user.youtube = data["youtube"]
+    if "tiktok" in data:
+        user.tiktok = data["tiktok"]
+    
+    db.session.commit()
     return user.to_dict()
 
 
@@ -281,6 +350,15 @@ def list_offers():
         except Exception:
             return {"message": "Preço máximo inválido."}, 400
 
+    # Filter to show only offers from active sellers
+    query = query.outerjoin(Seller, Offer.seller_id == Seller.id)\
+        .filter(
+            or_(
+                Seller.active == True,
+                Offer.seller_id.is_(None)
+            )
+        )
+
     offers = [offer.to_dict() for offer in query.order_by(Offer.created_at.desc()).all()]
     return jsonify(offers)
 
@@ -308,6 +386,75 @@ def create_template():
 def list_templates():
     templates = [template.to_dict() for template in Template.query.all()]
     return jsonify(templates)
+
+
+@api_bp.route("/template-social-network", methods=["POST"])
+@token_auth.login_required
+def save_custom_template():
+    """Save or update custom template for specific social network"""
+    data = request.get_json() or {}
+    
+    template_id = data.get("template_id")
+    social_network = data.get("social_network")
+    custom_body = data.get("custom_body")
+    
+    if not all([template_id, social_network, custom_body]):
+        return {"message": "template_id, social_network e custom_body são obrigatórios."}, 400
+    
+    # Verify template exists
+    from ..models import Template, TemplateSocialNetwork
+    template = Template.query.get(template_id)
+    if not template:
+        return {"message": "Template não encontrado."}, 404
+    
+    # Check if custom template already exists
+    existing = TemplateSocialNetwork.query.filter_by(
+        template_id=template_id,
+        social_network=social_network.lower()
+    ).first()
+    
+    if existing:
+        # Update existing
+        existing.custom_body = custom_body
+        existing.updated_at = db.func.now()
+        message = f"Template atualizado para {social_network}"
+    else:
+        # Create new
+        custom_template = TemplateSocialNetwork(
+            template_id=template_id,
+            social_network=social_network.lower(),
+            custom_body=custom_body
+        )
+        db.session.add(custom_template)
+        message = f"Template salvo para {social_network}"
+    
+    db.session.commit()
+    return {"message": message}, 200
+
+
+@api_bp.route("/template-social-network/<int:template_id>/<social_network>", methods=["GET"])
+def get_custom_template(template_id: int, social_network: str):
+    """Get custom template for specific social network"""
+    from ..models import TemplateSocialNetwork
+    
+    custom = TemplateSocialNetwork.query.filter_by(
+        template_id=template_id,
+        social_network=social_network.lower()
+    ).first()
+    
+    if not custom:
+        return {"message": "Template customizado não encontrado."}, 404
+    
+    return jsonify(custom.to_dict())
+
+
+@api_bp.route("/template-social-network/<int:template_id>", methods=["GET"])
+def get_all_custom_templates_for_template(template_id: int):
+    """Get all custom templates for a specific template"""
+    from ..models import TemplateSocialNetwork
+    
+    customs = TemplateSocialNetwork.query.filter_by(template_id=template_id).all()
+    return jsonify([c.to_dict() for c in customs])
 
 
 @api_bp.route("/namespaces", methods=["POST"])

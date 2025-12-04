@@ -30,9 +30,9 @@
           <i class="bi bi-cash-stack"></i> Moeda Padrão
         </label>
         <select name="default_currency" id="default_currency" class="form-select">
-          {% for code, name in currencies %}
+          {% for code, name, symbol in currencies %}
           <option value="{{ code }}" {% if code == default_currency %}selected{% endif %}>
-            {{ name }}
+            {{ symbol }} - {{ name }}
           </option>
           {% endfor %}
         </select>
@@ -50,25 +50,6 @@
     </form>
   </div>
 
-  <!-- Current Settings Info -->
-  <div class="panel mt-4">
-    <h3 class="mb-3">
-      <i class="bi bi-info-circle-fill"></i> Configurações Atuais
-    </h3>
-    
-    <div class="row g-3">
-      <div class="col-md-4">
-        <div class="d-flex align-items-center gap-3">
-          <i class="bi bi-currency-exchange fs-2 text-primary"></i>
-          <div>
-            <small class="text-muted d-block">Moeda Padrão</small>
-            <strong class="fs-4">{{ default_currency }}</strong>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- Currency Info -->
   <div class="panel mt-4">
     <h3 class="mb-3">
@@ -79,14 +60,18 @@
       <table class="table table-hover">
         <thead>
           <tr>
+            <th>Símbolo</th>
             <th>Código</th>
             <th>Nome</th>
             <th>Status</th>
           </tr>
         </thead>
         <tbody>
-          {% for code, name in currencies %}
+          {% for code, name, symbol in currencies %}
           <tr>
+            <td>
+              <span class="badge bg-primary">{{ symbol }}</span>
+            </td>
             <td><code>{{ code }}</code></td>
             <td>{{ name }}</td>
             <td>

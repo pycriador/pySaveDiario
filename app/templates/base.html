@@ -18,6 +18,7 @@
     />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}" />
     {% block head %}{% endblock %}
   </head>
   <body>
@@ -267,35 +268,36 @@
         font-size: 1.2rem;
       }
       
-      /* Animation */
+      /* Simple fade animation - no slide, no bounce */
+      .toast {
+        transition: opacity 0.4s ease-in-out !important;
+        transform: none !important;
+      }
+      
+      .toast.show {
+        opacity: 1 !important;
+      }
+      
+      .toast.hide,
+      .toast.hiding {
+        opacity: 0 !important;
+      }
+      
+      /* Remove all Bootstrap default animations */
       .toast.showing {
-        animation: slideIn 0.3s ease-out;
+        animation: none !important;
       }
       
-      .toast.hide {
-        animation: slideOut 0.3s ease-in;
+      /* Smooth fade in */
+      @keyframes simpleFadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
       }
       
-      @keyframes slideIn {
-        from {
-          transform: translateX(100%);
-          opacity: 0;
-        }
-        to {
-          transform: translateX(0);
-          opacity: 1;
-        }
-      }
-      
-      @keyframes slideOut {
-        from {
-          transform: translateX(0);
-          opacity: 1;
-        }
-        to {
-          transform: translateX(100%);
-          opacity: 0;
-        }
+      /* Smooth fade out */
+      @keyframes simpleFadeOut {
+        from { opacity: 1; }
+        to { opacity: 0; }
       }
     </style>
     
@@ -323,6 +325,19 @@
         // Listen for modal close events
         document.addEventListener('hidden.bs.modal', function() {
           document.body.style.paddingRight = '';
+        });
+      });
+      
+      // Initialize flashed message toasts with simple fade
+      document.addEventListener('DOMContentLoaded', function() {
+        const toastElList = document.querySelectorAll('#toastZone .toast');
+        toastElList.forEach(function(toastEl) {
+          const toast = new bootstrap.Toast(toastEl, {
+            autohide: true,
+            delay: 4500,
+            animation: false  // Disable Bootstrap animation, use CSS only
+          });
+          toast.show();
         });
       });
       
@@ -361,11 +376,11 @@
         // Set message
         toastBody.textContent = message;
         
-        // Show toast
+        // Show toast with simple fade
         const toast = new bootstrap.Toast(toastEl, {
           autohide: true,
           delay: duration,
-          animation: true
+          animation: false  // Disable Bootstrap animation, use CSS only
         });
         toast.show();
       };

@@ -55,6 +55,11 @@
             </button>
             {% endif %}
           </form>
+          <a href="{{ url_for('web.admin_category_edit', category_id=category.id) }}" 
+             class="btn btn-outline-primary btn-sm" 
+             title="Editar">
+            <i class="bi bi-pencil"></i>
+          </a>
           {% endif %}
           {% if current_user.role.value == 'admin' %}
           <button type="button" class="btn btn-outline-danger btn-sm" 

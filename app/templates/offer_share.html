@@ -21,7 +21,7 @@
     <div class="card-body">
       <div class="row">
         <div class="col-md-8">
-          <h4 class="mb-3" style="color: var(--text-primary);">{{ offer.product.name if offer.product else 'Sem nome' }}</h4>
+          <h4 class="mb-3 product-title">{{ offer.product.name if offer.product else 'Sem nome' }}</h4>
           {% if offer.product and offer.product.description %}
           <p class="offer-description mb-3">{{ offer.product.description }}</p>
           {% endif %}
@@ -53,13 +53,13 @@
             <div class="col-md-6">
               <p class="mb-2 offer-info-text">
                 <strong><i class="bi bi-currency-dollar"></i> Preço:</strong> 
-                <span class="text-success fs-5">{{ offer.currency }} {{ "%.2f"|format(offer.price) }}</span>
+                <span class="text-success fs-5">{{ offer.currency|currency_symbol }} {{ "%.2f"|format(offer.price) }}</span>
               </p>
               {% if offer.old_price %}
               <p class="mb-2 offer-info-text">
                 <strong><i class="bi bi-tag"></i> Preço Antigo:</strong> 
-                <span class="text-muted text-decoration-line-through">{{ offer.currency }} {{ "%.2f"|format(offer.old_price) }}</span>
-                {% set discount = ((offer.old_price - offer.price) / offer.old_price * 100)|int %}
+                <span class="text-muted text-decoration-line-through">{{ offer.currency|currency_symbol }} {{ "%.2f"|format(offer.old_price) }}</span>
+                {% set discount = ((offer.old_price_value - offer.price_value) / offer.old_price_value * 100)|int %}
                 <span class="badge bg-danger ms-2">-{{ discount }}%</span>
               </p>
               {% endif %}
@@ -74,10 +74,15 @@
         </div>
         <div class="col-md-4 text-center">
           {% if offer.product and offer.product.image_url %}
-          <img src="{{ offer.product.image_url }}" alt="{{ offer.product.name }}" class="img-fluid rounded" style="max-height: 200px;">
+          <div class="product-image-container-share">
+            <img src="{{ offer.product.image_url }}" 
+                 alt="{{ offer.product.name }}" 
+                 class="img-fluid rounded product-image-share"
+                 loading="lazy">
+          </div>
           {% else %}
-          <div class="bg-secondary bg-opacity-10 rounded d-flex align-items-center justify-content-center" style="height: 200px;">
-            <i class="bi bi-image fs-1 text-muted"></i>
+          <div class="product-image-placeholder-share rounded d-flex align-items-center justify-content-center">
+            <i class="bi bi-image fs-1"></i>
           </div>
           {% endif %}
         </div>
@@ -96,21 +101,15 @@
         </div>
         <div class="card-body">
           <div class="d-grid gap-2">
-            <button type="button" class="btn text-start social-btn social-btn-whatsapp" data-channel="whatsapp">
-              <i class="bi bi-whatsapp"></i> WhatsApp
+            {% for network in social_networks %}
+            {% set icon_map = {'whatsapp': 'whatsapp', 'facebook': 'facebook', 'twitter': 'twitter', 'instagram': 'instagram', 'telegram': 'telegram', 'linkedin': 'linkedin', 'tiktok': 'tiktok'} %}
+            <button type="button" 
+                    class="btn text-start social-btn social-btn-{{ network.network }}" 
+                    data-channel="{{ network.network }}"
+                    style="background: {{ network.color or '#1877f2' }} !important; color: white !important; border: none !important;">
+              <i class="bi bi-{{ icon_map.get(network.network, 'share') }}"></i> {{ network.network.title() }}
             </button>
-            <button type="button" class="btn text-start social-btn social-btn-facebook" data-channel="facebook">
-              <i class="bi bi-facebook"></i> Facebook
-            </button>
-            <button type="button" class="btn text-start social-btn social-btn-twitter" data-channel="twitter">
-              <i class="bi bi-twitter"></i> Twitter
-            </button>
-            <button type="button" class="btn text-start social-btn social-btn-instagram" data-channel="instagram">
-              <i class="bi bi-instagram"></i> Instagram
-            </button>
-            <button type="button" class="btn text-start social-btn social-btn-telegram" data-channel="telegram">
-              <i class="bi bi-telegram"></i> Telegram
-            </button>
+            {% endfor %}
           </div>
         </div>
       </div>
@@ -119,7 +118,9 @@
       {% if active_coupons %}
       <div class="card mb-4" style="background: var(--panel-solid); border: 1px solid var(--border-color);">
         <div class="card-header d-flex justify-content-between align-items-center">
-          <h6 class="mb-0"><i class="bi bi-ticket-perforated"></i> Cupons (Opcional)</h6>
+          <h6 class="mb-0">
+            <i class="bi bi-ticket-perforated"></i> Cupons do Vendedor (Opcional)
+          </h6>
           <div class="btn-group btn-group-sm">
             <button type="button" class="btn btn-outline-primary btn-sm" onclick="toggleAllCoupons(true)">
               <i class="bi bi-check-all"></i> Todos
@@ -131,27 +132,55 @@
         </div>
         <div class="card-body">
           <small class="text-muted d-block mb-3">
-            <i class="bi bi-info-circle"></i> Marque os cupons que deseja incluir no texto
+            <i class="bi bi-info-circle"></i> Cupons disponíveis de <strong>{{ offer.seller.name if offer.seller else offer.vendor_name }}</strong>
           </small>
           <div id="couponsList">
             {% for coupon in active_coupons %}
             <div class="form-check mb-2">
-              <input class="form-check-input coupon-checkbox" 
+                <input class="form-check-input coupon-checkbox" 
                      type="checkbox" 
                      id="coupon_{{ coupon.id }}"
                      data-coupon-code="{{ coupon.code|e }}"
                      data-coupon-seller="{{ (coupon.seller.name if coupon.seller else 'N/A')|e }}"
+                     data-coupon-discount-type="{{ coupon.discount_type or '' }}"
+                     data-coupon-discount-value="{{ coupon.discount_value or 0 }}"
+                     data-coupon-min-purchase="{{ coupon.min_purchase_value or 0 }}"
+                     data-coupon-max-discount-value="{{ coupon.max_discount_value or 0 }}"
+                     data-coupon-expires="{{ coupon.expires_at.strftime('%d/%m/%Y') if coupon.expires_at else '' }}"
                      checked>
               <label class="form-check-label" for="coupon_{{ coupon.id }}">
                 <code>{{ coupon.code }}</code>
                 {% if coupon.seller %}
                 <small class="text-muted">- {{ coupon.seller.name }}</small>
                 {% endif %}
+                {% if coupon.discount_value %}
+                <span class="badge bg-success ms-2">
+                  {% if coupon.discount_type == 'percentage' %}
+                  -{{ coupon.discount_value }}%
+                  {% if coupon.max_discount_value %}
+                  <small>(máx R$ {{ "%.2f"|format(coupon.max_discount_value) }})</small>
+                  {% endif %}
+                  {% else %}
+                  -R$ {{ "%.2f"|format(coupon.discount_value) }}
+                  {% endif %}
+                </span>
+                {% endif %}
               </label>
             </div>
             {% endfor %}
           </div>
         </div>
+      </div>
+      {% else %}
+      <!-- No coupons available -->
+      <div class="alert alert-info mb-4" role="alert">
+        <i class="bi bi-info-circle"></i>
+        <strong>Nenhum cupom disponível</strong> para o vendedor 
+        <strong>{{ offer.seller.name if offer.seller else offer.vendor_name }}</strong>.
+        {% if current_user.role in ['admin', 'editor'] %}
+        <br>
+        <a href="{{ url_for('web.create_coupon') }}" class="alert-link">Criar novo cupom</a>
+        {% endif %}
       </div>
       {% endif %}
 
@@ -216,16 +245,63 @@
           </div>
           
           <div id="generatedTextArea" style="display: none;">
+            <!-- Formatting Info Box -->
+            <div id="formattingInfo" class="mb-3 p-3" style="display: none; border-left: 4px solid #6366f1; background: transparent; border-radius: 8px; border: 1px solid var(--border-color);">
+              <div class="d-flex align-items-start">
+                <i class="bi bi-palette fs-5 me-3" style="color: #6366f1;"></i>
+                <div style="flex: 1;">
+                  <strong style="color: var(--text-primary);">Formatações suportadas por esta rede:</strong>
+                  <div id="formattingSupportList" class="mt-2" style="font-size: 0.9rem; color: var(--text-secondary);"></div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Formatting Toolbar -->
+            <div id="formattingToolbar" class="btn-toolbar mb-2 p-2" role="toolbar" style="display: none; background: var(--bg-secondary); border-radius: 8px; border: 1px solid var(--border-color); gap: 5px; flex-wrap: wrap;">
+              <div class="btn-group btn-group-sm" role="group">
+                <button type="button" class="btn btn-outline-secondary" onclick="applyFormatting('bold')" title="Negrito">
+                  <i class="bi bi-type-bold"></i>
+                </button>
+                <button type="button" class="btn btn-outline-secondary" onclick="applyFormatting('italic')" title="Itálico">
+                  <i class="bi bi-type-italic"></i>
+                </button>
+                <button type="button" class="btn btn-outline-secondary" onclick="applyFormatting('strikethrough')" title="Riscado">
+                  <i class="bi bi-type-strikethrough"></i>
+                </button>
+                <button type="button" class="btn btn-outline-secondary" onclick="applyFormatting('code')" title="Código">
+                  <i class="bi bi-code-slash"></i>
+                </button>
+              </div>
+              <div class="btn-group btn-group-sm" role="group">
+                <button type="button" class="btn btn-outline-secondary" onclick="applyFormatting('link')" title="Link">
+                  <i class="bi bi-link-45deg"></i>
+                </button>
+                <button type="button" class="btn btn-outline-secondary" onclick="applyFormatting('list')" title="Lista">
+                  <i class="bi bi-list-ul"></i>
+                </button>
+              </div>
+              <div class="btn-group btn-group-sm" role="group">
+                <button type="button" class="btn btn-outline-secondary" onclick="applyFormatting('emoji')" title="Emojis">
+                  <i class="bi bi-emoji-smile"></i>
+                </button>
+              </div>
+              <small class="text-muted ms-2 align-self-center" style="font-size: 0.75rem;">
+                💡 Selecione o texto e clique no botão de formatação
+              </small>
+            </div>
+            
             <textarea 
               id="generatedText" 
               class="form-control mb-3" 
               rows="15" 
-              readonly
               style="font-family: monospace; background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border-color); resize: vertical;"></textarea>
             
             <div class="d-grid gap-2">
               <button type="button" class="btn btn-primary" onclick="copyGeneratedText()">
                 <i class="bi bi-clipboard"></i> Copiar Texto
+              </button>
+              <button type="button" class="btn btn-success" onclick="saveCustomTemplate(); return false;" id="saveTemplateBtn" style="display: none;">
+                <i class="bi bi-save"></i> Salvar Template para Esta Rede
               </button>
               <button type="button" class="btn btn-outline-secondary" onclick="resetSelection()">
                 <i class="bi bi-arrow-counterclockwise"></i> Gerar Novamente
@@ -243,14 +319,31 @@
 const offerData = {
   id: {{ offer.id }},
   product_name: {{ (offer.product.name if offer.product else '')|tojson }},
+  product_description: {{ (offer.product.description if offer.product and offer.product.description else '')|tojson }},
   price: {{ "%.2f"|format(offer.price) if offer.price else 0 }},
   old_price: {{ "%.2f"|format(offer.old_price) if offer.old_price else 0 }},
   currency: {{ offer.currency|tojson }},
+  currency_symbol: {{ (offer.currency|currency_symbol)|tojson }},
   vendor_name: {{ offer.vendor_name|tojson }},
   offer_url: {{ offer.offer_url|tojson }},
   seller: {{ (offer.seller.name if offer.seller else '')|tojson }},
   category: {{ (offer.category.name if offer.category else '')|tojson }},
-  manufacturer: {{ (offer.manufacturer.name if offer.manufacturer else '')|tojson }}
+  manufacturer: {{ (offer.manufacturer.name if offer.manufacturer else '')|tojson }},
+  // Installment fields
+  installment_count: {{ offer.installment_count if offer.installment_count else 'null' }},
+  installment_value: {{ "%.2f"|format(offer.installment_value) if offer.installment_value else 'null' }},
+  installment_interest_free: {{ 'true' if offer.installment_interest_free else 'false' }},
+  product_image_url: {{ (offer.product.image_url if offer.product and offer.product.image_url else '')|tojson }},
+  // User contact information (for global namespaces)
+  user_phone: {{ (user.phone if user and user.phone else '')|tojson }},
+  user_address: {{ (user.address if user and user.address else '')|tojson }},
+  user_website: {{ (user.website if user and user.website else '')|tojson }},
+  user_instagram: {{ (user.instagram if user and user.instagram else '')|tojson }},
+  user_facebook: {{ (user.facebook if user and user.facebook else '')|tojson }},
+  user_twitter: {{ (user.twitter if user and user.twitter else '')|tojson }},
+  user_linkedin: {{ (user.linkedin if user and user.linkedin else '')|tojson }},
+  user_youtube: {{ (user.youtube if user and user.youtube else '')|tojson }},
+  user_tiktok: {{ (user.tiktok if user and user.tiktok else '')|tojson }}
 };
 
 // Social network configs (prefix/suffix)
@@ -262,6 +355,339 @@ const preSelectedChannel = {{ selected_channel|tojson }};
 // Current selections
 let selectedChannel = null;
 let selectedTemplate = null;
+
+/**
+ * Convert HTML to formatted text based on social network
+ * @param {string} html - HTML content from Quill editor
+ * @param {string} network - Social network name (whatsapp, telegram, instagram, etc.)
+ * @returns {string} - Formatted text for the specific network
+ */
+/**
+ * Convert HTML formatting from Quill.js editor to social network specific formatting
+ * 
+ * Supported networks and their formatting:
+ * - WhatsApp: *bold*, _italic_, ~strikethrough~, ```code```
+ * - Telegram: **bold**, __italic__, ~~strikethrough~~, `code`, [link](url)
+ * - Instagram/Facebook/Twitter/TikTok: Plain text (no formatting support)
+ * - LinkedIn: Limited support (plain text with structure)
+ * 
+ * @param {string} html - HTML content from Quill editor
+ * @param {string} network - Social network name (whatsapp, telegram, instagram, etc)
+ * @returns {string} - Formatted text for the specific network
+ */
+function htmlToFormattedText(html, network) {
+  if (!html) return '';
+  
+  // Create a temporary div to parse HTML
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = html;
+  
+  let text = '';
+  
+  /**
+   * Recursive function to process DOM nodes and apply formatting
+   */
+  function processNode(node) {
+    // Handle text nodes
+    if (node.nodeType === Node.TEXT_NODE) {
+      return node.textContent;
+    }
+    
+    // Handle element nodes
+    if (node.nodeType === Node.ELEMENT_NODE) {
+      const tagName = node.tagName.toLowerCase();
+      let content = '';
+      
+      // Process all child nodes recursively
+      for (let child of node.childNodes) {
+        content += processNode(child);
+      }
+      
+      // Apply formatting based on social network and HTML tag
+      const networkLower = network.toLowerCase();
+      
+      // ═══════════════════════════════════════════════════════════
+      // 📱 WHATSAPP - Markdown-style formatting
+      // ═══════════════════════════════════════════════════════════
+      if (networkLower === 'whatsapp') {
+        switch (tagName) {
+          // Bold: <strong>, <b> → *text*
+          case 'strong':
+          case 'b':
+            return `*${content}*`;
+          
+          // Italic: <em>, <i> → _text_
+          case 'em':
+          case 'i':
+            return `_${content}_`;
+          
+          // Strikethrough: <s>, <strike>, <del> → ~text~
+          case 's':
+          case 'strike':
+          case 'del':
+            return `~${content}~`;
+          
+          // Monospace/Code: <code>, <pre> → ```text```
+          case 'code':
+          case 'pre':
+            return `\`\`\`${content}\`\`\``;
+          
+          // Underline: convert to *bold* (WhatsApp doesn't support underline)
+          case 'u':
+            return `*${content}*`;
+          
+          // Line break
+          case 'br':
+            return '\n';
+          
+          // Paragraph
+          case 'p':
+            return content + '\n\n';
+          
+          // Headings → bold + uppercase
+          case 'h1':
+          case 'h2':
+          case 'h3':
+          case 'h4':
+          case 'h5':
+          case 'h6':
+            return `*${content.toUpperCase()}*\n\n`;
+          
+          // Lists
+          case 'ul':
+          case 'ol':
+            return '\n' + content;
+          
+          case 'li':
+            return `• ${content}\n`;
+          
+          // Blockquote → indent with >
+          case 'blockquote':
+            return `❝ ${content.trim()} ❞\n\n`;
+          
+          // Links → text (url)
+          case 'a':
+            const href = node.getAttribute('href');
+            return href ? `${content} (${href})` : content;
+          
+          // Horizontal rule
+          case 'hr':
+            return '\n━━━━━━━━━━━━━━━━━━\n\n';
+          
+          default:
+            return content;
+        }
+      }
+      
+      // ═══════════════════════════════════════════════════════════
+      // 📨 TELEGRAM - Markdown v2 formatting
+      // ═══════════════════════════════════════════════════════════
+      else if (networkLower === 'telegram') {
+        switch (tagName) {
+          // Bold: <strong>, <b> → **text**
+          case 'strong':
+          case 'b':
+            return `**${content}**`;
+          
+          // Italic: <em>, <i> → __text__
+          case 'em':
+          case 'i':
+            return `__${content}__`;
+          
+          // Strikethrough: <s>, <strike>, <del> → ~~text~~
+          case 's':
+          case 'strike':
+          case 'del':
+            return `~~${content}~~`;
+          
+          // Underline: <u> → __text__ (Telegram supports with double underscore in some clients)
+          case 'u':
+            return `__${content}__`;
+          
+          // Monospace/Code: <code>, <pre> → `text`
+          case 'code':
+            return `\`${content}\``;
+          
+          case 'pre':
+            return `\`\`\`\n${content}\n\`\`\``;
+          
+          // Line break
+          case 'br':
+            return '\n';
+          
+          // Paragraph
+          case 'p':
+            return content + '\n\n';
+          
+          // Headings → bold + uppercase
+          case 'h1':
+          case 'h2':
+          case 'h3':
+          case 'h4':
+          case 'h5':
+          case 'h6':
+            return `**${content.toUpperCase()}**\n\n`;
+          
+          // Lists
+          case 'ul':
+          case 'ol':
+            return '\n' + content;
+          
+          case 'li':
+            return `• ${content}\n`;
+          
+          // Blockquote
+          case 'blockquote':
+            return `> ${content.trim()}\n\n`;
+          
+          // Links → [text](url)
+          case 'a':
+            const href = node.getAttribute('href');
+            return href ? `[${content}](${href})` : content;
+          
+          // Horizontal rule
+          case 'hr':
+            return '\n━━━━━━━━━━━━━━━━━━\n\n';
+          
+          default:
+            return content;
+        }
+      }
+      
+      // ═══════════════════════════════════════════════════════════
+      // 💼 LINKEDIN - Plain text with structure (limited formatting)
+      // ═══════════════════════════════════════════════════════════
+      else if (networkLower === 'linkedin') {
+        switch (tagName) {
+          // Line break
+          case 'br':
+            return '\n';
+          
+          // Paragraph
+          case 'p':
+            return content + '\n\n';
+          
+          // Headings → UPPERCASE
+          case 'h1':
+          case 'h2':
+          case 'h3':
+          case 'h4':
+          case 'h5':
+          case 'h6':
+            return `${content.toUpperCase()}\n\n`;
+          
+          // Lists
+          case 'ul':
+          case 'ol':
+            return '\n' + content;
+          
+          case 'li':
+            return `• ${content}\n`;
+          
+          // Blockquote → indent
+          case 'blockquote':
+            return `"${content.trim()}"\n\n`;
+          
+          // Links → keep URL visible
+          case 'a':
+            const href = node.getAttribute('href');
+            return href ? `${content}: ${href}` : content;
+          
+          // Horizontal rule
+          case 'hr':
+            return '\n━━━━━━━━━━━━━━━━━━\n\n';
+          
+          // Strip all formatting tags but keep content
+          default:
+            return content;
+        }
+      }
+      
+      // ═══════════════════════════════════════════════════════════
+      // 📷 INSTAGRAM / 📘 FACEBOOK / 🐦 TWITTER / 🎵 TIKTOK
+      // Plain text only - no formatting support
+      // ═══════════════════════════════════════════════════════════
+      else if (['instagram', 'facebook', 'twitter', 'x', 'tiktok'].includes(networkLower)) {
+        switch (tagName) {
+          // Line break
+          case 'br':
+            return '\n';
+          
+          // Paragraph
+          case 'p':
+            return content + '\n\n';
+          
+          // Headings → UPPERCASE for emphasis
+          case 'h1':
+          case 'h2':
+          case 'h3':
+          case 'h4':
+          case 'h5':
+          case 'h6':
+            return `${content.toUpperCase()}\n\n`;
+          
+          // Lists
+          case 'ul':
+          case 'ol':
+            return '\n' + content;
+          
+          case 'li':
+            return `• ${content}\n`;
+          
+          // Blockquote → quotation marks
+          case 'blockquote':
+            return `"${content.trim()}"\n\n`;
+          
+          // Links → show URL
+          case 'a':
+            const href = node.getAttribute('href');
+            return href ? `${content} (${href})` : content;
+          
+          // Horizontal rule → use symbols
+          case 'hr':
+            return '\n━━━━━━━━━━━━━━━━━━\n\n';
+          
+          // Strip all other formatting
+          default:
+            return content;
+        }
+      }
+      
+      // ═══════════════════════════════════════════════════════════
+      // 🔧 DEFAULT - Fallback for unknown networks
+      // ═══════════════════════════════════════════════════════════
+      else {
+        switch (tagName) {
+          case 'br':
+            return '\n';
+          case 'p':
+            return content + '\n\n';
+          case 'ul':
+          case 'ol':
+            return '\n' + content;
+          case 'li':
+            return `• ${content}\n`;
+          default:
+            return content;
+        }
+      }
+    }
+    
+    return '';
+  }
+  
+  // Process all child nodes
+  for (let child of tempDiv.childNodes) {
+    text += processNode(child);
+  }
+  
+  // Clean up extra whitespace
+  text = text.replace(/\n{3,}/g, '\n\n'); // Max 2 consecutive line breaks
+  text = text.replace(/  +/g, ' '); // Remove multiple spaces
+  text = text.trim();
+  
+  return text;
+}
 
 // Toggle all coupons
 function toggleAllCoupons(checked) {
@@ -341,19 +767,54 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Generate text
-function generateText() {
+async function generateText() {
   if (!selectedChannel || !selectedTemplate) {
     return;
   }
 
+  // Try to load custom template for this social network
+  let templateBody = selectedTemplate.body;
+  let isCustomTemplate = false;
+  
+  try {
+    console.log(`🔍 Buscando template customizado: template_id=${selectedTemplate.id}, network=${selectedChannel}`);
+    
+    const response = await fetch(`/template-social-network/${selectedTemplate.id}/${selectedChannel.toLowerCase()}`);
+    const result = await response.json();
+    
+    console.log('📦 Resposta:', result);
+    
+    if (response.ok && result.found && result.data) {
+      templateBody = result.data.custom_body;
+      isCustomTemplate = true;
+      console.log(`✅ Template customizado carregado para ${selectedChannel}`);
+      
+      // Show indicator that custom template is being used
+      showToast(`Template personalizado carregado para ${selectedChannel}!`, 'info');
+    } else {
+      console.log(`ℹ️  Usando template padrão (sem customização para ${selectedChannel})`);
+      isCustomTemplate = false;
+    }
+  } catch (error) {
+    console.error('❌ Erro ao buscar template customizado:', error);
+    console.log('ℹ️  Usando template padrão');
+    isCustomTemplate = false;
+  }
+
   // Decode HTML entities
   const textarea = document.createElement('textarea');
-  textarea.innerHTML = selectedTemplate.body;
+  textarea.innerHTML = templateBody;
   let text = textarea.value;
 
   // Replace namespaces with actual values
   text = text.replace(/{product_name}/gi, offerData.product_name || '');
   text = text.replace(/{product}/gi, offerData.product_name || '');
+  
+  // Convert HTML description to formatted text for the selected network
+  const formattedDescription = htmlToFormattedText(offerData.product_description || '', selectedChannel);
+  text = text.replace(/{product_description}/gi, formattedDescription);
+  text = text.replace(/{description}/gi, formattedDescription);
+  text = text.replace(/{descricao}/gi, formattedDescription);
   
   text = text.replace(/{price}/gi, offerData.price || '');
   text = text.replace(/{valor}/gi, offerData.price || '');
@@ -390,14 +851,87 @@ function generateText() {
   text = text.replace(/{category}/gi, offerData.category || '');
   text = text.replace(/{manufacturer}/gi, offerData.manufacturer || '');
 
-  // Collect selected coupons
+  // Replace installment namespaces
+  if (offerData.installment_count && offerData.installment_value) {
+    // Individual fields
+    text = text.replace(/{installment_count}/gi, offerData.installment_count);
+    text = text.replace(/{installment_value}/gi, offerData.installment_value);
+    text = text.replace(/{installment_interest_free}/gi, offerData.installment_interest_free ? 'sem juros' : 'com juros');
+    
+    // Full formatted installment text: "5x de R$ 72.00 sem juros"
+    const interestText = offerData.installment_interest_free ? 'sem juros' : 'com juros';
+    const installmentFull = `${offerData.installment_count}x de ${offerData.currency_symbol} ${offerData.installment_value} ${interestText}`;
+    text = text.replace(/{installment_full}/gi, installmentFull);
+    text = text.replace(/{parcelamento}/gi, installmentFull);
+  } else {
+    // If no installment data, remove the namespaces
+    text = text.replace(/{installment_count}/gi, '');
+    text = text.replace(/{installment_value}/gi, '');
+    text = text.replace(/{installment_interest_free}/gi, '');
+    text = text.replace(/{installment_full}/gi, '');
+    text = text.replace(/{parcelamento}/gi, '');
+  }
+
+  // Collect selected coupons with discount info
   const selectedCoupons = [];
+  let bestDiscount = 0;
+  let bestDiscountedPrice = parseFloat(offerData.price);
+  
   document.querySelectorAll('.coupon-checkbox:checked').forEach(checkbox => {
+    const code = checkbox.getAttribute('data-coupon-code');
+    const seller = checkbox.getAttribute('data-coupon-seller');
+    const discountType = checkbox.getAttribute('data-coupon-discount-type');
+    const discountValue = parseFloat(checkbox.getAttribute('data-coupon-discount-value')) || 0;
+    const minPurchase = parseFloat(checkbox.getAttribute('data-coupon-min-purchase')) || 0;
+    const maxDiscountValue = parseFloat(checkbox.getAttribute('data-coupon-max-discount-value')) || 0;
+    const expires = checkbox.getAttribute('data-coupon-expires') || '';
+    
     selectedCoupons.push({
-      code: checkbox.getAttribute('data-coupon-code'),
-      seller: checkbox.getAttribute('data-coupon-seller')
+      code: code,
+      seller: seller,
+      discountType: discountType,
+      discountValue: discountValue,
+      minPurchase: minPurchase,
+      maxDiscountValue: maxDiscountValue,
+      expires: expires
     });
+    
+    // Calculate discount for this coupon
+    if (discountValue > 0) {
+      let discountedPrice = parseFloat(offerData.price);
+      let discountAmount = 0;
+      
+      if (discountType === 'percentage') {
+        discountAmount = (discountedPrice * discountValue) / 100;
+        
+        // Apply max discount limit if set
+        if (maxDiscountValue > 0) {
+          discountAmount = Math.min(discountAmount, maxDiscountValue);
+        }
+        
+        discountedPrice = discountedPrice - discountAmount;
+      } else if (discountType === 'fixed') {
+        discountAmount = discountValue;
+        discountedPrice = Math.max(0, discountedPrice - discountAmount);
+      }
+      
+      // Track best discount
+      if (discountedPrice < bestDiscountedPrice) {
+        bestDiscountedPrice = discountedPrice;
+        bestDiscount = discountValue;
+      }
+    }
   });
+
+  // Replace {price_with_coupon} namespace with best discounted price
+  if (selectedCoupons.length > 0 && bestDiscountedPrice < parseFloat(offerData.price)) {
+    text = text.replace(/{price_with_coupon}/gi, bestDiscountedPrice.toFixed(2));
+    text = text.replace(/{preco_com_cupom}/gi, bestDiscountedPrice.toFixed(2));
+  } else {
+    // No discount applied, use original price
+    text = text.replace(/{price_with_coupon}/gi, offerData.price);
+    text = text.replace(/{preco_com_cupom}/gi, offerData.price);
+  }
 
   // Replace {all_coupons} namespace
   if (selectedCoupons.length > 0) {
@@ -405,10 +939,125 @@ function generateText() {
     text = text.replace(/{all_coupons}/gi, allCouponsInline);
     text = text.replace(/{todos_cupons}/gi, allCouponsInline);
     text = text.replace(/{cupons}/gi, allCouponsInline);
+    
+    // Replace individual coupon namespaces (use first selected coupon)
+    const firstCoupon = selectedCoupons[0];
+    
+    // Coupon code
+    text = text.replace(/{coupon_code}/gi, firstCoupon.code);
+    text = text.replace(/{code}/gi, firstCoupon.code);
+    
+    // Coupon seller
+    text = text.replace(/{coupon_seller}/gi, firstCoupon.seller);
+    
+    // Discount type (translate to Portuguese)
+    const discountTypeText = firstCoupon.discountType === 'percentage' ? 'Porcentagem (%)' : 'Valor Fixo (R$)';
+    text = text.replace(/{coupon_discount_type}/gi, discountTypeText);
+    text = text.replace(/{tipo_desconto}/gi, discountTypeText);
+    
+    // Discount value
+    const discountValueFormatted = firstCoupon.discountType === 'percentage' 
+      ? `${firstCoupon.discountValue}%` 
+      : `R$ ${firstCoupon.discountValue.toFixed(2)}`;
+    text = text.replace(/{coupon_discount_value}/gi, discountValueFormatted);
+    text = text.replace(/{valor_desconto}/gi, discountValueFormatted);
+    
+    // Porcentagem (only for percentage type)
+    if (firstCoupon.discountType === 'percentage') {
+      text = text.replace(/{porcentagem}/gi, `${firstCoupon.discountValue}%`);
+      text = text.replace(/{desconto_porcentagem}/gi, `${firstCoupon.discountValue}%`);
+      text = text.replace(/{percentual}/gi, `${firstCoupon.discountValue}%`);
+    } else {
+      text = text.replace(/{porcentagem}/gi, '');
+      text = text.replace(/{desconto_porcentagem}/gi, '');
+      text = text.replace(/{percentual}/gi, '');
+    }
+    
+    // Valor Fixo (only for fixed type)
+    if (firstCoupon.discountType === 'fixed') {
+      const fixedValue = `R$ ${firstCoupon.discountValue.toFixed(2)}`;
+      text = text.replace(/{desconto_fixo}/gi, fixedValue);
+      text = text.replace(/{valor_fixo}/gi, fixedValue);
+    } else {
+      text = text.replace(/{desconto_fixo}/gi, '');
+      text = text.replace(/{valor_fixo}/gi, '');
+    }
+    
+    // Min purchase value
+    if (firstCoupon.minPurchase > 0) {
+      const minPurchaseFormatted = `R$ ${firstCoupon.minPurchase.toFixed(2)}`;
+      text = text.replace(/{min_purchase_value}/gi, minPurchaseFormatted);
+      text = text.replace(/{compra_minima}/gi, minPurchaseFormatted);
+      text = text.replace(/{valor_minimo}/gi, minPurchaseFormatted);
+      text = text.replace(/{valor_minimo_compra}/gi, minPurchaseFormatted);
+      text = text.replace(/{minimo}/gi, minPurchaseFormatted);
+    } else {
+      text = text.replace(/{min_purchase_value}/gi, 'Sem mínimo');
+      text = text.replace(/{compra_minima}/gi, 'Sem mínimo');
+      text = text.replace(/{valor_minimo}/gi, 'Sem mínimo');
+      text = text.replace(/{valor_minimo_compra}/gi, 'Sem mínimo');
+      text = text.replace(/{minimo}/gi, 'Sem mínimo');
+    }
+    
+    // Max discount value
+    if (firstCoupon.maxDiscountValue > 0) {
+      const maxDiscountFormatted = `R$ ${firstCoupon.maxDiscountValue.toFixed(2)}`;
+      text = text.replace(/{max_discount_value}/gi, maxDiscountFormatted);
+      text = text.replace(/{limite_desconto}/gi, maxDiscountFormatted);
+      text = text.replace(/{coupon_max_discount}/gi, maxDiscountFormatted);
+      text = text.replace(/{limite}/gi, maxDiscountFormatted);
+      text = text.replace(/{valor_maximo_desconto}/gi, maxDiscountFormatted);
+      text = text.replace(/{maximo}/gi, maxDiscountFormatted);
+    } else {
+      text = text.replace(/{max_discount_value}/gi, 'Sem limite');
+      text = text.replace(/{limite_desconto}/gi, 'Sem limite');
+      text = text.replace(/{coupon_max_discount}/gi, 'Sem limite');
+      text = text.replace(/{limite}/gi, 'Sem limite');
+      text = text.replace(/{valor_maximo_desconto}/gi, 'Sem limite');
+      text = text.replace(/{maximo}/gi, 'Sem limite');
+    }
+    
+    // Coupon expires
+    if (firstCoupon.expires) {
+      text = text.replace(/{coupon_expires}/gi, firstCoupon.expires);
+      text = text.replace(/{validade_cupom}/gi, firstCoupon.expires);
+      text = text.replace(/{expira_em}/gi, firstCoupon.expires);
+    } else {
+      text = text.replace(/{coupon_expires}/gi, 'Sem validade');
+      text = text.replace(/{validade_cupom}/gi, 'Sem validade');
+      text = text.replace(/{expira_em}/gi, 'Sem validade');
+    }
   } else {
+    // No coupons selected - clear all coupon namespaces
     text = text.replace(/{all_coupons}/gi, '');
     text = text.replace(/{todos_cupons}/gi, '');
     text = text.replace(/{cupons}/gi, '');
+    text = text.replace(/{coupon_code}/gi, '');
+    text = text.replace(/{code}/gi, '');
+    text = text.replace(/{coupon_seller}/gi, '');
+    text = text.replace(/{coupon_discount_type}/gi, '');
+    text = text.replace(/{tipo_desconto}/gi, '');
+    text = text.replace(/{coupon_discount_value}/gi, '');
+    text = text.replace(/{valor_desconto}/gi, '');
+    text = text.replace(/{porcentagem}/gi, '');
+    text = text.replace(/{desconto_porcentagem}/gi, '');
+    text = text.replace(/{percentual}/gi, '');
+    text = text.replace(/{desconto_fixo}/gi, '');
+    text = text.replace(/{valor_fixo}/gi, '');
+    text = text.replace(/{min_purchase_value}/gi, '');
+    text = text.replace(/{compra_minima}/gi, '');
+    text = text.replace(/{valor_minimo}/gi, '');
+    text = text.replace(/{valor_minimo_compra}/gi, '');
+    text = text.replace(/{minimo}/gi, '');
+    text = text.replace(/{max_discount_value}/gi, '');
+    text = text.replace(/{limite_desconto}/gi, '');
+    text = text.replace(/{coupon_max_discount}/gi, '');
+    text = text.replace(/{limite}/gi, '');
+    text = text.replace(/{valor_maximo_desconto}/gi, '');
+    text = text.replace(/{maximo}/gi, '');
+    text = text.replace(/{coupon_expires}/gi, '');
+    text = text.replace(/{validade_cupom}/gi, '');
+    text = text.replace(/{expira_em}/gi, '');
   }
 
   // Append coupons list if selected
@@ -418,6 +1067,35 @@ function generateText() {
       text += `• ${coupon.code} - ${coupon.seller}\n`;
     });
   }
+
+  // Replace global user namespaces
+  text = text.replace(/{user_phone}/gi, offerData.user_phone || '');
+  text = text.replace(/{telefone}/gi, offerData.user_phone || '');
+  text = text.replace(/{celular}/gi, offerData.user_phone || '');
+  
+  text = text.replace(/{user_address}/gi, offerData.user_address || '');
+  text = text.replace(/{endereco}/gi, offerData.user_address || '');
+  
+  text = text.replace(/{user_website}/gi, offerData.user_website || '');
+  text = text.replace(/{site}/gi, offerData.user_website || '');
+  
+  text = text.replace(/{user_instagram}/gi, offerData.user_instagram || '');
+  text = text.replace(/{instagram}/gi, offerData.user_instagram || '');
+  
+  text = text.replace(/{user_facebook}/gi, offerData.user_facebook || '');
+  text = text.replace(/{facebook}/gi, offerData.user_facebook || '');
+  
+  text = text.replace(/{user_twitter}/gi, offerData.user_twitter || '');
+  text = text.replace(/{twitter}/gi, offerData.user_twitter || '');
+  
+  text = text.replace(/{user_linkedin}/gi, offerData.user_linkedin || '');
+  text = text.replace(/{linkedin}/gi, offerData.user_linkedin || '');
+  
+  text = text.replace(/{user_youtube}/gi, offerData.user_youtube || '');
+  text = text.replace(/{youtube}/gi, offerData.user_youtube || '');
+  
+  text = text.replace(/{user_tiktok}/gi, offerData.user_tiktok || '');
+  text = text.replace(/{tiktok}/gi, offerData.user_tiktok || '');
 
   // Apply social network prefix/suffix
   if (socialConfigs[selectedChannel]) {
@@ -434,6 +1112,455 @@ function generateText() {
   document.getElementById('noSelectionMessage').style.display = 'none';
   document.getElementById('generatedTextArea').style.display = 'block';
   document.getElementById('generatedText').value = text;
+  
+  // Show formatting support info and save button
+  showFormattingSupport(selectedChannel);
+  
+  // Update save button text based on whether custom template exists
+  const saveBtn = document.getElementById('saveTemplateBtn');
+  if (saveBtn) {
+    if (isCustomTemplate) {
+      saveBtn.innerHTML = '<i class="bi bi-arrow-repeat"></i> Atualizar Template Salvo';
+      saveBtn.className = 'btn btn-warning';
+    } else {
+      saveBtn.innerHTML = '<i class="bi bi-save"></i> Salvar Template para Esta Rede';
+      saveBtn.className = 'btn btn-success';
+    }
+  }
+}
+
+// Show formatting support for selected network
+function showFormattingSupport(network) {
+  const formattingInfo = document.getElementById('formattingInfo');
+  const supportList = document.getElementById('formattingSupportList');
+  
+  if (!network || !formattingInfo || !supportList) return;
+  
+  const networkLower = network.toLowerCase();
+  let supportedFormats = [];
+  
+  switch (networkLower) {
+    case 'whatsapp':
+      supportedFormats = [
+        '<span class="badge bg-success me-1">✓ Negrito</span> <code>*texto*</code>',
+        '<span class="badge bg-success me-1">✓ Itálico</span> <code>_texto_</code>',
+        '<span class="badge bg-success me-1">✓ Riscado</span> <code>~texto~</code>',
+        '<span class="badge bg-success me-1">✓ Código</span> <code>```texto```</code>',
+        '<span class="badge bg-success me-1">✓ Listas</span>',
+        '<span class="badge bg-success me-1">✓ Links</span>'
+      ];
+      break;
+      
+    case 'telegram':
+      supportedFormats = [
+        '<span class="badge bg-success me-1">✓ Negrito</span> <code>**texto**</code>',
+        '<span class="badge bg-success me-1">✓ Itálico</span> <code>__texto__</code>',
+        '<span class="badge bg-success me-1">✓ Riscado</span> <code>~~texto~~</code>',
+        '<span class="badge bg-success me-1">✓ Código</span> <code>`texto`</code>',
+        '<span class="badge bg-success me-1">✓ Listas</span>',
+        '<span class="badge bg-success me-1">✓ Links</span> <code>[texto](url)</code>'
+      ];
+      break;
+      
+    case 'linkedin':
+      supportedFormats = [
+        '<span class="badge bg-warning text-dark me-1">⚠ Texto puro</span>',
+        '<span class="badge bg-success me-1">✓ Maiúsculas</span> para títulos',
+        '<span class="badge bg-success me-1">✓ Listas</span>',
+        '<span class="badge bg-success me-1">✓ Links</span> (URL visível)'
+      ];
+      break;
+      
+    case 'instagram':
+    case 'facebook':
+    case 'twitter':
+    case 'x':
+    case 'tiktok':
+      supportedFormats = [
+        '<span class="badge bg-warning text-dark me-1">⚠ Texto puro</span> (sem formatação)',
+        '<span class="badge bg-success me-1">✓ Emojis</span>',
+        '<span class="badge bg-success me-1">✓ Maiúsculas</span> para destaque',
+        '<span class="badge bg-success me-1">✓ Listas</span> com bullet points',
+        '<span class="badge bg-info me-1">💡 Dica:</span> Use emojis para destaque visual'
+      ];
+      break;
+      
+    default:
+      supportedFormats = ['<span class="badge bg-secondary">Texto simples</span>'];
+  }
+  
+  supportList.innerHTML = supportedFormats.join('<br>');
+  formattingInfo.style.display = 'block';
+  
+  // Show formatting toolbar
+  const toolbar = document.getElementById('formattingToolbar');
+  if (toolbar) {
+    toolbar.style.display = 'flex';
+  }
+  
+  // Show save button if template is selected
+  const saveBtn = document.getElementById('saveTemplateBtn');
+  if (saveBtn && selectedTemplate && selectedTemplate.id) {
+    saveBtn.style.display = 'block';
+  }
+}
+
+// Save custom template for specific social network
+async function saveCustomTemplate() {
+  if (!selectedTemplate || !selectedChannel) {
+    showToast('Selecione um template e uma rede social primeiro', 'warning');
+    return false;
+  }
+  
+  const generatedText = document.getElementById('generatedText').value;
+  if (!generatedText) {
+    showToast('Nenhum texto gerado para salvar', 'warning');
+    return false;
+  }
+  
+  const payload = {
+    template_id: parseInt(selectedTemplate.id),
+    social_network: selectedChannel.toLowerCase(),
+    custom_body: generatedText
+  };
+  
+  console.log('💾 Salvando template:', payload);
+  
+  try {
+    const response = await fetch('/template-social-network/save', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+    
+    console.log('Response status:', response.status);
+    
+    // Try to parse JSON
+    let result;
+    try {
+      result = await response.json();
+      console.log('Response data:', result);
+    } catch (parseError) {
+      console.error('Failed to parse JSON:', parseError);
+      showToast('Erro: Resposta inválida do servidor', 'danger');
+      return false;
+    }
+    
+    if (response.ok && result.success) {
+      showToast(result.message || `Template salvo para ${selectedChannel}! ✓`, 'success');
+      
+      // Update button to "Update" state
+      const saveBtn = document.getElementById('saveTemplateBtn');
+      if (saveBtn) {
+        saveBtn.innerHTML = '<i class="bi bi-arrow-repeat"></i> Atualizar Template Salvo';
+        saveBtn.className = 'btn btn-warning';
+      }
+      return true;
+    } else {
+      showToast(result.message || 'Erro ao salvar template', 'danger');
+      return false;
+    }
+  } catch (error) {
+    console.error('Error saving template:', error);
+    showToast('Erro ao salvar template: ' + error.message, 'danger');
+    return false;
+  }
+}
+
+// Apply formatting to selected text
+function applyFormatting(type) {
+  const textarea = document.getElementById('generatedText');
+  const start = textarea.selectionStart;
+  const end = textarea.selectionEnd;
+  const selectedText = textarea.value.substring(start, end);
+  
+  // For emoji, we don't need selected text - can insert at cursor position
+  if (type === 'emoji') {
+    showEmojiPicker(start, end, selectedText);
+    return;
+  }
+  
+  // For other formatting, we need selected text
+  if (!selectedText) {
+    showToast('Selecione o texto que deseja formatar', 'warning');
+    return;
+  }
+  
+  if (!selectedChannel) {
+    showToast('Selecione uma rede social primeiro', 'warning');
+    return;
+  }
+  
+  let formattedText = '';
+  const network = selectedChannel.toLowerCase();
+  
+  switch (type) {
+    case 'bold':
+      if (network === 'whatsapp') {
+        formattedText = `*${selectedText}*`;
+      } else if (network === 'telegram') {
+        formattedText = `**${selectedText}**`;
+      } else {
+        formattedText = selectedText.toUpperCase();
+      }
+      break;
+      
+    case 'italic':
+      if (network === 'whatsapp') {
+        formattedText = `_${selectedText}_`;
+      } else if (network === 'telegram') {
+        formattedText = `__${selectedText}__`;
+      } else {
+        showToast('Itálico não suportado nesta rede', 'warning');
+        return;
+      }
+      break;
+      
+    case 'strikethrough':
+      if (network === 'whatsapp') {
+        formattedText = `~${selectedText}~`;
+      } else if (network === 'telegram') {
+        formattedText = `~~${selectedText}~~`;
+      } else {
+        showToast('Riscado não suportado nesta rede', 'warning');
+        return;
+      }
+      break;
+      
+    case 'code':
+      if (network === 'whatsapp') {
+        formattedText = `\`\`\`${selectedText}\`\`\``;
+      } else if (network === 'telegram') {
+        formattedText = `\`${selectedText}\``;
+      } else {
+        showToast('Código não suportado nesta rede', 'warning');
+        return;
+      }
+      break;
+      
+    case 'link':
+      const url = prompt('Digite a URL:');
+      if (!url) return;
+      
+      if (network === 'telegram') {
+        formattedText = `[${selectedText}](${url})`;
+      } else if (network === 'whatsapp') {
+        formattedText = `${selectedText} (${url})`;
+      } else {
+        formattedText = `${selectedText} (${url})`;
+      }
+      break;
+      
+    case 'list':
+      const lines = selectedText.split('\n');
+      formattedText = lines.map(line => line.trim() ? `• ${line.trim()}` : '').join('\n');
+      break;
+      
+    default:
+      return;
+  }
+  
+  // Replace selected text with formatted text
+  textarea.value = textarea.value.substring(0, start) + formattedText + textarea.value.substring(end);
+  
+  // Set cursor position after formatted text
+  textarea.selectionStart = textarea.selectionEnd = start + formattedText.length;
+  textarea.focus();
+}
+
+// Show emoji picker
+function showEmojiPicker(start, end, selectedText) {
+  const emojis = {
+    'Rostos': ['😀', '😃', '😄', '😁', '😅', '😂', '🤣', '😊', '😇', '🙂', '🙃', '😉', '😌', '😍', '🥰', '😘', '😗', '😙', '😚', '😋', '😛', '😝', '😜', '🤪', '🤨', '🧐', '🤓', '😎', '🤩', '🥳', '😏'],
+    'Dinheiro & Celebração': ['💰', '💵', '💴', '💶', '💷', '💸', '💳', '💎', '🏆', '🎁', '🎉', '🎊', '🎈', '🎀', '🎯', '🎲'],
+    'Símbolos': ['🔥', '⭐', '✨', '💫', '⚡', '💥', '💯', '✅', '❌', '⚠️', '🔴', '🟢', '🔵', '🟡', '🟠', '🟣', '⬆️', '⬇️', '➡️', '⬅️'],
+    'Mãos': ['👍', '👎', '👏', '🙌', '👐', '🤲', '🤝', '🙏', '✍️', '💪', '👊', '✊', '🤛', '🤜', '🤞', '✌️', '🤟', '🤘', '👌', '🤏'],
+    'Corações': ['❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❣️', '💕', '💞', '💓', '💗', '💖', '💘', '💝']
+  };
+  
+  let html = '<div style="max-height: 300px; overflow-y: auto;">';
+  
+  for (const [category, emojiList] of Object.entries(emojis)) {
+    html += `<div class="mb-3">`;
+    html += `<strong style="color: var(--text-primary); font-size: 0.9rem;">${category}</strong>`;
+    html += `<div style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px;">`;
+    
+    emojiList.forEach(emoji => {
+      // Escape selectedText to prevent attribute issues
+      const escapedText = selectedText.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      html += `<button type="button" class="btn btn-sm btn-outline-secondary emoji-btn" 
+                style="font-size: 1.5rem; padding: 5px 10px; border-radius: 8px;" 
+                data-emoji="${emoji}" 
+                data-start="${start}" 
+                data-end="${end}" 
+                data-selected="${escapedText}">
+                ${emoji}
+              </button>`;
+    });
+    
+    html += `</div></div>`;
+  }
+  
+  html += '</div>';
+  
+  // Create or update modal
+  let modal = document.getElementById('emojiPickerModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'emojiPickerModal';
+    modal.className = 'modal fade';
+    modal.innerHTML = `
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">
+              <i class="bi bi-emoji-smile"></i> Escolha um Emoji
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body" id="emojiPickerContent">
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  }
+  
+  document.getElementById('emojiPickerContent').innerHTML = html;
+  
+  // Add click event listeners to emoji buttons
+  document.querySelectorAll('.emoji-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const emoji = this.getAttribute('data-emoji');
+      const start = parseInt(this.getAttribute('data-start'));
+      const end = parseInt(this.getAttribute('data-end'));
+      const escapedText = this.getAttribute('data-selected');
+      
+      // Decode HTML entities
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = escapedText;
+      const selectedText = tempDiv.textContent || tempDiv.innerText || '';
+      
+      insertEmoji(emoji, start, end, selectedText);
+    });
+  });
+  
+  const bsModal = new bootstrap.Modal(modal);
+  bsModal.show();
+}
+
+// Insert emoji at cursor position
+// Show emoji picker modal
+function showEmojiPicker(start, end, selectedText) {
+  const modalId = 'emojiPickerModal';
+  let modal = document.getElementById(modalId);
+  
+  // If modal doesn't exist, create it
+  if (!modal) {
+    const modalHTML = `
+      <div class="modal fade" id="${modalId}" tabindex="-1" aria-labelledby="emojiPickerModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="emojiPickerModalLabel">
+                <i class="bi bi-emoji-smile"></i> Selecionar Emoji
+              </h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body" id="emojiPickerBody">
+              <!-- Emojis will be populated here -->
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    modal = document.getElementById(modalId);
+  }
+  
+  // Populate emojis
+  const categories = {
+    'Sorrisos': ['😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '🙃', '😉', '😊', '😇'],
+    'Corações': ['❤️', '🧡', '💛', '💚', '💙', '💜', '🤎', '🖤', '🤍', '💔', '❣️', '💕', '💞'],
+    'Gestos': ['👍', '👎', '👌', '✌️', '🤞', '🤟', '🤘', '🤙', '👈', '👉', '👆', '👇', '☝️', '✋', '🤚', '🖐', '👋'],
+    'Objetos': ['💰', '💵', '💳', '💎', '🎁', '🎉', '🎊', '🏆', '🥇', '🥈', '🥉', '⭐', '🌟'],
+    'Diversos': ['🔥', '⚡', '💥', '✨', '💫', '🎯', '🚀', '💯', '✅', '❌', '⚠️', '🔔', '📢']
+  };
+  
+  let html = '';
+  for (const [category, emojis] of Object.entries(categories)) {
+    html += `<h6 class="mt-3 mb-2">${category}</h6><div class="d-flex flex-wrap gap-2">`;
+    emojis.forEach(emoji => {
+      const escapedText = selectedText.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      html += `<button type="button" class="btn btn-sm btn-outline-secondary emoji-btn" 
+                style="font-size: 1.5rem; padding: 5px 10px; border-radius: 8px;" 
+                data-emoji="${emoji}" 
+                data-start="${start}" 
+                data-end="${end}" 
+                data-selected="${escapedText}">
+                ${emoji}
+              </button>`;
+    });
+    html += '</div>';
+  }
+  
+  document.getElementById('emojiPickerBody').innerHTML = html;
+  
+  // Add click event listeners to emoji buttons
+  document.querySelectorAll('.emoji-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const emoji = this.getAttribute('data-emoji');
+      const start = parseInt(this.getAttribute('data-start'));
+      const end = parseInt(this.getAttribute('data-end'));
+      const escapedText = this.getAttribute('data-selected');
+      
+      // Decode HTML entities
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = escapedText;
+      const selectedText = tempDiv.textContent || tempDiv.innerText || '';
+      
+      insertEmoji(emoji, start, end, selectedText);
+    });
+  });
+  
+  // Show modal
+  const modalInstance = new bootstrap.Modal(modal);
+  modalInstance.show();
+}
+
+// Insert emoji at cursor position
+function insertEmoji(emoji, start, end, selectedText) {
+  const textarea = document.getElementById('generatedText');
+  
+  // Determine what to insert
+  let formattedText;
+  if (selectedText && selectedText.trim()) {
+    // There's selected text - add emoji after it with space
+    formattedText = selectedText + ' ' + emoji;
+  } else {
+    // No selected text - just insert emoji at cursor position
+    formattedText = emoji;
+  }
+  
+  // Replace text in textarea
+  const before = textarea.value.substring(0, start);
+  const after = textarea.value.substring(end);
+  textarea.value = before + formattedText + after;
+  
+  // Position cursor after inserted text
+  const newPosition = start + formattedText.length;
+  textarea.selectionStart = textarea.selectionEnd = newPosition;
+  textarea.focus();
+  
+  // Close modal
+  const modal = bootstrap.Modal.getInstance(document.getElementById('emojiPickerModal'));
+  if (modal) modal.hide();
+  
+  // Show success toast
+  const message = selectedText ? `Emoji ${emoji} adicionado ao texto!` : `Emoji ${emoji} inserido!`;
+  showToast(message, 'success');
 }
 
 // Copy generated text
@@ -457,6 +1584,24 @@ function resetSelection() {
   document.getElementById('noSelectionMessage').style.display = 'block';
   document.getElementById('generatedTextArea').style.display = 'none';
   document.getElementById('selectedChannel').textContent = 'Selecione uma rede social';
+  
+  // Hide formatting info
+  const formattingInfo = document.getElementById('formattingInfo');
+  if (formattingInfo) {
+    formattingInfo.style.display = 'none';
+  }
+  
+  // Hide formatting toolbar
+  const toolbar = document.getElementById('formattingToolbar');
+  if (toolbar) {
+    toolbar.style.display = 'none';
+  }
+  
+  // Hide save button
+  const saveBtn = document.getElementById('saveTemplateBtn');
+  if (saveBtn) {
+    saveBtn.style.display = 'none';
+  }
 }
 
 // Toast notification function
@@ -493,127 +1638,146 @@ function createToastContainer() {
 </script>
 
 <style>
-/* Active button styling */
-.social-btn.active,
-.template-btn.active {
-  background-color: var(--bs-btn-hover-bg) !important;
-  border-color: var(--bs-btn-hover-border-color) !important;
-  color: var(--bs-btn-hover-color) !important;
-}
+/* ================================
+   DARK THEME - COMPREHENSIVE FIX
+   ================================ */
 
-body[data-theme="dark"] .social-btn.active,
-html[data-theme="dark"] .social-btn.active {
-  color: white !important;
-}
-
-body[data-theme="dark"] .template-btn.active,
-html[data-theme="dark"] .template-btn.active {
-  background-color: rgba(59, 130, 246, 0.2) !important;
-  color: #60a5fa !important;
-  border-color: #60a5fa !important;
-}
-
-/* Make template buttons look better */
-.template-btn {
-  text-align: left;
-  transition: all 0.2s ease;
-}
-
-.template-btn:hover {
-  transform: translateX(5px);
-}
-
-/* Sticky positioning for generated text card */
-@media (min-width: 992px) {
-  .sticky-top {
-    position: sticky !important;
-  }
-}
-
-/* Ensure textarea is readable in dark theme */
-#generatedText {
-  font-size: 14px;
-  line-height: 1.6;
-}
-
-body[data-theme="dark"] #generatedText,
-html[data-theme="dark"] #generatedText {
-  background-color: #1a1a1a !important;
-  color: #e5e5e5 !important;
-  border-color: #404040 !important;
-}
-
-body[data-theme="light"] #generatedText,
-html[data-theme="light"] #generatedText {
-  background-color: #ffffff !important;
-  color: #212529 !important;
-  border-color: #dee2e6 !important;
-}
-
-/* Fix offer info text colors in dark theme */
-body[data-theme="dark"] .offer-info-text,
-html[data-theme="dark"] .offer-info-text {
-  color: #ffffff !important;
-}
-
-body[data-theme="dark"] .offer-info-text strong,
-html[data-theme="dark"] .offer-info-text strong {
-  color: #ffffff !important;
-}
-
-body[data-theme="dark"] .offer-value,
-html[data-theme="dark"] .offer-value {
+/* Global Dark Theme Text Fix */
+body[data-theme="dark"],
+html[data-theme="dark"] {
   color: #e5e5e5 !important;
 }
 
-body[data-theme="light"] .offer-info-text,
-html[data-theme="light"] .offer-info-text {
-  color: #212529 !important;
+body[data-theme="dark"] *,
+html[data-theme="dark"] * {
+  color: inherit;
 }
 
-body[data-theme="light"] .offer-value,
-html[data-theme="light"] .offer-value {
-  color: #495057 !important;
+/* Headers - WHITE */
+body[data-theme="dark"] h1,
+body[data-theme="dark"] h2,
+body[data-theme="dark"] h3,
+body[data-theme="dark"] h4,
+body[data-theme="dark"] h5,
+body[data-theme="dark"] h6,
+html[data-theme="dark"] h1,
+html[data-theme="dark"] h2,
+html[data-theme="dark"] h3,
+html[data-theme="dark"] h4,
+html[data-theme="dark"] h5,
+html[data-theme="dark"] h6 {
+  color: #ffffff !important;
 }
 
+/* Paragraphs - Light Gray */
+body[data-theme="dark"] p,
+html[data-theme="dark"] p {
+  color: #e5e5e5 !important;
+}
+
+/* Strong/Bold - WHITE */
+body[data-theme="dark"] strong,
+body[data-theme="dark"] b,
+html[data-theme="dark"] strong,
+html[data-theme="dark"] b {
+  color: #ffffff !important;
+}
+
+/* Spans - Light Gray */
+body[data-theme="dark"] span,
+html[data-theme="dark"] span {
+  color: #e5e5e5 !important;
+}
+
+/* Small text - Medium Gray */
+body[data-theme="dark"] small,
+html[data-theme="dark"] small {
+  color: #d1d5db !important;
+}
+
+/* Text Muted - Medium Gray */
 body[data-theme="dark"] .text-muted,
 html[data-theme="dark"] .text-muted {
   color: #9ca3af !important;
 }
 
-body[data-theme="dark"] .card-header h5,
-body[data-theme="dark"] .card-header h6,
-html[data-theme="dark"] .card-header h5,
-html[data-theme="dark"] .card-header h6 {
-  color: var(--text-primary) !important;
+/* Labels - Light Gray */
+body[data-theme="dark"] label,
+html[data-theme="dark"] label {
+  color: #e5e5e5 !important;
 }
 
-body[data-theme="dark"] .offer-description,
-html[data-theme="dark"] .offer-description {
-  color: #d1d5db !important;
+/* Links - Blue */
+body[data-theme="dark"] a,
+html[data-theme="dark"] a {
+  color: #60a5fa !important;
 }
 
-body[data-theme="light"] .offer-description,
-html[data-theme="light"] .offer-description {
-  color: #6b7280 !important;
+body[data-theme="dark"] a:hover,
+html[data-theme="dark"] a:hover {
+  color: #93c5fd !important;
 }
 
-/* Ensure all text in social network buttons is visible */
-body[data-theme="dark"] .social-btn,
-html[data-theme="dark"] .social-btn {
-  color: white !important;
-  border-width: 2px !important;
+/* Code - Yellow */
+body[data-theme="dark"] code,
+html[data-theme="dark"] code {
+  color: #fbbf24 !important;
+  background-color: rgba(251, 191, 36, 0.1) !important;
 }
 
-body[data-theme="dark"] .social-btn.active,
-html[data-theme="dark"] .social-btn.active {
-  color: white !important;
-  background-color: rgba(255, 255, 255, 0.1) !important;
+/* Cards */
+body[data-theme="dark"] .card,
+html[data-theme="dark"] .card {
+  color: #e5e5e5 !important;
 }
 
+body[data-theme="dark"] .card-header,
+html[data-theme="dark"] .card-header {
+  color: #ffffff !important;
+  background-color: var(--panel-solid) !important;
+  border-bottom-color: var(--border-color) !important;
+}
+
+body[data-theme="dark"] .card-body,
+html[data-theme="dark"] .card-body {
+  color: #e5e5e5 !important;
+}
+
+/* List Group Items */
+body[data-theme="dark"] .list-group-item,
+html[data-theme="dark"] .list-group-item {
+  background-color: var(--panel-solid) !important;
+  color: #e5e5e5 !important;
+  border-color: var(--border-color) !important;
+}
+
+body[data-theme="dark"] .list-group-item h6,
+html[data-theme="dark"] .list-group-item h6 {
+  color: #ffffff !important;
+}
+
+body[data-theme="dark"] .list-group-item p,
+html[data-theme="dark"] .list-group-item p {
+  color: #9ca3af !important;
+}
+
+body[data-theme="dark"] .list-group-item:hover,
+html[data-theme="dark"] .list-group-item:hover {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  color: #ffffff !important;
+}
+
+/* Buttons */
 body[data-theme="dark"] .btn,
 html[data-theme="dark"] .btn {
   color: #e5e5e5 !important;
+}
+
+body[data-theme="dark"] .btn-primary,
+html[data-theme="dark"] .btn-primary {
+  color: white !important;
+  background-color: #3b82f6 !important;
+  border-color: #3b82f6 !important;
 }
 
 body[data-theme="dark"] .btn-outline-primary,
@@ -640,114 +1804,13 @@ html[data-theme="dark"] .btn-outline-secondary:hover {
   background-color: #6b7280 !important;
 }
 
-/* Ensure coupon labels are readable */
-body[data-theme="dark"] .form-check-label,
-html[data-theme="dark"] .form-check-label {
-  color: var(--text-primary) !important;
+/* Badges */
+body[data-theme="dark"] .badge,
+html[data-theme="dark"] .badge {
+  color: white !important;
 }
 
-body[data-theme="dark"] .form-check-label small,
-html[data-theme="dark"] .form-check-label small {
-  color: #9ca3af !important;
-}
-
-/* Ensure links are visible in dark theme */
-body[data-theme="dark"] .offer-link,
-html[data-theme="dark"] .offer-link {
-  color: #60a5fa !important;
-}
-
-body[data-theme="dark"] .offer-link:hover,
-html[data-theme="dark"] .offer-link:hover {
-  color: #93c5fd !important;
-}
-
-/* COMPREHENSIVE DARK THEME FIX - ALL TEXTS */
-body[data-theme="dark"] .card,
-html[data-theme="dark"] .card {
-  color: #e5e5e5 !important;
-}
-
-body[data-theme="dark"] .card-header,
-html[data-theme="dark"] .card-header {
-  color: #ffffff !important;
-}
-
-body[data-theme="dark"] .card-header h5,
-body[data-theme="dark"] .card-header h6,
-html[data-theme="dark"] .card-header h5,
-html[data-theme="dark"] .card-header h6 {
-  color: #ffffff !important;
-}
-
-body[data-theme="dark"] .card-body,
-html[data-theme="dark"] .card-body {
-  color: #e5e5e5 !important;
-}
-
-body[data-theme="dark"] h1,
-body[data-theme="dark"] h2,
-body[data-theme="dark"] h3,
-body[data-theme="dark"] h4,
-body[data-theme="dark"] h5,
-body[data-theme="dark"] h6,
-html[data-theme="dark"] h1,
-html[data-theme="dark"] h2,
-html[data-theme="dark"] h3,
-html[data-theme="dark"] h4,
-html[data-theme="dark"] h5,
-html[data-theme="dark"] h6 {
-  color: #ffffff !important;
-}
-
-body[data-theme="dark"] p,
-html[data-theme="dark"] p {
-  color: #e5e5e5 !important;
-}
-
-body[data-theme="dark"] .text-muted,
-html[data-theme="dark"] .text-muted {
-  color: #9ca3af !important;
-}
-
-body[data-theme="dark"] small,
-html[data-theme="dark"] small {
-  color: #d1d5db !important;
-}
-
-body[data-theme="dark"] label,
-html[data-theme="dark"] label {
-  color: #e5e5e5 !important;
-}
-
-body[data-theme="dark"] .list-group-item,
-html[data-theme="dark"] .list-group-item {
-  background-color: var(--panel-solid) !important;
-  color: #e5e5e5 !important;
-  border-color: var(--border-color) !important;
-}
-
-body[data-theme="dark"] .list-group-item h6,
-html[data-theme="dark"] .list-group-item h6 {
-  color: #ffffff !important;
-}
-
-body[data-theme="dark"] .list-group-item p,
-html[data-theme="dark"] .list-group-item p {
-  color: #9ca3af !important;
-}
-
-body[data-theme="dark"] .list-group-item:hover,
-html[data-theme="dark"] .list-group-item:hover {
-  background-color: rgba(255, 255, 255, 0.05) !important;
-}
-
-body[data-theme="dark"] code,
-html[data-theme="dark"] code {
-  color: #fbbf24 !important;
-  background-color: rgba(251, 191, 36, 0.1) !important;
-}
-
+/* Alerts */
 body[data-theme="dark"] .alert,
 html[data-theme="dark"] .alert {
   color: #e5e5e5 !important;
@@ -767,6 +1830,98 @@ html[data-theme="dark"] .alert-warning {
   color: #e5e5e5 !important;
 }
 
+/* Form Elements */
+body[data-theme="dark"] .form-check-label,
+html[data-theme="dark"] .form-check-label {
+  color: #e5e5e5 !important;
+}
+
+body[data-theme="dark"] .form-check-label small,
+html[data-theme="dark"] .form-check-label small {
+  color: #9ca3af !important;
+}
+
+/* Specific Classes */
+body[data-theme="dark"] .offer-info-text,
+html[data-theme="dark"] .offer-info-text,
+body[data-theme="dark"] .offer-info-text *,
+html[data-theme="dark"] .offer-info-text * {
+  color: #ffffff !important;
+}
+
+body[data-theme="dark"] .offer-value,
+html[data-theme="dark"] .offer-value {
+  color: #e5e5e5 !important;
+}
+
+body[data-theme="dark"] .offer-description,
+html[data-theme="dark"] .offer-description {
+  color: #d1d5db !important;
+}
+
+body[data-theme="dark"] .offer-link,
+html[data-theme="dark"] .offer-link {
+  color: #60a5fa !important;
+}
+
+body[data-theme="dark"] .offer-link:hover,
+html[data-theme="dark"] .offer-link:hover {
+  color: #93c5fd !important;
+}
+
+/* Product info card - ensure all text is white */
+body[data-theme="dark"] .card .row p,
+html[data-theme="dark"] .card .row p,
+body[data-theme="dark"] .card .row strong,
+html[data-theme="dark"] .card .row strong,
+body[data-theme="dark"] .card .row span,
+html[data-theme="dark"] .card .row span,
+body[data-theme="dark"] .card h4,
+html[data-theme="dark"] .card h4,
+body[data-theme="dark"] .card .col-md-6 p,
+html[data-theme="dark"] .card .col-md-6 p,
+body[data-theme="dark"] .card .col-md-6 strong,
+html[data-theme="dark"] .card .col-md-6 strong,
+body[data-theme="dark"] .card .col-md-8 h4,
+html[data-theme="dark"] .card .col-md-8 h4 {
+  color: #ffffff !important;
+}
+
+body[data-theme="dark"] .card .row .offer-value,
+html[data-theme="dark"] .card .row .offer-value {
+  color: #e5e5e5 !important;
+}
+
+/* Force white color on all text elements in offer info */
+body[data-theme="dark"] .offer-info-text strong,
+html[data-theme="dark"] .offer-info-text strong,
+body[data-theme="dark"] .offer-info-text i,
+html[data-theme="dark"] .offer-info-text i {
+  color: #ffffff !important;
+}
+
+/* Product title */
+body[data-theme="dark"] .product-title,
+html[data-theme="dark"] .product-title {
+  color: #ffffff !important;
+}
+
+body[data-theme="dark"] .page-title,
+html[data-theme="dark"] .page-title {
+  color: #ffffff !important;
+}
+
+body[data-theme="dark"] .generated-text-header,
+html[data-theme="dark"] .generated-text-header {
+  color: #ffffff !important;
+}
+
+body[data-theme="dark"] .channel-badge,
+html[data-theme="dark"] .channel-badge {
+  color: white !important;
+  background-color: #6b7280 !important;
+}
+
 body[data-theme="dark"] .no-selection-msg,
 html[data-theme="dark"] .no-selection-msg {
   color: #9ca3af !important;
@@ -782,139 +1937,99 @@ html[data-theme="dark"] .no-selection-msg p {
   color: #9ca3af !important;
 }
 
-body[data-theme="dark"] .badge,
-html[data-theme="dark"] .badge {
-  color: white !important;
+/* Textarea */
+#generatedText {
+  font-size: 14px;
+  line-height: 1.6;
 }
 
-body[data-theme="dark"] .page-title,
-html[data-theme="dark"] .page-title {
-  color: #ffffff !important;
+body[data-theme="dark"] #generatedText,
+html[data-theme="dark"] #generatedText {
+  background-color: #1a1a1a !important;
+  color: #e5e5e5 !important;
+  border-color: #404040 !important;
 }
 
-body[data-theme="dark"] .btn-back,
-html[data-theme="dark"] .btn-back {
-  color: #9ca3af !important;
-  border-color: #6b7280 !important;
+body[data-theme="light"] #generatedText,
+html[data-theme="light"] #generatedText {
+  background-color: #ffffff !important;
+  color: #212529 !important;
+  border-color: #dee2e6 !important;
 }
 
-body[data-theme="dark"] .btn-back:hover,
-html[data-theme="dark"] .btn-back:hover {
-  color: white !important;
-  background-color: #6b7280 !important;
-  border-color: #6b7280 !important;
+/* Formatting Toolbar */
+#formattingToolbar {
+  display: flex;
+  align-items: center;
 }
 
-body[data-theme="dark"] .generated-text-header,
-html[data-theme="dark"] .generated-text-header {
-  color: #ffffff !important;
+#formattingToolbar .btn {
+  transition: all 0.2s ease;
 }
 
-body[data-theme="dark"] .channel-badge,
-html[data-theme="dark"] .channel-badge {
-  color: white !important;
-  background-color: #6b7280 !important;
+#formattingToolbar .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
 }
 
-body[data-theme="dark"] .btn-primary,
-html[data-theme="dark"] .btn-primary {
-  color: white !important;
+#formattingToolbar .btn i {
+  font-size: 1.1rem;
 }
 
-/* Social buttons - all with colored backgrounds */
-
-/* WhatsApp */
-.social-btn-whatsapp {
-  background: #25d366 !important;
-  color: white !important;
-  border: none !important;
+body[data-theme="dark"] #formattingToolbar,
+html[data-theme="dark"] #formattingToolbar {
+  background-color: #1a1a1a !important;
+  border-color: #404040 !important;
 }
 
-.social-btn-whatsapp:hover {
-  background: #20ba5a !important;
-  color: white !important;
+body[data-theme="light"] #formattingToolbar,
+html[data-theme="light"] #formattingToolbar {
+  background-color: #f8f9fa !important;
+  border-color: #dee2e6 !important;
 }
 
-.social-btn-whatsapp.active {
-  background: #1da851 !important;
-  color: white !important;
-  box-shadow: 0 0 0 3px rgba(37, 211, 102, 0.3);
+/* Emoji Picker Modal */
+#emojiPickerModal .modal-content {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
 }
 
-/* Facebook */
-.social-btn-facebook {
-  background: #1877f2 !important;
-  color: white !important;
-  border: none !important;
+#emojiPickerModal .modal-header {
+  border-bottom: 1px solid var(--border-color);
 }
 
-.social-btn-facebook:hover {
-  background: #166fe5 !important;
-  color: white !important;
+#emojiPickerModal .modal-title {
+  color: var(--text-primary);
 }
 
-.social-btn-facebook.active {
-  background: #1467d8 !important;
-  color: white !important;
-  box-shadow: 0 0 0 3px rgba(24, 119, 242, 0.3);
+#emojiPickerModal .btn-close {
+  filter: var(--bs-btn-close-filter, invert(1) grayscale(100%) brightness(200%));
 }
 
-/* Twitter */
-.social-btn-twitter {
-  background: #1da1f2 !important;
-  color: white !important;
-  border: none !important;
+body[data-theme="dark"] #emojiPickerModal .btn-close,
+html[data-theme="dark"] #emojiPickerModal .btn-close {
+  filter: invert(1) grayscale(100%) brightness(200%);
 }
 
-.social-btn-twitter:hover {
-  background: #1a94da !important;
-  color: white !important;
+body[data-theme="light"] #emojiPickerModal .btn-close,
+html[data-theme="light"] #emojiPickerModal .btn-close {
+  filter: none;
 }
 
-.social-btn-twitter.active {
-  background: #1787c2 !important;
-  color: white !important;
-  box-shadow: 0 0 0 3px rgba(29, 161, 242, 0.3);
+.emoji-btn {
+  transition: all 0.15s ease;
+  border-color: var(--border-color) !important;
 }
 
-/* Instagram */
-.social-btn-instagram {
-  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%) !important;
-  color: white !important;
-  border: none !important;
+.emoji-btn:hover {
+  transform: scale(1.2);
+  background: var(--bs-primary) !important;
+  border-color: var(--bs-primary) !important;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
 }
 
-.social-btn-instagram:hover {
-  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%) !important;
-  color: white !important;
-  opacity: 0.9;
-}
-
-.social-btn-instagram.active {
-  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%) !important;
-  color: white !important;
-  box-shadow: 0 0 0 3px rgba(225, 48, 108, 0.3);
-}
-
-/* Telegram */
-.social-btn-telegram {
-  background: #0088cc !important;
-  color: white !important;
-  border: none !important;
-}
-
-.social-btn-telegram:hover {
-  background: #007ab8 !important;
-  color: white !important;
-}
-
-.social-btn-telegram.active {
-  background: #006ca5 !important;
-  color: white !important;
-  box-shadow: 0 0 0 3px rgba(0, 136, 204, 0.3);
-}
-
-/* Ensure all social buttons have white text */
+/* Social Buttons */
 .social-btn {
   color: white !important;
   font-weight: 500;
@@ -924,6 +2039,113 @@ html[data-theme="dark"] .btn-primary {
 body[data-theme="dark"] .social-btn,
 html[data-theme="dark"] .social-btn {
   color: white !important;
+}
+
+body[data-theme="dark"] .social-btn.active,
+html[data-theme="dark"] .social-btn.active {
+  color: white !important;
+}
+
+/* Template Buttons */
+.template-btn {
+  text-align: left;
+  transition: all 0.2s ease;
+}
+
+.template-btn:hover {
+  transform: translateX(5px);
+}
+
+body[data-theme="dark"] .template-btn.active,
+html[data-theme="dark"] .template-btn.active {
+  background-color: rgba(59, 130, 246, 0.2) !important;
+  color: #60a5fa !important;
+  border-color: #60a5fa !important;
+}
+
+body[data-theme="dark"] .template-btn.active h6,
+html[data-theme="dark"] .template-btn.active h6 {
+  color: #ffffff !important;
+}
+
+/* Sticky positioning for generated text card */
+@media (min-width: 992px) {
+  .sticky-top {
+    position: sticky !important;
+  }
+}
+
+/* Override Bootstrap text colors in dark mode */
+body[data-theme="dark"] .text-success,
+html[data-theme="dark"] .text-success {
+  color: #10b981 !important;
+}
+
+body[data-theme="dark"] .text-danger,
+html[data-theme="dark"] .text-danger {
+  color: #ef4444 !important;
+}
+
+body[data-theme="dark"] .text-warning,
+html[data-theme="dark"] .text-warning {
+  color: #f59e0b !important;
+}
+
+body[data-theme="dark"] .text-info,
+html[data-theme="dark"] .text-info {
+  color: #3b82f6 !important;
+}
+
+/* Icons */
+body[data-theme="dark"] i,
+html[data-theme="dark"] i {
+  color: inherit !important;
+}
+
+body[data-theme="dark"] .bi,
+html[data-theme="dark"] .bi {
+  color: inherit !important;
+}
+
+/* ================================
+   PRODUCT IMAGES - SHARE PAGE
+   ================================ */
+
+.product-image-container-share {
+  width: 100%;
+  max-height: 250px;
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--bg-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.product-image-share {
+  width: 100%;
+  height: 100%;
+  max-height: 250px;
+  object-fit: contain;
+  padding: 0.5rem;
+}
+
+.product-image-placeholder-share {
+  width: 100%;
+  height: 250px;
+  background: var(--bg-secondary);
+  border: 2px dashed var(--border-color);
+  color: var(--text-muted);
+}
+
+body[data-theme="dark"] .product-image-placeholder-share {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+body[data-theme="dark"] .product-image-placeholder-share i {
+  color: #6b7280 !important;
 }
 </style>
 

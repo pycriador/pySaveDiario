@@ -15,7 +15,7 @@
   </div>
 
   <div class="panel">
-    <form method="post" class="row g-4">
+    <form method="post" enctype="multipart/form-data" class="row g-4">
       {{ form.hidden_tag() }}
       
       <!-- Product Section -->
@@ -43,7 +43,28 @@
         <label class="form-label" for="{{ form.product_description.id }}">
           <i class="bi bi-text-paragraph"></i> Descrição do produto
         </label>
-        {{ form.product_description(class="form-control", rows="3", placeholder="Descrição detalhada do produto") }}
+        {{ form.product_description(class="form-control html-editor", id="product_description", rows="3", placeholder="Descrição detalhada do produto com formatação HTML...") }}
+      </div>
+      
+      <!-- Separator -->
+      <div class="col-12 my-4">
+        <hr style="border-top: 2px solid var(--border-color); opacity: 0.3;">
+      </div>
+      
+      <div class="col-12">
+        <label class="form-label" for="{{ form.product_image.id }}">
+          <i class="bi bi-image"></i> Imagem do produto
+        </label>
+        {% if offer.product and offer.product.image_url %}
+        <div class="mb-2">
+          <img src="{{ offer.product.image_url }}" alt="Imagem atual" class="img-thumbnail" style="max-height: 150px;">
+          <small class="text-muted d-block">Imagem atual - envie uma nova para substituir</small>
+        </div>
+        {% endif %}
+        {{ form.product_image(class="form-control", accept="image/png,image/jpeg,image/jpg,image/gif,image/webp") }}
+        <small class="text-muted">
+          <i class="bi bi-info-circle"></i> Formatos permitidos: PNG, JPG, JPEG, GIF, WEBP. Tamanho máximo: 5MB
+        </small>
       </div>
       
       <!-- Classificação do Produto -->
@@ -105,6 +126,48 @@
         {{ form.currency(class="form-select", id="currency") }}
       </div>
       
+      <!-- Parcelamento -->
+      <div class="col-12 mt-4">
+        <h5 class="text-uppercase text-muted mb-3" style="font-size: 0.85rem; letter-spacing: 0.1em; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+          <i class="bi bi-credit-card"></i> Parcelamento (Opcional)
+        </h5>
+      </div>
+      
+      <div class="col-md-4">
+        <label class="form-label" for="{{ form.installment_count.id }}">
+          <i class="bi bi-123"></i> Quantidade de Parcelas
+        </label>
+        {{ form.installment_count(class="form-control", placeholder="Ex: 5", min="1", max="99") }}
+        <small class="text-muted">
+          <i class="bi bi-info-circle"></i> Em quantas vezes
+        </small>
+      </div>
+      
+      <div class="col-md-4">
+        <label class="form-label" for="{{ form.installment_value.id }}">
+          <i class="bi bi-cash-coin"></i> Valor da Parcela
+        </label>
+        {{ form.installment_value(class="form-control", placeholder="Ex: 72.00", step="0.01") }}
+        <small class="text-muted">
+          <i class="bi bi-info-circle"></i> Valor de cada parcela
+        </small>
+      </div>
+      
+      <div class="col-md-4">
+        <label class="form-label" for="{{ form.installment_interest_free.id }}">
+          <i class="bi bi-percent"></i> Juros
+        </label>
+        <div class="form-check form-switch pt-2">
+          {{ form.installment_interest_free(class="form-check-input", id="installment_interest_free") }}
+          <label class="form-check-label" for="installment_interest_free">
+            Sem juros
+          </label>
+        </div>
+        <small class="text-muted">
+          <i class="bi bi-info-circle"></i> Marque se for sem juros
+        </small>
+      </div>
+      
       <!-- Validade -->
       <div class="col-12 mt-4">
         <h5 class="text-uppercase text-muted mb-3" style="font-size: 0.85rem; letter-spacing: 0.1em; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
@@ -156,5 +219,10 @@
   </div>
 </section>
 
+{% endblock %}
+
+{% block scripts %}
+<!-- HTML Editor Component -->
+{% include 'components/html_editor.html' %}
 {% endblock %}
 

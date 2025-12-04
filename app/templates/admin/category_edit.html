@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Editar Categoria{% endblock %}
+
+{% block content %}
+<section>
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+    <div>
+      <p class="eyebrow"><i class="bi bi-tag-fill"></i> Administração / Categorias</p>
+      <h1 class="mb-0">Editar Categoria</h1>
+      <p class="muted mb-0">Atualize as informações da categoria</p>
+    </div>
+    <div>
+      <a class="btn btn-outline-light btn-sm" href="{{ url_for('web.admin_categories') }}">
+        <i class="bi bi-arrow-left"></i> Voltar
+      </a>
+    </div>
+  </div>
+
+  <div class="panel">
+    <form method="post" class="row g-4">
+      {{ form.hidden_tag() }}
+      
+      <div class="col-md-6">
+        <label class="form-label" for="{{ form.name.id }}">
+          <i class="bi bi-tag-fill"></i> Nome da categoria *
+        </label>
+        {{ form.name(class="form-control", placeholder="Ex: Eletrônicos") }}
+      </div>
+      
+      <div class="col-md-6">
+        <label class="form-label" for="{{ form.slug.id }}">
+          <i class="bi bi-link-45deg"></i> Slug *
+        </label>
+        {{ form.slug(class="form-control", placeholder="eletronicos") }}
+        <small class="text-muted">Usado para URLs. Apenas letras minúsculas e hífens.</small>
+      </div>
+      
+      <div class="col-12">
+        <label class="form-label" for="{{ form.description.id }}">
+          <i class="bi bi-text-paragraph"></i> Descrição
+        </label>
+        {{ form.description(class="form-control", rows="3", placeholder="Descrição opcional") }}
+      </div>
+      
+      <div class="col-md-6">
+        <label class="form-label" for="{{ form.icon.id }}">
+          <i class="bi bi-image"></i> Ícone (Bootstrap Icons)
+        </label>
+        {{ form.icon(class="form-control", placeholder="bi-lightning-charge-fill") }}
+        <small class="text-muted d-block mt-1">
+          <i class="bi bi-info-circle"></i> 
+          Veja todos os ícones em 
+          <a href="https://icons.getbootstrap.com/" target="_blank">icons.getbootstrap.com</a>
+        </small>
+      </div>
+      
+      <div class="col-md-6">
+        <div class="form-check mt-4 pt-2">
+          {{ form.active(class="form-check-input") }}
+          <label class="form-check-label" for="{{ form.active.id }}">
+            Categoria ativa
+          </label>
+        </div>
+      </div>
+      
+      <div class="col-12">
+        <hr class="my-4">
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-check-circle"></i> Salvar Alterações
+          </button>
+          <a href="{{ url_for('web.admin_categories') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-x-circle"></i> Cancelar
+          </a>
+        </div>
+      </div>
+    </form>
+  </div>
+</section>
+{% endblock %}
+

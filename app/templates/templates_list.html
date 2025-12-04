@@ -16,6 +16,48 @@
     {% endif %}
   </div>
 
+  <!-- Filters Section -->
+  <div class="panel mb-4">
+    <form method="get" id="filterForm" class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label" for="search">
+          <i class="bi bi-search"></i> Buscar
+        </label>
+        <input type="text" class="form-control" name="search" id="search" 
+               placeholder="Nome, descrição ou slug..." 
+               value="{{ request.args.get('search', '') }}">
+      </div>
+      
+      <div class="col-md-4">
+        <label class="form-label" for="social_network">
+          <i class="bi bi-broadcast"></i> Rede Social
+        </label>
+        <select class="form-select" name="social_network" id="social_network">
+          <option value="">Todas as redes</option>
+          {% for network in social_networks %}
+          <option value="{{ network.network }}" {% if request.args.get('social_network') == network.network %}selected{% endif %}>
+            {{ network.network|title }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      
+      <div class="col-md-2 d-flex align-items-end">
+        <button type="submit" class="btn btn-primary w-100">
+          <i class="bi bi-funnel"></i> Filtrar
+        </button>
+      </div>
+      
+      {% if request.args.get('search') or request.args.get('social_network') %}
+      <div class="col-12">
+        <a href="{{ url_for('web.share_templates') }}" class="btn btn-sm btn-outline-secondary">
+          <i class="bi bi-x-circle"></i> Limpar Filtros
+        </a>
+      </div>
+      {% endif %}
+    </form>
+  </div>
+
   <div class="grid two">
     {% for template in templates %}
     <article class="panel card">
@@ -139,5 +181,39 @@ function confirmDelete(id, name, type) {
   
   modal.show();
 }
+
+// Dynamic filters
+document.addEventListener('DOMContentLoaded', function() {
+  const searchInput = document.getElementById('search');
+  const socialNetworkSelect = document.getElementById('social_network');
+  
+  function applyFilters() {
+    const params = new URLSearchParams();
+    
+    const search = searchInput.value.trim();
+    const socialNetwork = socialNetworkSelect.value;
+    
+    if (search) params.append('search', search);
+    if (socialNetwork) params.append('social_network', socialNetwork);
+    
+    const url = `${window.location.pathname}${params.toString() ? '?' + params.toString() : ''}`;
+    window.location.href = url;
+  }
+  
+  // Apply filters on input change (with debounce for search)
+  let searchTimeout;
+  searchInput.addEventListener('input', function() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(applyFilters, 500);
+  });
+  
+  socialNetworkSelect.addEventListener('change', applyFilters);
+  
+  // Prevent form submit (we handle it via JS)
+  document.getElementById('filterForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    applyFilters();
+  });
+});
 </script>
 {% endblock %}

@@ -4,7 +4,9 @@ from flask_wtf import FlaskForm
 from wtforms import (
     BooleanField,
     DecimalField,
+    FileField,
     HiddenField,
+    IntegerField,
     PasswordField,
     SelectField,
     StringField,
@@ -40,7 +42,52 @@ class UserCreateForm(FlaskForm):
         default="member",
         validators=[DataRequired()],
     )
+    
+    # Contact information
+    phone = StringField("Celular", validators=[Optional(), Length(max=20)])
+    address = StringField("Endereço", validators=[Optional(), Length(max=255)])
+    website = StringField("Website", validators=[Optional(), Length(max=255)])
+    
+    # Social media
+    instagram = StringField("Instagram", validators=[Optional(), Length(max=255)])
+    facebook = StringField("Facebook", validators=[Optional(), Length(max=255)])
+    twitter = StringField("Twitter/X", validators=[Optional(), Length(max=255)])
+    linkedin = StringField("LinkedIn", validators=[Optional(), Length(max=255)])
+    youtube = StringField("YouTube", validators=[Optional(), Length(max=255)])
+    tiktok = StringField("TikTok", validators=[Optional(), Length(max=255)])
+    
     submit_user = SubmitField("Cadastrar usuário")
+
+
+class UserEditForm(FlaskForm):
+    display_name = StringField("Nome exibido", validators=[DataRequired(), Length(max=120)])
+    email = StringField("E-mail", validators=[DataRequired(), Email(), Length(max=120)])
+    password = PasswordField("Nova senha", validators=[Optional(), Length(min=6)])
+    confirm_password = PasswordField("Confirmar nova senha", validators=[Optional(), Length(min=6)])
+    role = SelectField(
+        "Papel",
+        choices=[
+            ("member", "Membro"),
+            ("editor", "Editor"),
+            ("admin", "Administrador"),
+        ],
+        validators=[DataRequired()],
+    )
+    
+    # Contact information
+    phone = StringField("Celular", validators=[Optional(), Length(max=20)])
+    address = StringField("Endereço", validators=[Optional(), Length(max=255)])
+    website = StringField("Website", validators=[Optional(), Length(max=255)])
+    
+    # Social media
+    instagram = StringField("Instagram", validators=[Optional(), Length(max=255)])
+    facebook = StringField("Facebook", validators=[Optional(), Length(max=255)])
+    twitter = StringField("Twitter/X", validators=[Optional(), Length(max=255)])
+    linkedin = StringField("LinkedIn", validators=[Optional(), Length(max=255)])
+    youtube = StringField("YouTube", validators=[Optional(), Length(max=255)])
+    tiktok = StringField("TikTok", validators=[Optional(), Length(max=255)])
+    
+    submit = SubmitField("Salvar alterações")
 
 
 class GroupCreateForm(FlaskForm):
@@ -60,6 +107,7 @@ class OfferCreateForm(FlaskForm):
     product_name = StringField("Nome do produto", validators=[DataRequired(), Length(max=200)])
     product_slug = StringField("Slug do produto", validators=[DataRequired(), Length(max=200)])
     product_description = TextAreaField("Descrição do produto", validators=[Optional(), Length(max=500)])
+    product_image = FileField("Imagem do produto", validators=[Optional()])
     seller_id = SelectField("Vendedor", coerce=int, validators=[Optional()])
     category_id = SelectField("Categoria", coerce=int, validators=[Optional()])
     manufacturer_id = SelectField("Fabricante", coerce=int, validators=[Optional()])
@@ -68,23 +116,29 @@ class OfferCreateForm(FlaskForm):
     old_price = DecimalField("Preço antigo", validators=[Optional(), NumberRange(min=0)], places=2)
     currency = SelectField("Moeda", validators=[DataRequired()], 
                           choices=[
-                              ('BRL', 'BRL - Real Brasileiro'),
-                              ('USD', 'USD - Dólar Americano'),
-                              ('EUR', 'EUR - Euro'),
-                              ('GBP', 'GBP - Libra Esterlina'),
-                              ('JPY', 'JPY - Iene Japonês'),
-                              ('CAD', 'CAD - Dólar Canadense'),
-                              ('AUD', 'AUD - Dólar Australiano'),
+                              ('BRL', 'R$ - Real Brasileiro'),
+                              ('USD', '$ - Dólar Americano'),
+                              ('EUR', '€ - Euro'),
+                              ('GBP', '£ - Libra Esterlina'),
+                              ('JPY', '¥ - Iene Japonês'),
+                              ('CAD', 'CA$ - Dólar Canadense'),
+                              ('AUD', 'AU$ - Dólar Australiano'),
                               ('CHF', 'CHF - Franco Suíço'),
-                              ('CNY', 'CNY - Yuan Chinês'),
-                              ('ARS', 'ARS - Peso Argentino'),
-                              ('MXN', 'MXN - Peso Mexicano'),
-                              ('CLP', 'CLP - Peso Chileno'),
+                              ('CNY', '¥ - Yuan Chinês'),
+                              ('ARS', 'ARS$ - Peso Argentino'),
+                              ('MXN', 'MX$ - Peso Mexicano'),
+                              ('CLP', 'CLP$ - Peso Chileno'),
                           ],
                           default='BRL')
     offer_url = StringField("URL da oferta", validators=[Optional(), Length(max=255)])
     expires_date = DateField("Data de expiração", validators=[Optional()], format='%Y-%m-%d')
     expires_time = TimeField("Hora de expiração", validators=[Optional()], format='%H:%M')
+    
+    # Installment fields
+    installment_count = IntegerField("Quantidade de parcelas", validators=[Optional(), NumberRange(min=1, max=99)])
+    installment_value = DecimalField("Valor da parcela", validators=[Optional(), NumberRange(min=0)], places=2)
+    installment_interest_free = BooleanField("Sem juros", default=True)
+    
     submit_offer = SubmitField("Publicar oferta")
 
 
@@ -102,6 +156,7 @@ class SellerForm(FlaskForm):
     slug = StringField("Slug", validators=[DataRequired(), Length(max=120)])
     description = TextAreaField("Descrição", validators=[Optional()])
     website = StringField("Website", validators=[Optional(), Length(max=255)])
+    color = StringField("Cor do vendedor", validators=[Optional(), Length(max=255)], default='#6b7280')
     active = BooleanField("Ativo", default=True)
     submit = SubmitField("Salvar vendedor")
 
@@ -131,11 +186,20 @@ class CouponForm(FlaskForm):
     active = BooleanField("Ativo", default=True)
     expires_date = DateField("Data de expiração", validators=[Optional()], format='%Y-%m-%d')
     expires_time = TimeField("Hora de expiração", validators=[Optional()], format='%H:%M')
+    discount_type = SelectField("Tipo de desconto", 
+                               choices=[('percentage', 'Porcentagem (%)'), ('fixed', 'Valor fixo (R$)')],
+                               default='percentage',
+                               validators=[Optional()])
+    discount_value = DecimalField("Valor do desconto", validators=[Optional(), NumberRange(min=0)], places=2)
+    min_purchase_value = DecimalField("Valor mínimo da compra (R$)", validators=[Optional(), NumberRange(min=0)], places=2)
+    max_discount_value = DecimalField("Desconto máximo (R$)", validators=[Optional(), NumberRange(min=0)], places=2)
     submit = SubmitField("Salvar cupom")
 
 
 class SocialNetworkConfigForm(FlaskForm):
     network = StringField("Rede Social", validators=[DataRequired(), Length(max=50)])
+    color = StringField("Cor do Botão", validators=[Optional(), Length(max=200)],
+                       render_kw={'type': 'text', 'placeholder': '#1877f2 ou linear-gradient(...)'})
     prefix_text = TextAreaField("Texto Inicial", validators=[Optional()], 
                                  render_kw={'rows': 3, 'placeholder': 'Texto que aparece antes do conteúdo do template'})
     suffix_text = TextAreaField("Texto Final / Hashtags", validators=[Optional()],

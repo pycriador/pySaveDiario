@@ -88,7 +88,7 @@
         <div>
           <p class="mb-1" style="font-size: 1.25rem; font-weight: 700; color: var(--accent-primary);">
             <i class="bi bi-tag-fill"></i>
-            {{ offer.currency }} {{ '%.2f'|format(offer.price_value) }}
+            {{ offer.currency|currency_symbol }} {{ '%.2f'|format(offer.price_value) }}
           </p>
           <p class="muted mb-0" style="font-size: 0.85rem;">
             <i class="bi bi-shop"></i> {{ offer.vendor_name }}

@@ -94,10 +94,15 @@
         <label class="form-label" for="{{ form.body.id }}">
           <i class="bi bi-code-square"></i> Corpo do Template *
         </label>
-        {{ form.body(class="form-control", rows="8", id="templateBody", placeholder="Digite o conteúdo do template...", required=True) }}
+        {{ form.body(class="form-control html-editor", rows="8", id="templateBody", placeholder="Digite o conteúdo do template com formatação HTML...", required=True) }}
         <small class="text-muted">
-          <i class="bi bi-info-circle"></i> Use variáveis abaixo para tornar o template dinâmico
+          <i class="bi bi-info-circle"></i> Use variáveis abaixo e formatação HTML para criar templates ricos
         </small>
+      </div>
+      
+      <!-- Separator -->
+      <div class="col-12 my-4">
+        <hr style="border-top: 2px solid var(--border-color); opacity: 0.3;">
       </div>
       
       <div class="col-12">
@@ -124,7 +129,7 @@
               
               {# Offer Variables #}
               {% if offer_ns and offer_ns|length > 0 %}
-              <div class="mb-3">
+              <div class="mb-4">
                 <h6 class="text-uppercase mb-2" style="font-size: 0.75rem; letter-spacing: 0.05em; color: var(--text-muted);">
                   <i class="bi bi-tag"></i> Variáveis de Ofertas
                 </h6>
@@ -146,7 +151,7 @@
               
               {# Coupon Variables #}
               {% if coupon_ns %}
-              <div class="mb-3">
+              <div class="mb-4">
                 <h6 class="text-uppercase mb-2" style="font-size: 0.75rem; letter-spacing: 0.05em; color: var(--text-muted);">
                   <i class="bi bi-ticket-perforated"></i> Variáveis de Cupons
                 </h6>
@@ -168,7 +173,7 @@
               
               {# Global Variables #}
               {% if global_ns %}
-              <div class="mb-0">
+              <div class="mb-3">
                 <h6 class="text-uppercase mb-2 global-variables-title" style="font-size: 0.75rem; letter-spacing: 0.05em;">
                   <i class="bi bi-globe"></i> Variáveis Globais
                 </h6>
@@ -288,5 +293,39 @@ document.querySelector('input[name="template-name"]')?.addEventListener('input',
   }
 });
 </script>
+
+<!-- HTML Editor Component -->
+{% include 'components/html_editor.html' %}
+
+<script>
+// Override insertNamespace function to work with Quill editor
+function insertNamespace(namespaceName) {
+  const editorId = 'templateBody';
+  
+  // Check if Quill editor exists
+  if (editors && editors[editorId]) {
+    const quill = editors[editorId];
+    const range = quill.getSelection(true);
+    const namespaceText = `{${namespaceName}}`;
+    quill.insertText(range.index, namespaceText);
+    quill.setSelection(range.index + namespaceText.length);
+  } else {
+    // Fallback to textarea
+    const textarea = document.getElementById(editorId);
+    if (!textarea) return;
+    
+    const cursorPos = textarea.selectionStart;
+    const textBefore = textarea.value.substring(0, cursorPos);
+    const textAfter = textarea.value.substring(textarea.selectionEnd);
+    const namespaceText = `{${namespaceName}}`;
+    
+    textarea.value = textBefore + namespaceText + textAfter;
+    const newCursorPos = cursorPos + namespaceText.length;
+    textarea.setSelectionRange(newCursorPos, newCursorPos);
+    textarea.focus();
+  }
+}
+</script>
+
 {% endblock %}
 

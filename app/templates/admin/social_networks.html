@@ -61,6 +61,119 @@
           </div>
 
           <div class="mb-3">
+            <label class="form-label">
+              <i class="bi bi-palette"></i> Cor do Botão
+            </label>
+            
+            <!-- Preview -->
+            <div class="color-preview mb-2" 
+                 id="preview_{{ config.id }}" 
+                 style="background: {{ config.color or '#1877f2' }};">
+              <span class="preview-text">Preview</span>
+            </div>
+            
+            <!-- Tipo de Cor -->
+            <div class="btn-group w-100 mb-2" role="group">
+              <input type="radio" class="btn-check" name="color_type_{{ config.id }}" 
+                     id="solid_{{ config.id }}" value="solid" checked 
+                     onchange="switchColorType('{{ config.id }}', 'solid')">
+              <label class="btn btn-outline-primary btn-sm" for="solid_{{ config.id }}">
+                <i class="bi bi-circle-fill"></i> Cor Sólida
+              </label>
+              
+              <input type="radio" class="btn-check" name="color_type_{{ config.id }}" 
+                     id="gradient_{{ config.id }}" value="gradient"
+                     onchange="switchColorType('{{ config.id }}', 'gradient')">
+              <label class="btn btn-outline-primary btn-sm" for="gradient_{{ config.id }}">
+                <i class="bi bi-palette-fill"></i> Gradiente
+              </label>
+              
+              <input type="radio" class="btn-check" name="color_type_{{ config.id }}" 
+                     id="custom_{{ config.id }}" value="custom"
+                     onchange="switchColorType('{{ config.id }}', 'custom')">
+              <label class="btn btn-outline-primary btn-sm" for="custom_{{ config.id }}">
+                <i class="bi bi-code-square"></i> CSS
+              </label>
+            </div>
+            
+            <!-- Cor Sólida -->
+            <div id="solid_picker_{{ config.id }}" class="color-option">
+              <div class="input-group">
+                <input type="color" 
+                       class="form-control form-control-color" 
+                       id="color_picker_{{ config.id }}"
+                       value="{{ config.color if config.color and not config.color.startswith('linear-gradient') else '#1877f2' }}"
+                       onchange="updateSolidColor('{{ config.id }}')">
+                <input type="text" 
+                       class="form-control" 
+                       id="color_hex_{{ config.id }}"
+                       value="{{ config.color if config.color and not config.color.startswith('linear-gradient') else '#1877f2' }}"
+                       placeholder="#1877f2"
+                       onchange="updateSolidColorFromHex('{{ config.id }}')">
+              </div>
+            </div>
+            
+            <!-- Gradientes Pré-definidos -->
+            <div id="gradient_picker_{{ config.id }}" class="color-option" style="display: none;">
+              <div class="gradient-presets">
+                <button type="button" class="gradient-btn" 
+                        onclick="applyGradient('{{ config.id }}', 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)')">
+                  <div class="gradient-preview" style="background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);"></div>
+                  Instagram
+                </button>
+                
+                <button type="button" class="gradient-btn"
+                        onclick="applyGradient('{{ config.id }}', 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)')">
+                  <div class="gradient-preview" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></div>
+                  Roxo
+                </button>
+                
+                <button type="button" class="gradient-btn"
+                        onclick="applyGradient('{{ config.id }}', 'linear-gradient(to right, #f12711 0%, #f5af19 100%)')">
+                  <div class="gradient-preview" style="background: linear-gradient(to right, #f12711 0%, #f5af19 100%);"></div>
+                  Fogo
+                </button>
+                
+                <button type="button" class="gradient-btn"
+                        onclick="applyGradient('{{ config.id }}', 'linear-gradient(120deg, #89f7fe 0%, #66a6ff 100%)')">
+                  <div class="gradient-preview" style="background: linear-gradient(120deg, #89f7fe 0%, #66a6ff 100%);"></div>
+                  Azul
+                </button>
+                
+                <button type="button" class="gradient-btn"
+                        onclick="applyGradient('{{ config.id }}', 'linear-gradient(to top, #0ba360 0%, #3cba92 100%)')">
+                  <div class="gradient-preview" style="background: linear-gradient(to top, #0ba360 0%, #3cba92 100%);"></div>
+                  Verde
+                </button>
+                
+                <button type="button" class="gradient-btn"
+                        onclick="applyGradient('{{ config.id }}', 'linear-gradient(to right, #fa709a 0%, #fee140 100%)')">
+                  <div class="gradient-preview" style="background: linear-gradient(to right, #fa709a 0%, #fee140 100%);"></div>
+                  Rosa/Amarelo
+                </button>
+              </div>
+            </div>
+            
+            <!-- CSS Customizado -->
+            <div id="custom_picker_{{ config.id }}" class="color-option" style="display: none;">
+              <textarea class="form-control font-monospace" 
+                        id="custom_css_{{ config.id }}"
+                        rows="3"
+                        placeholder="linear-gradient(45deg, #f09433 0%, #e6683c 100%)"
+                        onchange="updateCustomCSS('{{ config.id }}')">{{ config.color if config.color and config.color.startswith('linear-gradient') else '' }}</textarea>
+              <small class="text-muted">
+                <i class="bi bi-info-circle"></i> Cole qualquer CSS válido para background
+              </small>
+            </div>
+            
+            <!-- Hidden input para enviar o valor -->
+            <input type="hidden" 
+                   id="color_{{ config.id }}" 
+                   name="color" 
+                   value="{{ config.color or '#1877f2' }}">
+          </div>
+
+          <div class="mb-3">
             <label class="form-label" for="prefix_{{ config.id }}">
               <i class="bi bi-arrow-bar-up"></i> Texto Inicial
             </label>
@@ -89,17 +202,21 @@
           </div>
 
           <div class="d-flex justify-content-between align-items-center">
-            <form method="POST" action="{{ url_for('web.admin_social_network_delete', config_id=config.id) }}" 
-                  onsubmit="return confirm('Tem certeza que deseja deletar esta rede social? Todos os templates associados perderão esta configuração.')">
-              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-              <button type="submit" class="btn btn-sm btn-outline-danger">
-                <i class="bi bi-trash"></i> Deletar
-              </button>
-            </form>
+            <button type="button" class="btn btn-sm btn-outline-danger" 
+                    onclick="deleteNetwork('{{ config.id }}', '{{ config.network.title() }}')">
+              <i class="bi bi-trash"></i> Deletar
+            </button>
             <button type="submit" class="btn btn-primary">
               <i class="bi bi-save"></i> Salvar
             </button>
           </div>
+        </form>
+        
+        <!-- Hidden form for deleting (outside the main form) -->
+        <form id="deleteForm_{{ config.id }}" method="POST" 
+              action="{{ url_for('web.admin_social_network_delete', config_id=config.id) }}" 
+              style="display: none;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         </form>
       </div>
     </div>
@@ -126,6 +243,30 @@
               {{ form.network(class="form-control", placeholder="Ex: twitter, linkedin, tiktok", required=True) }}
               <small class="text-muted">
                 <i class="bi bi-info-circle"></i> Use letras minúsculas, sem espaços
+              </small>
+            </div>
+            
+            <div class="mb-3">
+              <label class="form-label">
+                <i class="bi bi-palette"></i> Cor do Botão
+              </label>
+              
+              <!-- Preview -->
+              <div class="color-preview mb-2" id="preview_new">
+                <span class="preview-text">Preview</span>
+              </div>
+              
+              <!-- Cor Sólida -->
+              <div class="input-group">
+                <input type="color" 
+                       class="form-control form-control-color" 
+                       id="color_picker_new"
+                       value="#1877f2"
+                       onchange="updateSolidColor('new')">
+                {{ form.color(class="form-control", id="color_new", placeholder="#1877f2", value="#1877f2") }}
+              </div>
+              <small class="text-muted">
+                <i class="bi bi-info-circle"></i> Clique no quadrado colorido para escolher uma cor
               </small>
             </div>
             
@@ -196,6 +337,223 @@ code {
   border-radius: 4px;
   font-size: 0.85rem;
 }
+
+/* Color Picker Styles */
+.color-preview {
+  width: 100%;
+  height: 60px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--border-color);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.color-preview:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.preview-text {
+  color: white;
+  font-weight: 600;
+  font-size: 1.1rem;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  letter-spacing: 0.5px;
+}
+
+.color-option {
+  margin-top: 0.5rem;
+}
+
+.gradient-presets {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.75rem;
+}
+
+.gradient-btn {
+  background: transparent;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-primary);
+  font-size: 0.85rem;
+}
+
+.gradient-btn:hover {
+  border-color: var(--bs-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.gradient-btn.active {
+  border-color: var(--bs-primary);
+  background: rgba(var(--bs-primary-rgb), 0.1);
+}
+
+.gradient-preview {
+  width: 100%;
+  height: 50px;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.form-control-color {
+  width: 70px !important;
+  height: 38px !important;
+  padding: 0.375rem !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 0.375rem !important;
+  cursor: pointer;
+}
+
+.form-control-color::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.form-control-color::-webkit-color-swatch {
+  border: none;
+  border-radius: 0.25rem;
+}
+
+.input-group .form-control-color {
+  flex: 0 0 70px;
+}
+
+.input-group .form-control {
+  flex: 1 1 auto;
+}
+
+.font-monospace {
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+}
+
+body[data-theme="dark"] .color-preview {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+body[data-theme="dark"] .gradient-btn {
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #e5e5e5;
+}
+
+body[data-theme="dark"] .gradient-btn:hover {
+  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.1);
+}
 </style>
+
+<script>
+// Inicializar cor inicial ao carregar página
+document.addEventListener('DOMContentLoaded', function() {
+  // Detectar tipo de cor inicial para cada config
+  {% for config in configs %}
+  const initialColor_{{ config.id }} = '{{ config.color or "#1877f2" }}';
+  if (initialColor_{{ config.id }}.startsWith('linear-gradient')) {
+    document.getElementById('gradient_{{ config.id }}').checked = true;
+    switchColorType('{{ config.id }}', 'gradient');
+  } else if (initialColor_{{ config.id }}.startsWith('#') && initialColor_{{ config.id }}.length <= 7) {
+    document.getElementById('solid_{{ config.id }}').checked = true;
+    switchColorType('{{ config.id }}', 'solid');
+  } else if (initialColor_{{ config.id }}.length > 7) {
+    document.getElementById('custom_{{ config.id }}').checked = true;
+    switchColorType('{{ config.id }}', 'custom');
+  }
+  {% endfor %}
+});
+
+// Trocar tipo de seleção de cor
+function switchColorType(id, type) {
+  // Esconder todos
+  document.getElementById('solid_picker_' + id).style.display = 'none';
+  document.getElementById('gradient_picker_' + id).style.display = 'none';
+  document.getElementById('custom_picker_' + id).style.display = 'none';
+  
+  // Mostrar o selecionado
+  if (type === 'solid') {
+    document.getElementById('solid_picker_' + id).style.display = 'block';
+    updateSolidColor(id);
+  } else if (type === 'gradient') {
+    document.getElementById('gradient_picker_' + id).style.display = 'block';
+  } else if (type === 'custom') {
+    document.getElementById('custom_picker_' + id).style.display = 'block';
+  }
+}
+
+// Atualizar cor sólida a partir do color picker
+function updateSolidColor(id) {
+  const picker = document.getElementById('color_picker_' + id);
+  const hexInput = document.getElementById('color_hex_' + id);
+  const preview = document.getElementById('preview_' + id);
+  const hiddenInput = document.getElementById('color_' + id);
+  
+  const color = picker.value;
+  hexInput.value = color;
+  preview.style.background = color;
+  hiddenInput.value = color;
+}
+
+// Atualizar cor sólida a partir do input hex
+function updateSolidColorFromHex(id) {
+  const hexInput = document.getElementById('color_hex_' + id);
+  const picker = document.getElementById('color_picker_' + id);
+  const preview = document.getElementById('preview_' + id);
+  const hiddenInput = document.getElementById('color_' + id);
+  
+  let color = hexInput.value.trim();
+  // Adicionar # se não tiver
+  if (!color.startsWith('#')) {
+    color = '#' + color;
+  }
+  
+  picker.value = color;
+  preview.style.background = color;
+  hiddenInput.value = color;
+}
+
+// Aplicar gradiente pré-definido
+function applyGradient(id, gradient) {
+  const preview = document.getElementById('preview_' + id);
+  const hiddenInput = document.getElementById('color_' + id);
+  const customTextarea = document.getElementById('custom_css_' + id);
+  
+  preview.style.background = gradient;
+  hiddenInput.value = gradient;
+  customTextarea.value = gradient;
+  
+  // Marcar botão como ativo
+  const allButtons = document.getElementById('gradient_picker_' + id).querySelectorAll('.gradient-btn');
+  allButtons.forEach(btn => btn.classList.remove('active'));
+  event.target.closest('.gradient-btn').classList.add('active');
+}
+
+// Atualizar CSS customizado
+function updateCustomCSS(id) {
+  const customTextarea = document.getElementById('custom_css_' + id);
+  const preview = document.getElementById('preview_' + id);
+  const hiddenInput = document.getElementById('color_' + id);
+  
+  const css = customTextarea.value.trim();
+  preview.style.background = css;
+  hiddenInput.value = css;
+}
+
+// Deletar rede social (sem form aninhado)
+function deleteNetwork(configId, networkName) {
+  if (confirm(`Tem certeza que deseja deletar a rede social "${networkName}"?\n\nTodos os templates associados perderão esta configuração.`)) {
+    document.getElementById('deleteForm_' + configId).submit();
+  }
+}
+</script>
 {% endblock %}
 

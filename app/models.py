@@ -56,6 +56,19 @@ class User(UserMixin, TimestampMixin, db.Model):
     bio = db.Column(db.Text)
     avatar_url = db.Column(db.String(255))
     is_active = db.Column(db.Boolean, default=True)
+    
+    # Contact information
+    phone = db.Column(db.String(20))
+    address = db.Column(db.String(255))
+    website = db.Column(db.String(255))
+    
+    # Social media profiles
+    instagram = db.Column(db.String(255))
+    facebook = db.Column(db.String(255))
+    twitter = db.Column(db.String(255))
+    linkedin = db.Column(db.String(255))
+    youtube = db.Column(db.String(255))
+    tiktok = db.Column(db.String(255))
 
     tokens = db.relationship("UserToken", back_populates="user", lazy="dynamic")
     wishlists = db.relationship("Wishlist", back_populates="owner", lazy="dynamic")
@@ -84,6 +97,15 @@ class User(UserMixin, TimestampMixin, db.Model):
             "role": self.role.value,
             "bio": self.bio,
             "avatar_url": self.avatar_url,
+            "phone": self.phone,
+            "address": self.address,
+            "website": self.website,
+            "instagram": self.instagram,
+            "facebook": self.facebook,
+            "twitter": self.twitter,
+            "linkedin": self.linkedin,
+            "youtube": self.youtube,
+            "tiktok": self.tiktok,
             "created_at": self.created_at.isoformat(),
         }
 
@@ -160,6 +182,7 @@ class Product(TimestampMixin, db.Model):
     description = db.Column(db.Text)
     category = db.Column(db.String(120))
     manufacturer = db.Column(db.String(120))
+    image_url = db.Column(db.String(500), nullable=True)  # Path to uploaded image
 
     offers = db.relationship("Offer", back_populates="product", lazy="dynamic")
 
@@ -193,6 +216,11 @@ class Offer(TimestampMixin, db.Model):
     expires_at = db.Column(db.DateTime)
     created_by_id = db.Column(db.Integer, db.ForeignKey("users.id"))
     
+    # Installment fields
+    installment_count = db.Column(db.Integer, nullable=True)  # Number of installments (e.g., 5)
+    installment_value = db.Column(db.Numeric(10, 2), nullable=True)  # Value per installment (e.g., 72.00)
+    installment_interest_free = db.Column(db.Boolean, default=True)  # Interest free or not
+    
     # New relationships for administration
     seller_id = db.Column(db.Integer, db.ForeignKey("sellers.id"), nullable=True)
     category_id = db.Column(db.Integer, db.ForeignKey("categories.id"), nullable=True)
@@ -216,6 +244,14 @@ class Offer(TimestampMixin, db.Model):
     @property
     def price_value(self) -> float:
         return float(self.price or 0)
+    
+    @property
+    def old_price_value(self) -> float:
+        return float(self.old_price or 0) if self.old_price else 0.0
+    
+    @property
+    def installment_value_float(self) -> float:
+        return float(self.installment_value or 0) if self.installment_value else 0.0
 
 
 class WishlistItem(TimestampMixin, db.Model):
@@ -235,11 +271,39 @@ class WishlistItem(TimestampMixin, db.Model):
     )
 
 
-# Association table for Template and SocialNetworkConfig (many-to-many)
+# Association table for Template and SocialNetworkConfig (many-to-many) - DEPRECATED
+# Kept for backwards compatibility, use TemplateSocialNetwork model instead
 template_social_networks = db.Table('template_social_networks',
     db.Column('template_id', db.Integer, db.ForeignKey('templates.id'), primary_key=True),
     db.Column('social_network_id', db.Integer, db.ForeignKey('social_network_configs.id'), primary_key=True)
 )
+
+
+class TemplateSocialNetwork(TimestampMixin, db.Model):
+    """Custom template body for specific social networks"""
+    __tablename__ = "template_social_network_custom"
+    
+    id = db.Column(db.Integer, primary_key=True)
+    template_id = db.Column(db.Integer, db.ForeignKey('templates.id'), nullable=False)
+    social_network = db.Column(db.String(50), nullable=False)  # 'whatsapp', 'telegram', 'instagram', etc.
+    custom_body = db.Column(db.Text, nullable=False)  # Custom template body for this network
+    
+    # Relationships
+    template = db.relationship('Template', backref=db.backref('custom_networks', lazy='dynamic'))
+    
+    __table_args__ = (
+        db.UniqueConstraint('template_id', 'social_network', name='uq_template_social_network'),
+    )
+    
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "template_id": self.template_id,
+            "social_network": self.social_network,
+            "custom_body": self.custom_body,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }
 
 
 class Template(TimestampMixin, db.Model):
@@ -362,6 +426,7 @@ class Seller(TimestampMixin, db.Model):
     description = db.Column(db.Text)
     website = db.Column(db.String(255))
     active = db.Column(db.Boolean, default=True)
+    color = db.Column(db.String(255), default='#6b7280')  # Hex color or CSS gradient
 
     # Relationships
     offers = db.relationship("Offer", backref="seller", lazy="dynamic")
@@ -374,6 +439,7 @@ class Seller(TimestampMixin, db.Model):
             "description": self.description,
             "website": self.website,
             "active": self.active,
+            "color": self.color,
             "created_at": self.created_at.isoformat() if self.created_at else None,
         }
 
@@ -440,6 +506,7 @@ class SocialNetworkConfig(db.Model):
     network = db.Column(db.String(50), unique=True, nullable=False)  # instagram, facebook, whatsapp, telegram
     prefix_text = db.Column(db.Text, nullable=True)  # Text to add before template content
     suffix_text = db.Column(db.Text, nullable=True)  # Text to add after template content (hashtags, etc)
+    color = db.Column(db.String(20), nullable=True, default='#1877f2')  # Default color for the network button
     active = db.Column(db.Boolean, default=True)
     
     @staticmethod
@@ -512,10 +579,40 @@ class Coupon(TimestampMixin, db.Model):
     active = db.Column(db.Boolean, default=True)
     expires_at = db.Column(db.DateTime, nullable=True)
     created_by_id = db.Column(db.Integer, db.ForeignKey("users.id"))
+    
+    # Discount fields
+    discount_type = db.Column(db.String(20), default='percentage')  # 'percentage' or 'fixed'
+    discount_value = db.Column(db.Numeric(10, 2), nullable=True)  # e.g., 10 for 10% or 50 for R$ 50
+    min_purchase_value = db.Column(db.Numeric(10, 2), nullable=True)  # Minimum purchase value to apply coupon
+    max_discount_value = db.Column(db.Numeric(10, 2), nullable=True)  # Maximum discount limit (e.g., 70 for R$ 70 max)
 
     # Relationships
     seller = db.relationship("Seller", backref=db.backref("coupons", lazy="dynamic"))
     created_by = db.relationship("User")
+    
+    def calculate_discount(self, original_price):
+        """Calculate discounted price based on coupon type, min purchase value and max discount limit"""
+        if not self.discount_value or original_price is None:
+            return original_price
+        
+        # Check if purchase value meets minimum requirement
+        if self.min_purchase_value and float(original_price) < float(self.min_purchase_value):
+            return original_price  # Coupon not applicable
+        
+        discount_amount = 0
+        
+        if self.discount_type == 'percentage':
+            discount_amount = (float(original_price) * float(self.discount_value)) / 100
+            # Apply max discount limit if set
+            if self.max_discount_value:
+                discount_amount = min(discount_amount, float(self.max_discount_value))
+        elif self.discount_type == 'fixed':
+            discount_amount = float(self.discount_value)
+        
+        discounted_price = float(original_price) - discount_amount
+        return max(0, discounted_price)  # Don't allow negative prices
+        
+        return original_price
 
     def to_dict(self) -> dict:
         return {

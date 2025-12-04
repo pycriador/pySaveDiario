@@ -7,6 +7,7 @@
     <div>
       <p class="eyebrow"><i class="bi bi-people-fill"></i> Equipe e perfis públicos</p>
       <h1 class="mb-0">Usuários cadastrados</h1>
+      <p class="muted mb-0">{{ users|length }} usuário(s) encontrado(s)</p>
     </div>
     <div class="d-flex gap-2 flex-wrap">
       {% if can_manage %}
@@ -14,20 +15,70 @@
         <i class="bi bi-person-plus-fill"></i> Novo usuário
       </button>
       {% endif %}
-      <form method="get" class="d-flex align-items-end gap-2">
-        <div>
-          <label class="form-label text-uppercase small mb-1" for="role">
-            <i class="bi bi-funnel"></i> Filtrar por papel
-          </label>
-          <select class="form-select" name="role" id="role" onchange="this.form.submit()">
-            <option value="">Todos</option>
-            <option value="admin" {{ 'selected' if request.args.get('role') == 'admin' else '' }}>Administradores</option>
-            <option value="editor" {{ 'selected' if request.args.get('role') == 'editor' else '' }}>Editores</option>
-            <option value="member" {{ 'selected' if request.args.get('role') == 'member' else '' }}>Membros</option>
-          </select>
-        </div>
-      </form>
     </div>
+  </div>
+
+  <!-- Advanced Filters -->
+  <div class="panel mb-4">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+      <h5 class="mb-0">
+        <i class="bi bi-funnel"></i> Filtros
+      </h5>
+      <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearFilters()">
+        <i class="bi bi-x-circle"></i> Limpar
+      </button>
+    </div>
+    
+    <form method="get" id="filterForm" class="row g-3">
+      <!-- Search -->
+      <div class="col-md-6">
+        <label class="form-label" for="search">
+          <i class="bi bi-search"></i> Buscar
+        </label>
+        <input type="text" 
+               class="form-control" 
+               id="search" 
+               name="search" 
+               value="{{ search }}"
+               placeholder="Email, nome, telefone, redes sociais..."
+               oninput="updateFilters()">
+        <small class="text-muted">
+          <i class="bi bi-info-circle"></i> Busca em email, nome, telefone, website e redes sociais
+        </small>
+      </div>
+      
+      <!-- Role Filter -->
+      <div class="col-md-3">
+        <label class="form-label" for="role">
+          <i class="bi bi-shield"></i> Papel
+        </label>
+        <select class="form-select" id="role" name="role" onchange="updateFilters()">
+          <option value="">Todos os papéis</option>
+          <option value="admin" {{ 'selected' if role_filter == 'admin' else '' }}>Administrador</option>
+          <option value="editor" {{ 'selected' if role_filter == 'editor' else '' }}>Editor</option>
+          <option value="member" {{ 'selected' if role_filter == 'member' else '' }}>Membro</option>
+        </select>
+      </div>
+      
+      <!-- Active Only -->
+      <div class="col-md-3">
+        <label class="form-label">
+          <i class="bi bi-toggle-on"></i> Status
+        </label>
+        <div class="form-check form-switch" style="padding-top: 0.5rem;">
+          <input class="form-check-input" 
+                 type="checkbox" 
+                 id="active_only" 
+                 name="active_only" 
+                 value="true"
+                 {{ 'checked' if active_only else '' }}
+                 onchange="updateFilters()">
+          <label class="form-check-label" for="active_only">
+            Apenas usuários ativos
+          </label>
+        </div>
+      </div>
+    </form>
   </div>
 
   <div class="grid three">
@@ -52,14 +103,67 @@
         </div>
       </header>
       <p><i class="bi bi-envelope"></i> {{ user.email }}</p>
+      {% if user.phone %}
+      <p><i class="bi bi-phone"></i> {{ user.phone }}</p>
+      {% endif %}
+      {% if user.website %}
+      <p><i class="bi bi-globe"></i> <a href="{{ user.website }}" target="_blank" rel="noopener">{{ user.website }}</a></p>
+      {% endif %}
       <p class="muted">
         <i class="bi bi-{{ 'check-circle-fill' if user.is_active else 'x-circle-fill' }}"></i>
         Status: {{ "Ativo" if user.is_active else "Inativo" }}
       </p>
-      <p>{{ user.bio or "Sem bio ainda." }}</p>
+      
+      {% if user.instagram or user.facebook or user.twitter or user.linkedin or user.youtube or user.tiktok %}
+      <div class="d-flex flex-wrap gap-2 mt-2">
+        {% if user.instagram %}
+        <a href="{{ user.instagram if user.instagram.startswith('http') else 'https://instagram.com/' + user.instagram.replace('@', '') }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary">
+          <i class="bi bi-instagram"></i>
+        </a>
+        {% endif %}
+        {% if user.facebook %}
+        <a href="{{ user.facebook if user.facebook.startswith('http') else 'https://facebook.com/' + user.facebook.replace('@', '') }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary">
+          <i class="bi bi-facebook"></i>
+        </a>
+        {% endif %}
+        {% if user.twitter %}
+        <a href="{{ user.twitter if user.twitter.startswith('http') else 'https://twitter.com/' + user.twitter.replace('@', '') }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary">
+          <i class="bi bi-twitter-x"></i>
+        </a>
+        {% endif %}
+        {% if user.linkedin %}
+        <a href="{{ user.linkedin }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary">
+          <i class="bi bi-linkedin"></i>
+        </a>
+        {% endif %}
+        {% if user.youtube %}
+        <a href="{{ user.youtube }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary">
+          <i class="bi bi-youtube"></i>
+        </a>
+        {% endif %}
+        {% if user.tiktok %}
+        <a href="{{ user.tiktok if user.tiktok.startswith('http') else 'https://tiktok.com/@' + user.tiktok.replace('@', '') }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary">
+          <i class="bi bi-tiktok"></i>
+        </a>
+        {% endif %}
+      </div>
+      {% endif %}
 
-      {% if current_user.is_authenticated and current_user.role == role_enum.ADMIN and action_form %}
-      <div class="user-actions">
+      {% if current_user.is_authenticated %}
+        {% if current_user.id == user.id %}
+        <!-- User can edit own profile -->
+        <div class="user-actions">
+          <a href="{{ url_for('web.edit_user', user_id=user.id) }}" class="btn btn-primary btn-sm">
+            <i class="bi bi-pencil-square"></i> Editar Meu Perfil
+          </a>
+        </div>
+        {% elif current_user.role == role_enum.ADMIN and action_form %}
+        <!-- Admin can manage all users -->
+        <div class="user-actions">
+          <a href="{{ url_for('web.edit_user', user_id=user.id) }}" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-pencil-square"></i> Editar
+          </a>
+        
         <form method="post" action="{{ url_for('web.user_action') }}">
           {{ action_form.csrf_token }}
           <input type="hidden" name="user_id" value="{{ user.id }}" />
@@ -112,6 +216,7 @@
         </form>
         {% endif %}
       </div>
+        {% endif %}
       {% endif %}
     </article>
     {% else %}
@@ -159,6 +264,92 @@
             </label>
             {{ user_form.role(class="form-select") }}
           </div>
+          
+          <!-- Contact Information -->
+          <div class="col-12 mt-4">
+            <h6 class="text-uppercase text-muted mb-3" style="font-size: 0.85rem; letter-spacing: 0.1em; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+              <i class="bi bi-telephone"></i> Informações de Contato
+            </h6>
+          </div>
+          
+          <div class="col-md-6">
+            <label class="form-label" for="{{ user_form.phone.id }}">
+              <i class="bi bi-phone"></i> Celular
+            </label>
+            {{ user_form.phone(class="form-control", placeholder="(11) 98765-4321") }}
+            <small class="text-muted">
+              <i class="bi bi-info-circle"></i> Usado em namespaces globais: {celular}
+            </small>
+          </div>
+          
+          <div class="col-md-6">
+            <label class="form-label" for="{{ user_form.website.id }}">
+              <i class="bi bi-globe"></i> Website
+            </label>
+            {{ user_form.website(class="form-control", placeholder="https://seusite.com.br") }}
+            <small class="text-muted">
+              <i class="bi bi-info-circle"></i> Namespace: {site}
+            </small>
+          </div>
+          
+          <div class="col-12">
+            <label class="form-label" for="{{ user_form.address.id }}">
+              <i class="bi bi-geo-alt"></i> Endereço
+            </label>
+            {{ user_form.address(class="form-control", placeholder="Rua, número, bairro, cidade - UF") }}
+            <small class="text-muted">
+              <i class="bi bi-info-circle"></i> Namespace: {endereco}
+            </small>
+          </div>
+          
+          <!-- Social Media -->
+          <div class="col-12 mt-4">
+            <h6 class="text-uppercase text-muted mb-3" style="font-size: 0.85rem; letter-spacing: 0.1em; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+              <i class="bi bi-share"></i> Redes Sociais
+            </h6>
+          </div>
+          
+          <div class="col-md-6">
+            <label class="form-label" for="{{ user_form.instagram.id }}">
+              <i class="bi bi-instagram"></i> Instagram
+            </label>
+            {{ user_form.instagram(class="form-control", placeholder="@usuario ou URL completa") }}
+          </div>
+          
+          <div class="col-md-6">
+            <label class="form-label" for="{{ user_form.facebook.id }}">
+              <i class="bi bi-facebook"></i> Facebook
+            </label>
+            {{ user_form.facebook(class="form-control", placeholder="@usuario ou URL completa") }}
+          </div>
+          
+          <div class="col-md-6">
+            <label class="form-label" for="{{ user_form.twitter.id }}">
+              <i class="bi bi-twitter-x"></i> Twitter/X
+            </label>
+            {{ user_form.twitter(class="form-control", placeholder="@usuario ou URL completa") }}
+          </div>
+          
+          <div class="col-md-6">
+            <label class="form-label" for="{{ user_form.linkedin.id }}">
+              <i class="bi bi-linkedin"></i> LinkedIn
+            </label>
+            {{ user_form.linkedin(class="form-control", placeholder="URL do perfil") }}
+          </div>
+          
+          <div class="col-md-6">
+            <label class="form-label" for="{{ user_form.youtube.id }}">
+              <i class="bi bi-youtube"></i> YouTube
+            </label>
+            {{ user_form.youtube(class="form-control", placeholder="URL do canal") }}
+          </div>
+          
+          <div class="col-md-6">
+            <label class="form-label" for="{{ user_form.tiktok.id }}">
+              <i class="bi bi-tiktok"></i> TikTok
+            </label>
+            {{ user_form.tiktok(class="form-control", placeholder="@usuario ou URL completa") }}
+          </div>
         </form>
       </div>
       <div class="modal-footer">
@@ -173,4 +364,105 @@
   </div>
 </div>
 {% endif %}
+
+<style>
+/* Filter Panel Styles */
+.panel h5 {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.panel .form-label {
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.panel .form-control,
+.panel .form-select {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.panel .form-control:focus,
+.panel .form-select:focus {
+  background: var(--bg-secondary);
+  border-color: var(--bs-primary);
+  color: var(--text-primary);
+  box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.25);
+}
+
+.panel .form-check-input {
+  background-color: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+.panel .form-check-input:checked {
+  background-color: var(--bs-primary);
+  border-color: var(--bs-primary);
+}
+
+.panel small.text-muted {
+  color: var(--text-muted) !important;
+}
+
+/* User Card Improvements */
+.user-card {
+  transition: all 0.2s ease;
+}
+
+.user-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+</style>
+
+<script>
+// Update filters dynamically
+function updateFilters() {
+  const form = document.getElementById('filterForm');
+  const params = new URLSearchParams();
+  
+  // Get search value
+  const search = document.getElementById('search').value.trim();
+  if (search) {
+    params.set('search', search);
+  }
+  
+  // Get role value
+  const role = document.getElementById('role').value;
+  if (role) {
+    params.set('role', role);
+  }
+  
+  // Get active_only value
+  const activeOnly = document.getElementById('active_only').checked;
+  params.set('active_only', activeOnly ? 'true' : 'false');
+  
+  // Update URL
+  const newUrl = window.location.pathname + '?' + params.toString();
+  window.location.href = newUrl;
+}
+
+// Clear all filters
+function clearFilters() {
+  window.location.href = window.location.pathname;
+}
+
+// Debounce search input
+let searchTimeout;
+const searchInput = document.getElementById('search');
+if (searchInput) {
+  searchInput.removeAttribute('oninput');
+  searchInput.addEventListener('input', function() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(function() {
+      updateFilters();
+    }, 500); // Wait 500ms after user stops typing
+  });
+}
+</script>
+
 {% endblock %}

@@ -1,6 +1,6 @@
 # 🎯 pySaveDiário
 
-**Central moderna para gestão de ofertas, cupons, templates de compartilhamento social e equipes.**
+**Central moderna para gestão de ofertas, cupons, templates de compartilhamento social e equipes. Sistema completo com API REST, tema escuro, upload de imagens e muito mais!**
 
 [![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/)
 [![Flask](https://img.shields.io/badge/Flask-3.0+-green.svg)](https://flask.palletsprojects.com/)
@@ -12,8 +12,8 @@
 ## 📋 Índice
 
 - [Visão Geral](#-visão-geral)
-- [Stack Tecnológico](#-stack-tecnológico)
 - [Funcionalidades](#-funcionalidades-principais)
+- [Stack Tecnológico](#-stack-tecnológico)
 - [Instalação](#-instalação)
 - [Configuração](#-configuração)
 - [Uso](#-uso)
@@ -25,19 +25,471 @@
 
 ## 🚀 Visão Geral
 
-O **pySaveDiário** é um sistema completo para gerenciar ofertas, criar templates de compartilhamento para redes sociais, organizar cupons de desconto e administrar equipes com diferentes níveis de permissão.
+O **pySaveDiário** é um sistema completo e moderno para gerenciar ofertas, criar templates de compartilhamento para redes sociais, organizar cupons de desconto e administrar equipes com diferentes níveis de permissão.
 
-### Destaques:
+### 🎯 Principais Destaques:
 
-- ✅ **Sistema CRUD Completo** para Ofertas, Cupons, Templates, Vendedores, Categorias e Fabricantes
-- ✅ **Compartilhamento Social** com templates personalizados e variáveis dinâmicas
-- ✅ **Sistema de Cupons** integrado ao compartilhamento de ofertas
-- ✅ **Filtros Dinâmicos** com busca em tempo real e URL compartilhável
-- ✅ **Quick-Create** para criar entidades sem sair da página atual
+- ✅ **CRUD Completo** para Ofertas, Cupons, Templates, Vendedores, Categorias e Fabricantes
+- ✅ **Upload de Imagens** com validação de segurança e pré-visualização
+- ✅ **Editor HTML Visual** (Quill.js) para descrições ricas
+- ✅ **Cores Personalizadas** para vendedores com colorpicker visual
+- ✅ **Sistema de Cupons Inteligente** com desconto % ou fixo e limite máximo
+- ✅ **Sistema de Parcelas** com cálculo automático
+- ✅ **Compartilhamento Social** com formatação específica por rede
+- ✅ **Filtros Dinâmicos** em tempo real com URL compartilhável
+- ✅ **Quick-Create** para criar entidades sem sair da página
 - ✅ **Tema Escuro** completo e responsivo
-- ✅ **Toast Notifications** estilo macOS
-- ✅ **API RESTful** com autenticação por token
-- ✅ **Documentação Interativa** com exemplos em múltiplas linguagens
+- ✅ **Toast Notifications** estilo macOS (sem piscadas)
+- ✅ **API RESTful** com autenticação Bearer Token
+- ✅ **Documentação Interativa** com exemplos em 4 linguagens
+
+---
+
+## ✨ Funcionalidades Principais
+
+### 1. 🏷️ Gerenciamento de Ofertas
+
+**Funcionalidades:**
+- ✅ Criar, editar, deletar e listar ofertas
+- ✅ **Upload de imagens** com validação de segurança (7 camadas)
+- ✅ **Editor HTML** para descrições ricas
+- ✅ Campo `old_price` com **cálculo automático de desconto**
+- ✅ **Sistema de parcelas** (quantidade, valor, com/sem juros)
+- ✅ Badge visual mostrando **percentual de economia**
+- ✅ **Data de expiração** com seletor separado (data + hora)
+- ✅ Associação com vendedores, categorias e fabricantes
+- ✅ **Multi-moedas** com símbolos (R$, $, €, £, etc.)
+
+**Filtros Dinâmicos (7 tipos):**
+- 🔍 Busca geral (nome, slug, vendedor)
+- 🏭 Fabricante
+- 🏷️ Categoria
+- 🏪 Vendedor
+- 💰 Faixa de preço (min/max)
+- ✅ Apenas ofertas ativas (padrão)
+- 📅 Por data de expiração
+
+**Recursos Avançados:**
+- Quick-create de vendedores, categorias e fabricantes
+- Preview de imagem antes do upload
+- Lazy loading de imagens
+- Cálculo automático do nome da parcela (ex: "5x de R$ 72 sem juros")
+
+### 2. 🎨 Cores Personalizadas para Vendedores
+
+**Colorpicker Visual com 3 Modos:**
+
+**Modo 1: Cor Sólida**
+- Colorpicker HTML5 nativo
+- Input manual de código hexadecimal (#FFE600)
+- Preview em tempo real
+
+**Modo 2: Gradientes Pré-definidos**
+- Instagram (multi-color)
+- Roxo
+- Rosa
+- Azul
+- Verde
+- Pôr do Sol
+
+**Modo 3: CSS Customizado**
+- Cole qualquer valor CSS válido
+- Suporte a `linear-gradient`, `radial-gradient`, etc.
+
+**Cores Padrão:**
+- Mercado Livre: `#FFE600` (Amarelo)
+- Amazon: `#FF9900` (Laranja)
+- Shopee: `#EE4D2D` (Laranja avermelhado)
+- Magazine Luiza: `#DC143C` (Vermelho)
+- AliExpress: `#E62129` (Vermelho)
+- Kabum: `#003DA5` (Azul)
+
+**Aplicação Automática:**
+- Badge colorido nas listagens de ofertas
+- Texto sempre branco para legibilidade
+- Funciona em tema claro E escuro
+
+### 3. 🎫 Sistema de Cupons Inteligente
+
+**Funcionalidades:**
+- ✅ Criar, editar, deletar e listar cupons
+- ✅ **Editor HTML** para descrições
+- ✅ Ativar/desativar cupons
+- ✅ Data de expiração opcional (data + hora separados)
+- ✅ Associação com vendedores
+
+**Tipos de Desconto:**
+
+**1. Porcentagem (%)**
+```
+Exemplo: 10% de desconto
+Com limite máximo: 10% até R$ 50
+```
+
+**2. Valor Fixo (R$)**
+```
+Exemplo: R$ 20 de desconto
+Aplicado diretamente no preço
+```
+
+**Cálculo Automático:**
+- `{price_with_coupon}` - Mostra preço com desconto aplicado
+- Considera limite máximo em descontos percentuais
+- Nunca resulta em preço negativo
+
+**Filtros Disponíveis:**
+- 🔍 Busca (código do cupom)
+- 🏪 Vendedor
+- 💰 Tipo de desconto (% ou R$)
+- ✅ Apenas cupons ativos
+
+**Integração:**
+- Seleção múltipla ao compartilhar ofertas
+- Namespace `{all_coupons}` para listar todos
+- Formato: `CUPONS: CUPOM1, CUPOM2, CUPOM3`
+
+### 4. 📝 Sistema de Templates
+
+**Funcionalidades:**
+- ✅ Criar templates reutilizáveis
+- ✅ **Editor HTML** para corpo do template
+- ✅ **Variáveis dinâmicas** (50+ namespaces)
+- ✅ Suporte a **múltiplas redes sociais**
+- ✅ Preview e compartilhamento
+- ✅ Configuração de prefixo/sufixo por rede
+
+**Variáveis Disponíveis (Namespaces):**
+
+**Produto/Oferta:**
+- `{product_name}` - Nome do produto
+- `{product_description}` - Descrição (formatada por rede)
+- `{price}` - Preço atual (com símbolo)
+- `{old_price}` - Preço antigo
+- `{discount}` - Percentual de desconto
+- `{vendor_name}` ou `{seller}` - Nome do vendedor
+- `{offer_url}` - Link da oferta
+- `{category}` - Categoria
+- `{manufacturer}` - Fabricante
+
+**Parcelas:**
+- `{installment_count}` - Número de parcelas (ex: 5)
+- `{installment_value}` - Valor da parcela (ex: R$ 72.00)
+- `{installment_interest_free}` - Sim/Não
+- `{installment_full}` ou `{parcelamento}` - Texto completo (ex: "5x de R$ 72 sem juros")
+
+**Cupons:**
+- `{coupon_code}` ou `{code}` - Código do cupom (ex: DESC10)
+- `{coupon_seller}` ou `{seller}` - Vendedor do cupom
+- `{porcentagem}` ou `{percentual}` - Desconto em % (ex: 10%)
+- `{desconto_fixo}` ou `{valor_fixo}` - Desconto fixo em R$ (ex: R$ 20,00)
+- `{valor_minimo_compra}` ou `{minimo}` - Valor mínimo da compra (ex: R$ 100,00)
+- `{valor_maximo_desconto}` ou `{maximo}` - Limite máximo do desconto (ex: R$ 50,00)
+- `{coupon_expires}` ou `{validade_cupom}` - Data de validade (ex: 31/12/2025)
+- `{all_coupons}` - Todos os cupons selecionados (ex: CUPONS: DESC10, FRETE)
+- `{price_with_coupon}` - Preço com cupom aplicado (cálculo automático)
+
+**Globais (Informações do Usuário):**
+- `{celular}` ou `{user_phone}` - Celular do usuário
+- `{endereco}` ou `{user_address}` - Endereço do usuário
+- `{site}` ou `{user_website}` - Website do usuário
+- `{instagram}` ou `{user_instagram}` - Instagram do usuário
+- `{facebook}` ou `{user_facebook}` - Facebook do usuário
+- `{twitter}` ou `{user_twitter}` - Twitter/X do usuário
+- `{linkedin}` ou `{user_linkedin}` - LinkedIn do usuário
+- `{youtube}` ou `{user_youtube}` - YouTube do usuário
+- `{tiktok}` ou `{user_tiktok}` - TikTok do usuário
+
+**Filtros Disponíveis:**
+- 🔍 Busca (nome, slug, descrição)
+- 📱 Rede social específica
+
+### 5. 📤 Compartilhamento Social
+
+**Página Dedicada** (`/ofertas/<id>/compartilhar`)
+
+**Recursos:**
+- ✅ Seleção de rede social (Instagram, Facebook, WhatsApp, Telegram, Twitter, LinkedIn, TikTok)
+- ✅ **Conversão automática de formatação** HTML → Formato da rede social
+- ✅ **Barra de ferramentas de formatação** com 7 botões interativos
+- ✅ **Seletor de emojis** com 100+ opções organizadas por categoria
+- ✅ **Edição livre** do texto gerado
+- ✅ **Salvamento de templates personalizados** por rede social
+- ✅ Botões coloridos com cores configuráveis
+- ✅ Seleção de template
+- ✅ **Seleção múltipla de cupons** (todos ativos por padrão)
+- ✅ Checkbox para calcular preço com cupom
+- ✅ **Formatação automática** por rede social:
+  - WhatsApp: `*negrito*`, `_itálico_`
+  - Telegram: `**negrito**`, `__itálico__`
+  - Instagram/Facebook: texto puro
+- ✅ Conversão HTML → Texto formatado
+- ✅ Geração automática do texto
+- ✅ Botão de copiar
+- ✅ Preview em tempo real
+- ✅ Pré-seleção via URL (`?channel=whatsapp`)
+
+**Exemplo de Texto Gerado:**
+```
+*Controle PS5 DualSense*
+
+De R$ 499,00 por R$ 399,00 (-20%)
+
+5x de R$ 79,80 sem juros
+
+CUPONS: DESC10, FRETEGRATIS
+
+💰 Com cupom: R$ 359,10
+
+🔗 https://exemplo.com/oferta
+
+📍 Vendedor: Amazon
+
+#ps5 #controle #oferta
+```
+
+### 6. 🖼️ Upload de Imagens Seguro
+
+**7 Camadas de Segurança:**
+
+1. **Validação de Extensão**
+   ```
+   Permitidas: .jpg, .jpeg, .png, .gif, .webp
+   ```
+
+2. **Validação de Content-Type**
+   ```
+   Apenas image/jpeg, image/png, image/gif, image/webp
+   ```
+
+3. **Validação com Pillow**
+   ```
+   Tenta abrir como imagem real
+   Detecta arquivos corrompidos ou falsos
+   ```
+
+4. **Limite de Tamanho**
+   ```
+   Máximo: 5MB por imagem
+   ```
+
+5. **Nome Seguro**
+   ```
+   Gera: product_<timestamp>_<random>.jpg
+   Remove caracteres especiais
+   ```
+
+6. **Diretório Isolado**
+   ```
+   app/static/uploads/products/
+   Separado do código da aplicação
+   ```
+
+7. **Permissões do Sistema**
+   ```
+   Diretórios: 755 (rwxr-xr-x)
+   Arquivos: 644 (rw-r--r--)
+   ```
+
+**Exibição:**
+- Preview na criação de oferta
+- Imagem na listagem de ofertas
+- Imagem na página de compartilhamento
+- Placeholder quando não há imagem
+- Lazy loading para performance
+
+### 7. 📝 Editor HTML Visual (Quill.js)
+
+**Funcionalidades:**
+- ✅ Editor WYSIWYG moderno
+- ✅ Barra de ferramentas completa
+- ✅ **Compatível com temas claro e escuro**
+- ✅ Salvamento como **texto puro** (sem tags HTML)
+- ✅ Conversão automática para formato de rede social
+
+**Ferramentas Disponíveis:**
+- Negrito, Itálico, Sublinhado
+- Listas (ordenadas e não ordenadas)
+- Links
+- Alinhamento de texto
+- Limpeza de formatação
+
+**Campos com Editor:**
+- Descrição de produtos (ofertas)
+- Descrição de cupons
+- Corpo de templates
+
+**Conversão Inteligente:**
+```
+HTML Input:
+<p><strong>Oferta</strong></p>
+<ul><li>Item 1</li><li>Item 2</li></ul>
+
+WhatsApp Output:
+*Oferta*
+• Item 1
+• Item 2
+
+Telegram Output:
+**Oferta**
+• Item 1
+• Item 2
+```
+
+### 8. 🎨 Configuração de Redes Sociais
+
+**Funcionalidades:**
+- ✅ Personalizar prefixos e sufixos
+- ✅ **Colorpicker visual** para botões
+- ✅ Ativar/desativar redes
+- ✅ Preview em tempo real
+
+**Colorpicker com 3 Modos:**
+- Cor sólida (#hex)
+- 6 gradientes pré-definidos
+- CSS customizado
+
+**Configurações Por Rede:**
+```
+Instagram:
+  Prefixo: "📸 OFERTA DO DIA\n\n"
+  Sufixo: "\n\n#oferta #desconto #instagram"
+  Cor: linear-gradient(45deg, #f09433, #bc1888)
+
+WhatsApp:
+  Prefixo: "🔥 APROVEITE!\n\n"
+  Sufixo: "\n\n✅ Clique e compre agora!"
+  Cor: #25D366
+
+Facebook:
+  Prefixo: "🎁 PROMOÇÃO EXCLUSIVA\n\n"
+  Sufixo: "\n\n👉 Compartilhe com amigos!"
+  Cor: #1877F2
+```
+
+### 9. 🔍 Filtros Dinâmicos
+
+**Ofertas** (`/ofertas`)
+- 🔍 Busca geral
+- 🏪 Vendedor
+- 🏭 Fabricante
+- 🏷️ Categoria
+- 💰 Faixa de preço
+- ✅ Apenas ativas
+
+**Templates** (`/templates`)
+- 🔍 Busca (nome, slug, descrição)
+- 📱 Rede social
+
+**Cupons** (`/cupons`)
+- 🔍 Busca (código do cupom)
+- 🏪 Vendedor
+- 💰 Tipo de desconto (% ou R$)
+- ✅ Apenas ativos
+
+**Recursos:**
+- Atualização em tempo real (500ms debounce)
+- URL compartilhável
+- Botão "Limpar Filtros"
+- Valores persistem após filtrar
+
+### 10. 👥 Administração
+
+**Menu Dropdown Organizado:**
+```
+Administração ▼
+  ├─ 📊 Painel
+  ├─ ─────────────
+  ├─ 👥 Usuários
+  ├─ 👨‍👩‍👧‍👦 Grupos
+  ├─ ─────────────
+  ├─ 🏪 Vendedores
+  ├─ 🏷️ Categorias
+  ├─ 🏭 Fabricantes
+  ├─ ─────────────
+  ├─ 📱 Redes Sociais
+  └─ ⚙️ Configurações
+```
+
+**Vendedores, Categorias e Fabricantes:**
+- ✅ Criar, editar, deletar
+- ✅ Ativar/desativar
+- ✅ **Páginas dedicadas para edição**
+- ✅ Colorpicker visual (vendedores)
+- ✅ **Filtro automático**: Inativos não aparecem
+
+**Configurações:**
+- ✅ Moeda padrão do sistema
+- ✅ Símbolos de moedas
+- ✅ 12 moedas disponíveis
+
+**Redes Sociais:**
+- ✅ Configurar prefixo/sufixo
+- ✅ Escolher cor/gradiente
+- ✅ Ativar/desativar
+- ✅ Preview em tempo real
+
+### 11. ⚡ Quick-Create
+
+**Criar sem sair da página:**
+
+**Ofertas:**
+- Vendedores
+- Categorias
+- Fabricantes
+
+**Cupons:**
+- Vendedores
+
+**Funcionamento:**
+1. Clique no botão `[+]`
+2. Modal abre
+3. Preencha os dados
+4. Salve
+5. **Dropdown atualiza automaticamente**
+6. **Item já vem selecionado**
+7. Continua no formulário atual
+
+### 12. 🎨 UX/UI Moderna
+
+**Interface:**
+- ✅ **Toast notifications** estilo macOS (sem piscadas!)
+- ✅ **Tema escuro** completo e responsivo
+- ✅ **Design mobile-first**
+- ✅ **Bootstrap Icons** em toda interface
+- ✅ **Animações suaves** (fade-in/out)
+- ✅ **Feedback visual** em todas as ações
+- ✅ **Cards elegantes** com hover effects
+- ✅ **Gradientes modernos** em hero sections
+- ✅ **Menu sempre no topo** (z-index otimizado)
+
+**Home Page Repaginada:**
+- Hero section com gradiente
+- Estatísticas em tempo real (cards)
+- Seção de funcionalidades (6 cards)
+- Ofertas em destaque
+- Call-to-action section
+- Footer informativo
+
+### 13. 💰 Sistema de Moedas
+
+**12 Moedas Disponíveis:**
+- 🇧🇷 **BRL** - R$ (Real Brasileiro)
+- 🇺🇸 **USD** - $ (Dólar Americano)
+- 🇪🇺 **EUR** - € (Euro)
+- 🇬🇧 **GBP** - £ (Libra Esterlina)
+- 🇯🇵 **JPY** - ¥ (Iene Japonês)
+- 🇨🇦 **CAD** - C$ (Dólar Canadense)
+- 🇦🇺 **AUD** - A$ (Dólar Australiano)
+- 🇨🇭 **CHF** - CHF (Franco Suíço)
+- 🇨🇳 **CNY** - ¥ (Yuan Chinês)
+- 🇦🇷 **ARS** - $ (Peso Argentino)
+- 🇲🇽 **MXN** - $ (Peso Mexicano)
+- 🇨🇱 **CLP** - $ (Peso Chileno)
+
+**Recursos:**
+- Moeda padrão configurável
+- Símbolos em toda interface
+- Conversão automática em templates
 
 ---
 
@@ -46,135 +498,25 @@ O **pySaveDiário** é um sistema completo para gerenciar ofertas, criar templat
 ### Backend
 - **Python 3.11+**
 - **Flask 3.0+** - Framework web
-- **SQLAlchemy** - ORM para banco de dados
-- **Flask-Migrate / Alembic** - Gerenciamento de migrações
-- **Flask-Login** - Autenticação de usuários
-- **Flask-WTF** - Formulários e CSRF protection
-- **Flask-HTTPAuth** - Autenticação para API (Basic + Bearer Token)
+- **SQLAlchemy** - ORM
+- **Flask-Migrate / Alembic** - Migrações
+- **Flask-Login** - Autenticação
+- **Flask-WTF** - Formulários e CSRF
+- **Flask-HTTPAuth** - API Auth (Basic + Bearer)
+- **Pillow** - Processamento de imagens
+- **python-slugify** - Geração de slugs
 
 ### Frontend
 - **HTML5 + CSS3 + JavaScript**
 - **Bootstrap 5.3.3** - Framework CSS
-- **Bootstrap Icons** - Ícones modernos
+- **Bootstrap Icons** - Ícones
+- **Quill.js** - Editor HTML WYSIWYG
 - **Vanilla JavaScript** - Interações dinâmicas
 
 ### Banco de Dados
 - **SQLite** (desenvolvimento)
-- **PostgreSQL / MySQL / MariaDB** (produção - suportado)
-
----
-
-## ✨ Funcionalidades Principais
-
-### 1. Gerenciamento de Ofertas
-
-- ✅ Criar, editar, deletar e listar ofertas
-- ✅ Campo `old_price` com cálculo automático de desconto
-- ✅ Badge visual mostrando percentual de economia
-- ✅ Filtros dinâmicos (busca, preço, categoria, fabricante, vendedor)
-- ✅ Quick-create de vendedores, categorias e fabricantes
-- ✅ Data de expiração com seletor de data/hora
-
-### 2. Sistema de Templates
-
-- ✅ Criar templates reutilizáveis para redes sociais
-- ✅ Variáveis dinâmicas (namespaces) substituídas automaticamente
-- ✅ Suporte a múltiplas redes sociais (Instagram, Facebook, WhatsApp, Telegram, Twitter)
-- ✅ Preview e compartilhamento
-
-**Variáveis disponíveis:**
-- `{product_name}` - Nome do produto
-- `{price}` - Preço atual
-- `{old_price}` - Preço antigo
-- `{discount}` - Percentual de desconto
-- `{vendor_name}` - Nome do vendedor
-- `{offer_url}` - Link da oferta
-- `{category}` - Categoria
-- `{manufacturer}` - Fabricante
-- `{all_coupons}` - Todos os cupons selecionados inline (ex: CUPOM1 / CUPOM2)
-
-### 3. Sistema de Cupons
-
-- ✅ Criar, editar, deletar e listar cupons
-- ✅ Ativar/desativar cupons
-- ✅ Data de expiração opcional
-- ✅ Associação com vendedores
-- ✅ Integração com compartilhamento de ofertas
-
-### 4. Configuração de Redes Sociais
-
-- ✅ Personalizar prefixos e sufixos para cada rede social
-- ✅ Adicionar hashtags específicas por plataforma
-- ✅ Ativar/desativar redes sociais
-- ✅ Aplicação automática ao gerar textos de compartilhamento
-
-### 5. Compartilhamento Social
-
-- ✅ Página dedicada para compartilhamento (`/ofertas/<id>/compartilhar`)
-- ✅ Seleção de rede social (Instagram, Facebook, WhatsApp, Telegram, Twitter)
-- ✅ Seleção de cupons ativos para incluir no texto
-- ✅ Seleção de template
-- ✅ Geração automática do texto com todas as substituições
-- ✅ Botão de copiar texto
-- ✅ Preview em tempo real
-
-### 6. Filtros Dinâmicos
-
-**7 tipos de filtros nas ofertas:**
-- 🔍 Busca geral (nome do produto, slug, vendedor)
-- 🏭 Fabricante
-- 🏷️ Categoria
-- 🏪 Vendedor
-- 💰 Faixa de preço (min/max)
-- ✅ Apenas ofertas ativas (padrão)
-
-**Recursos:**
-- Filtragem em tempo real (delay 500ms)
-- URL compartilhável com parâmetros
-- Contador de resultados
-- Botão para limpar filtros
-
-### 7. Administração
-
-**Menu dropdown organizado:**
-```
-Administração ▼
-  ├─ Painel
-  ├─ ─────────
-  ├─ Usuários
-  ├─ Grupos
-  ├─ ─────────
-  ├─ Vendedores
-  ├─ Categorias
-  ├─ Fabricantes
-  ├─ ─────────
-  ├─ Redes Sociais
-  └─ Configurações
-```
-
-### 8. Quick-Create
-
-**Criar sem sair da página atual:**
-- Vendedores (em ofertas e cupons)
-- Categorias (em ofertas)
-- Fabricantes (em ofertas)
-
-**Funcionamento:**
-1. Clique no botão `[+]`
-2. Modal abre
-3. Preencha os dados
-4. Salve
-5. Dropdown atualiza automaticamente
-6. Item já vem selecionado
-
-### 9. UX/UI Moderna
-
-- ✅ Toast notifications estilo macOS
-- ✅ Tema escuro completo
-- ✅ Design responsivo (mobile-first)
-- ✅ Ícones Bootstrap Icons
-- ✅ Animações suaves
-- ✅ Feedback visual em todas as ações
+- **PostgreSQL** (produção recomendado)
+- **MySQL / MariaDB** (suportado)
 
 ---
 
@@ -183,7 +525,7 @@ Administração ▼
 ### Pré-requisitos
 
 - Python 3.11 ou superior
-- pip (gerenciador de pacotes Python)
+- pip
 - Git
 
 ### Passo a Passo
@@ -197,17 +539,10 @@ cd pySaveDiario
 
 #### 2. Crie um ambiente virtual
 
-**Windows (PowerShell):**
+**Windows:**
 ```powershell
 python -m venv .venv
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned
 .\.venv\Scripts\Activate.ps1
-```
-
-**Windows (Prompt de Comando):**
-```cmd
-python -m venv .venv
-.\.venv\Scripts\activate.bat
 ```
 
 **Linux / macOS:**
@@ -228,30 +563,34 @@ pip install -r requirements.txt
 cp env.example .env
 ```
 
-Edite o arquivo `.env` conforme necessário.
+Edite o `.env` conforme necessário.
 
 #### 5. Inicialize o banco de dados
 
 ```bash
-flask --app run.py db init
-flask --app run.py db migrate -m "initial migration"
 flask --app run.py db upgrade
 ```
 
-#### 6. Crie o primeiro administrador
+#### 6. Rode scripts de setup (opcional mas recomendado)
+
+```bash
+# Adicionar cores aos vendedores
+python scripts/add_color_to_sellers.py
+
+# Adicionar namespaces de parcelas
+python scripts/add_installment_namespaces.py
+
+# Adicionar namespaces de descrição
+python scripts/add_description_namespaces.py
+```
+
+#### 7. Crie o primeiro administrador
 
 ```bash
 python -m scripts.create_admin --email admin@local --display-name "Admin"
 ```
 
-Você será solicitado a criar uma senha.
-
-**Para criar um editor:**
-```bash
-python -m scripts.create_admin --email editor@local --display-name "Editor" --role editor
-```
-
-#### 7. Execute a aplicação
+#### 8. Execute a aplicação
 
 ```bash
 flask --app run.py run --reload
@@ -265,23 +604,17 @@ Acesse: `http://localhost:5000`
 
 ### Arquivo `.env`
 
-O arquivo `.env` contém as configurações do ambiente. Exemplo:
-
 ```env
 # Database
 DB_ENGINE=sqlite
-# Para PostgreSQL: DB_ENGINE=postgresql
-# Para MySQL/MariaDB: DB_ENGINE=mysql ou mariadb
 
-# Se usando PostgreSQL ou MySQL/MariaDB:
+# Para PostgreSQL:
+# DB_ENGINE=postgresql
 # DB_HOST=localhost
-# DB_PORT=5432  # 5432 para PostgreSQL, 3306 para MySQL
+# DB_PORT=5432
 # DB_USER=seu_usuario
 # DB_PASSWORD=sua_senha
 # DB_NAME=pysavediario
-
-# Ou use DATABASE_URL diretamente:
-# DATABASE_URL=postgresql+psycopg://user:senha@host:5432/db
 
 # Security
 SECRET_KEY=sua-chave-secreta-aqui
@@ -297,49 +630,9 @@ FLASK_DEBUG=1
 python -c "import secrets; print(secrets.token_hex(32))"
 ```
 
-### Bancos de Dados Suportados
-
-#### SQLite (Padrão - Desenvolvimento)
-```env
-DB_ENGINE=sqlite
-```
-Cria automaticamente `instance/app.db`
-
-#### PostgreSQL (Recomendado - Produção)
-```env
-DB_ENGINE=postgresql
-DB_HOST=localhost
-DB_PORT=5432
-DB_USER=seu_usuario
-DB_PASSWORD=sua_senha
-DB_NAME=pysavediario
-```
-
-#### MySQL / MariaDB
-```env
-DB_ENGINE=mysql
-DB_HOST=localhost
-DB_PORT=3306
-DB_USER=seu_usuario
-DB_PASSWORD=sua_senha
-DB_NAME=pysavediario
-```
-
 ---
 
 ## 🎯 Uso
-
-### Acesso Web
-
-Após executar a aplicação, acesse:
-
-- **Home:** `http://localhost:5000`
-- **Login:** `http://localhost:5000/login`
-- **Dashboard:** `http://localhost:5000/dashboard`
-- **Ofertas:** `http://localhost:5000/ofertas`
-- **Cupons:** `http://localhost:5000/cupons`
-- **Templates:** `http://localhost:5000/templates`
-- **Administração:** `http://localhost:5000/admin`
 
 ### Principais Rotas Web
 
@@ -347,25 +640,29 @@ Após executar a aplicação, acesse:
 |------|-----------|
 | `/` | Página inicial |
 | `/login` | Autenticação |
-| `/dashboard` | Painel após login |
-| `/ofertas` | Listagem de ofertas |
+| `/dashboard` | Dashboard do usuário |
+| `/ofertas` | Listagem de ofertas (com filtros) |
 | `/ofertas/nova` | Criar nova oferta |
 | `/ofertas/<id>/editar` | Editar oferta |
-| `/ofertas/<id>/compartilhar` | Compartilhar oferta em redes sociais |
-| `/cupons` | Listagem de cupons |
+| `/ofertas/<id>/compartilhar` | Compartilhar oferta |
+| `/cupons` | Listagem de cupons (com filtros) |
 | `/cupons/novo` | Criar novo cupom |
 | `/cupons/<id>/editar` | Editar cupom |
-| `/templates` | Listagem de templates |
+| `/templates` | Listagem de templates (com filtros) |
 | `/templates/novo` | Criar novo template |
 | `/templates/<id>/editar` | Editar template |
 | `/admin` | Painel administrativo |
 | `/admin/sellers` | Gerenciar vendedores |
+| `/admin/sellers/<id>/editar` | Editar vendedor |
 | `/admin/categories` | Gerenciar categorias |
+| `/admin/categories/<id>/editar` | Editar categoria |
 | `/admin/manufacturers` | Gerenciar fabricantes |
+| `/admin/manufacturers/<id>/editar` | Editar fabricante |
 | `/admin/social-networks` | Configurar redes sociais |
 | `/admin/settings` | Configurações do sistema |
-| `/usuarios` | Gerenciar usuários (admin) |
-| `/grupos` | Gerenciar grupos (admin) |
+| `/usuarios` | Gerenciar usuários |
+| `/grupos` | Gerenciar grupos |
+| `/api-docs` | Documentação interativa da API |
 
 ---
 
@@ -373,9 +670,7 @@ Após executar a aplicação, acesse:
 
 ### Autenticação
 
-O sistema oferece duas formas de autenticação para a API:
-
-#### 1. Obter Token via HTTP Basic Auth
+#### Obter Token
 
 ```bash
 curl -X POST http://localhost:5000/api/auth/token \
@@ -390,27 +685,68 @@ curl -X POST http://localhost:5000/api/auth/token \
 }
 ```
 
-#### 2. Login via JSON
-
-```bash
-curl -X POST http://localhost:5000/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "admin@local",
-    "password": "sua_senha"
-  }'
-```
-
-### Usando o Token
-
-Inclua o token no header `Authorization`:
+#### Usar Token
 
 ```bash
 curl http://localhost:5000/api/sellers \
-  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGc..."
+  -H "Authorization: Bearer SEU_TOKEN_AQUI"
 ```
 
-### Principais Endpoints da API
+### Principais Endpoints
+
+#### Users (Usuários)
+
+| Método | Endpoint | Descrição | Permissão |
+|--------|----------|-----------|-----------|
+| POST | `/api/users` | Registrar novo usuário | Público |
+| GET | `/api/users` | Listar todos | Admin |
+| GET | `/api/users/<id>` | Obter um usuário | Próprio/Admin |
+| PUT/PATCH | `/api/users/<id>` | Atualizar usuário | Próprio/Admin |
+
+**Exemplo POST (Registro Completo):**
+```bash
+curl -X POST http://localhost:5000/api/users \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "usuario@email.com",
+    "password": "senha123",
+    "display_name": "Nome Completo",
+    "role": "member",
+    "phone": "(11) 98765-4321",
+    "address": "Rua Exemplo, 123 - São Paulo, SP",
+    "website": "https://meusite.com.br",
+    "instagram": "@meuinstagram",
+    "facebook": "https://facebook.com/meuperfil",
+    "twitter": "@meutwitter",
+    "linkedin": "https://linkedin.com/in/meuperfil",
+    "youtube": "https://youtube.com/@meucanal",
+    "tiktok": "@meutiktok"
+  }'
+```
+
+**Exemplo PUT (Atualizar Perfil):**
+```bash
+curl -X PUT http://localhost:5000/api/users/1 \
+  -H "Authorization: Bearer TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "phone": "(11) 91234-5678",
+    "website": "https://novosite.com.br",
+    "instagram": "@novoinstagram"
+  }'
+```
+
+**Campos Disponíveis:**
+- **Obrigatórios** (no registro): `email`, `password`, `display_name`
+- **Opcionais**: `role`, `phone`, `address`, `website`
+- **Redes Sociais**: `instagram`, `facebook`, `twitter`, `linkedin`, `youtube`, `tiktok`
+
+**Namespaces Globais:**
+Informações do usuário podem ser usadas em templates via:
+- `{celular}` - Telefone do usuário
+- `{endereco}` - Endereço
+- `{site}` - Website
+- `{instagram}`, `{facebook}`, `{twitter}`, `{linkedin}`, `{youtube}`, `{tiktok}` - Redes sociais
 
 #### Sellers (Vendedores)
 
@@ -422,13 +758,25 @@ curl http://localhost:5000/api/sellers \
 | PUT | `/api/sellers/<id>` | Atualizar | Admin/Editor |
 | DELETE | `/api/sellers/<id>` | Deletar | Admin |
 
+**Exemplo POST:**
+```bash
+curl -X POST http://localhost:5000/api/sellers \
+  -H "Authorization: Bearer TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Novo Vendedor",
+    "slug": "novo-vendedor",
+    "color": "#FF5733",
+    "active": true
+  }'
+```
+
 #### Categories (Categorias)
 
 | Método | Endpoint | Descrição | Permissão |
 |--------|----------|-----------|-----------|
 | GET | `/api/categories` | Listar todas | Autenticado |
 | POST | `/api/categories` | Criar nova | Admin/Editor |
-| GET | `/api/categories/<id>` | Obter uma | Autenticado |
 | PUT | `/api/categories/<id>` | Atualizar | Admin/Editor |
 | DELETE | `/api/categories/<id>` | Deletar | Admin |
 
@@ -438,9 +786,26 @@ curl http://localhost:5000/api/sellers \
 |--------|----------|-----------|-----------|
 | GET | `/api/manufacturers` | Listar todos | Autenticado |
 | POST | `/api/manufacturers` | Criar novo | Admin/Editor |
-| GET | `/api/manufacturers/<id>` | Obter um | Autenticado |
 | PUT | `/api/manufacturers/<id>` | Atualizar | Admin/Editor |
 | DELETE | `/api/manufacturers/<id>` | Deletar | Admin |
+
+#### Offers (Ofertas)
+
+| Método | Endpoint | Descrição | Permissão |
+|--------|----------|-----------|-----------|
+| GET | `/api/offers` | Listar ofertas | Público |
+| POST | `/api/offers` | Criar oferta | Admin/Editor |
+| GET | `/api/offers/<id>` | Obter oferta | Público |
+| PUT | `/api/offers/<id>` | Atualizar | Admin/Editor |
+| DELETE | `/api/offers/<id>` | Deletar | Admin |
+
+**Filtros GET:**
+```
+?vendor=mercado
+?product=ps5
+?min_price=100
+?max_price=500
+```
 
 #### Users (Usuários)
 
@@ -448,54 +813,36 @@ curl http://localhost:5000/api/sellers \
 |--------|----------|-----------|-----------|
 | GET | `/api/users` | Listar todos | Admin |
 | POST | `/api/users` | Criar novo | Admin |
-| GET | `/api/users/<id>` | Obter um | Admin ou próprio usuário |
-| PUT | `/api/users/<id>` | Atualizar | Admin ou próprio usuário |
+| PUT | `/api/users/<id>` | Atualizar | Admin ou próprio |
 | DELETE | `/api/users/<id>` | Deletar | Admin |
 
-#### Groups (Grupos)
+### Documentação Completa
 
-| Método | Endpoint | Descrição | Permissão |
-|--------|----------|-----------|-----------|
-| GET | `/api/groups` | Listar todos | Autenticado |
-| POST | `/api/groups` | Criar novo | Admin/Editor |
-| GET | `/api/groups/<id>` | Obter um | Autenticado |
-| PUT | `/api/groups/<id>` | Atualizar | Admin/Editor |
-| DELETE | `/api/groups/<id>` | Deletar | Admin |
+Acesse: **`http://localhost:5000/api-docs`**
 
-### Exemplos em Diferentes Linguagens
-
-Acesse a **documentação interativa completa** em: `http://localhost:5000/api-docs`
-
-A documentação inclui exemplos práticos em:
-- 🐍 **Python** (com `requests`)
-- 🟢 **Node.js** (com `axios`)
-- 🐘 **PHP** (com `cURL`)
-- 💻 **cURL** (linha de comando)
+Inclui exemplos em:
+- 🐍 Python (requests)
+- 🟢 Node.js (axios)
+- 🐘 PHP (cURL)
+- 💻 cURL (linha de comando)
 
 ---
 
 ## 📚 Documentação
 
-### Documentação Completa
+### `/docs` - Documentação Técnica
 
-Toda a documentação técnica está organizada em `/docs`:
-
-- **[FEATURES.md](/docs/FEATURES.md)** - Lista completa de funcionalidades
-- **[QUICK_REFERENCE.md](/docs/QUICK_REFERENCE.md)** - Referência rápida de comandos
-- **[API_COMPLETE_INVENTORY.md](/docs/API_COMPLETE_INVENTORY.md)** - Inventário completo da API
-- **[GUIA_USO_REDES_SOCIAIS.md](/docs/GUIA_USO_REDES_SOCIAIS.md)** - Como usar redes sociais e cupons
-- **[RESUMO_FINAL_IMPLEMENTACOES.md](/docs/RESUMO_FINAL_IMPLEMENTACOES.md)** - Resumo de todas as implementações
-
-### Documentação da API
-
-**Documentação Interativa:** `http://localhost:5000/api-docs`
-
-Inclui:
-- Todos os endpoints disponíveis
-- Parâmetros esperados
-- Exemplos de request/response
-- Códigos de exemplo em Python, Node.js, PHP e cURL
-- Tratamento de erros
+- **[FEATURES.md](docs/FEATURES.md)** - Lista completa de funcionalidades
+- **[SELLER_COLORS_FEATURE.md](docs/SELLER_COLORS_FEATURE.md)** - Cores personalizadas
+- **[FILTERS_FEATURE.md](docs/FILTERS_FEATURE.md)** - Sistema de filtros
+- **[SECURE_IMAGE_UPLOAD.md](docs/SECURE_IMAGE_UPLOAD.md)** - Upload seguro
+- **[INSTALLMENT_FEATURE.md](docs/INSTALLMENT_FEATURE.md)** - Sistema de parcelas
+- **[COUPON_DISCOUNT_FEATURE.md](docs/COUPON_DISCOUNT_FEATURE.md)** - Descontos com cupons
+- **[HTML_EDITOR_FEATURE.md](docs/HTML_EDITOR_FEATURE.md)** - Editor Quill.js
+- **[CURRENCY_SYMBOLS.md](docs/CURRENCY_SYMBOLS.md)** - Símbolos de moedas
+- **[INACTIVE_SELLER_FILTER.md](docs/INACTIVE_SELLER_FILTER.md)** - Filtro de inativos
+- **[MAX_DISCOUNT_LIMIT.md](docs/MAX_DISCOUNT_LIMIT.md)** - Limite de desconto
+- **[HTML_TO_TEXT_CONVERSION.md](docs/HTML_TO_TEXT_CONVERSION.md)** - Conversão para redes
 
 ---
 
@@ -504,87 +851,56 @@ Inclui:
 ```
 pySaveDiario/
 ├── app/
-│   ├── __init__.py           # Inicialização do app Flask
-│   ├── config.py             # Configurações
-│   ├── extensions.py         # Extensões (SQLAlchemy, Login, etc)
-│   ├── models.py             # Modelos do banco de dados
-│   ├── forms.py              # Formulários (WTForms)
-│   ├── security.py           # Funções de segurança
+│   ├── __init__.py              # App factory
+│   ├── config.py                # Configurações
+│   ├── extensions.py            # Extensões Flask
+│   ├── models.py                # Modelos (15+ tabelas)
+│   ├── forms.py                 # Formulários WTForms
+│   ├── security.py              # Autenticação
 │   ├── routes/
-│   │   ├── __init__.py
-│   │   ├── web.py            # Rotas web (~38 rotas)
-│   │   └── api.py            # Rotas API (~34 rotas)
+│   │   ├── web.py               # ~40 rotas web
+│   │   └── api.py               # ~35 rotas API
+│   ├── utils/
+│   │   ├── upload.py            # Upload seguro
+│   │   ├── currency.py          # Moedas
+│   │   └── slugify.py           # Slugs
 │   ├── static/
 │   │   ├── css/
-│   │   │   └── style.css     # Estilos customizados
-│   │   └── js/
-│   │       └── main.js       # JavaScript customizado
+│   │   │   └── theme.css        # CSS centralizado
+│   │   ├── js/
+│   │   └── uploads/             # Imagens
+│   │       └── products/
 │   └── templates/
-│       ├── base.html         # Template base
-│       ├── index.html        # Página inicial
-│       ├── login.html        # Login
-│       ├── dashboard.html    # Dashboard
-│       ├── offers_list.html  # Listagem de ofertas
-│       ├── offer_create.html # Criar oferta
-│       ├── offer_edit.html   # Editar oferta
-│       ├── offer_share.html  # Compartilhar oferta
-│       ├── coupons_list.html # Listagem de cupons
-│       ├── coupon_create.html # Criar cupom
-│       ├── coupon_edit.html  # Editar cupom
-│       ├── templates_list.html # Listagem de templates
-│       ├── template_create.html # Criar template
-│       ├── template_edit.html # Editar template
-│       ├── admin/            # Templates administrativos
-│       └── api_docs.html     # Documentação da API
-├── migrations/               # Migrações do banco de dados
-│   └── versions/
-├── scripts/
-│   ├── create_admin.py       # Criar usuário admin
-│   └── ...                   # Outros scripts utilitários
-├── docs/                     # Documentação técnica
-│   ├── README.md             # Índice da documentação
-│   ├── FEATURES.md           # Features do sistema
-│   ├── QUICK_REFERENCE.md    # Referência rápida
-│   ├── api/                  # Documentação da API
-│   └── ...                   # Outras docs
+│       ├── base.html            # Template base
+│       ├── index.html           # Home repaginada
+│       ├── offers_list.html     # Lista de ofertas
+│       ├── offer_create.html    # Criar oferta
+│       ├── offer_edit.html      # Editar oferta
+│       ├── offer_share.html     # Compartilhar oferta
+│       ├── coupons_list.html    # Lista de cupons
+│       ├── templates_list.html  # Lista de templates
+│       ├── admin/               # Templates admin
+│       │   ├── sellers.html
+│       │   ├── seller_edit.html
+│       │   ├── categories.html
+│       │   └── ...
+│       ├── components/
+│       │   └── html_editor.html # Editor Quill
+│       └── api_docs.html        # Docs da API
+├── migrations/                  # Migrações Alembic
+├── scripts/                     # Scripts utilitários
+│   ├── create_admin.py
+│   ├── add_color_to_sellers.py
+│   ├── add_installment_namespaces.py
+│   └── ...
+├── docs/                        # Documentação
 ├── instance/
-│   └── app.db                # Banco de dados SQLite (não commitado)
-├── .env                      # Variáveis de ambiente (não commitado)
-├── env.example               # Template do .env
-├── .gitignore                # Arquivos ignorados pelo Git
-├── requirements.txt          # Dependências Python
-├── run.py                    # Ponto de entrada da aplicação
-└── README.md                 # Este arquivo
+│   └── app.db                   # SQLite (dev)
+├── .env                         # Variáveis (não commitado)
+├── requirements.txt             # Dependências
+├── run.py                       # Entry point
+└── README.md                    # Este arquivo
 ```
-
----
-
-## 🎨 Temas e Customização
-
-### Tema Escuro
-
-O sistema possui suporte completo ao tema escuro, com toggle no header.
-
-**CSS Variables usadas:**
-```css
---bg-primary
---bg-secondary
---panel-solid
---panel-bg
---text-primary
---text-secondary
---text-muted
---border-color
---link-color
-```
-
-### Customização de Cores
-
-Edite `app/static/css/style.css` para personalizar:
-- Cores do tema claro e escuro
-- Gradientes dos botões
-- Cores dos toasts
-- Espaçamentos e tipografia
 
 ---
 
@@ -593,93 +909,59 @@ Edite `app/static/css/style.css` para personalizar:
 - ✅ **CSRF Protection** em todos os formulários
 - ✅ **@login_required** em rotas protegidas
 - ✅ **Role-Based Access Control** (Admin, Editor, Viewer)
-- ✅ **Validação de dados** no backend e frontend
+- ✅ **Validação de upload** (7 camadas de segurança)
 - ✅ **Sanitização de inputs**
-- ✅ **Proteção contra SQL Injection** (ORM)
-- ✅ **Senhas hasheadas** com Werkzeug
-- ✅ **Tokens JWT** para autenticação da API
+- ✅ **SQL Injection** protegido (ORM)
+- ✅ **Senhas hasheadas** (Werkzeug)
+- ✅ **Tokens JWT** para API
+- ✅ **Permissões de arquivo** (755/644)
 
 ---
 
-## 🐛 Solução de Problemas
+## 📊 Estatísticas
 
-### "no such table" Error
-
-Se receber `sqlite3.OperationalError: no such table`:
-
-```bash
-flask --app run.py db migrate -m "sync schema"
-flask --app run.py db upgrade
-```
-
-### Ambiente Virtual não Ativa (Windows)
-
-```powershell
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned
-.\.venv\Scripts\Activate.ps1
-```
-
-### Dependências não Instaladas
-
-```bash
-source .venv/bin/activate  # Linux/macOS
-pip install -r requirements.txt
-```
-
-### Reset do Banco de Dados
-
-```bash
-rm instance/app.db
-flask --app run.py db upgrade
-python -m scripts.create_admin --email admin@local --display-name "Admin"
-```
-
----
-
-## 📊 Estatísticas do Projeto
-
-- **Total de funcionalidades:** 20+
-- **Total de rotas web:** ~38
-- **Total de rotas API:** ~34
-- **Suporte a temas:** Claro + Escuro
-- **Idioma do código:** Inglês
-- **Idioma da interface:** Português (BR)
+- **Funcionalidades:** 30+
+- **Rotas Web:** ~40
+- **Rotas API:** ~35
+- **Tabelas no banco:** 15+
+- **Namespaces disponíveis:** 50+
+- **Idioma código:** Inglês
+- **Idioma interface:** Português (BR)
 - **Responsivo:** Sim (mobile-first)
+- **PWA Ready:** Não (planejado)
 
 ---
 
 ## 🚀 Roadmap
 
-### Features Planejadas
+### Próximas Features
 
 - [ ] Paginação nas listagens
-- [ ] Exportação de dados (CSV, Excel, PDF)
-- [ ] Gráficos e estatísticas
+- [ ] Exportação (CSV, Excel, PDF)
+- [ ] Gráficos e dashboard analytics
 - [ ] Histórico de alterações
 - [ ] Notificações por email
-- [ ] Auto-post em redes sociais (integração)
-- [ ] PWA (Progressive Web App)
+- [ ] Auto-post em redes sociais
+- [ ] PWA (offline-first)
 - [ ] Multi-idioma (EN, ES)
-- [ ] Sistema de comentários em ofertas
 - [ ] Sistema de favoritos
+- [ ] API webhooks
 
 ---
 
 ## 🤝 Contribuindo
 
-Contribuições são bem-vindas! Sinta-se à vontade para:
-
 1. Fork o projeto
-2. Criar uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
-3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
-4. Push para a branch (`git push origin feature/AmazingFeature`)
-5. Abrir um Pull Request
+2. Crie uma branch (`git checkout -b feature/NovaFeature`)
+3. Commit suas mudanças (`git commit -m 'Add NovaFeature'`)
+4. Push para a branch (`git push origin feature/NovaFeature`)
+5. Abra um Pull Request
 
 ---
 
 ## 📝 Licença
 
-Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalhes.
+MIT License - Veja [LICENSE](LICENSE) para detalhes.
 
 ---
 
@@ -691,18 +973,12 @@ Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalh
 
 ## 🙏 Agradecimentos
 
-- [Flask](https://flask.palletsprojects.com/) - Framework web
-- [Bootstrap](https://getbootstrap.com/) - Framework CSS
-- [Bootstrap Icons](https://icons.getbootstrap.com/) - Ícones
-- [SQLAlchemy](https://www.sqlalchemy.org/) - ORM
-
----
-
-## 📞 Suporte
-
-Para suporte, abra uma issue no GitHub ou entre em contato.
+- [Flask](https://flask.palletsprojects.com/)
+- [Bootstrap](https://getbootstrap.com/)
+- [Quill.js](https://quilljs.com/)
+- [Pillow](https://python-pillow.org/)
+- [SQLAlchemy](https://www.sqlalchemy.org/)
 
 ---
 
 **Desenvolvido com ❤️ e Python**
-

@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+{% block title %}Editar Vendedor{% endblock %}
+
+{% block content %}
+<section>
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+    <div>
+      <p class="eyebrow"><i class="bi bi-shop"></i> Administração / Vendedores</p>
+      <h1 class="mb-0">Editar Vendedor</h1>
+      <p class="muted mb-0">Atualize as informações do vendedor</p>
+    </div>
+    <div>
+      <a class="btn btn-outline-light btn-sm" href="{{ url_for('web.admin_sellers') }}">
+        <i class="bi bi-arrow-left"></i> Voltar
+      </a>
+    </div>
+  </div>
+
+  <div class="panel">
+    <form method="post" class="row g-4">
+      {{ form.hidden_tag() }}
+      
+      <div class="col-md-6">
+        <label class="form-label" for="{{ form.name.id }}">
+          <i class="bi bi-shop"></i> Nome do vendedor *
+        </label>
+        {{ form.name(class="form-control", placeholder="Ex: Mercado Livre") }}
+      </div>
+      
+      <div class="col-md-6">
+        <label class="form-label" for="{{ form.slug.id }}">
+          <i class="bi bi-link-45deg"></i> Slug *
+        </label>
+        {{ form.slug(class="form-control", placeholder="mercado-livre") }}
+        <small class="text-muted">Usado para URLs. Apenas letras minúsculas e hífens.</small>
+      </div>
+      
+      <div class="col-12">
+        <label class="form-label" for="{{ form.description.id }}">
+          <i class="bi bi-text-paragraph"></i> Descrição
+        </label>
+        {{ form.description(class="form-control", rows="3", placeholder="Descrição opcional") }}
+      </div>
+      
+      <div class="col-md-6">
+        <label class="form-label" for="{{ form.website.id }}">
+          <i class="bi bi-globe"></i> Website
+        </label>
+        {{ form.website(class="form-control", placeholder="https://exemplo.com") }}
+      </div>
+      
+      <div class="col-md-6">
+        <div class="form-check mt-4 pt-2">
+          {{ form.active(class="form-check-input") }}
+          <label class="form-check-label" for="{{ form.active.id }}">
+            Vendedor ativo
+          </label>
+        </div>
+      </div>
+      
+      <div class="col-12">
+        <hr class="my-4">
+        <label class="form-label">
+          <i class="bi bi-palette-fill"></i> Cor do Vendedor
+        </label>
+        
+        <!-- Color Picker Tabs -->
+        <ul class="nav nav-pills mb-3" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#solid-color-seller" type="button">
+              <i class="bi bi-circle-fill"></i> Cor Sólida
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#gradient-seller" type="button">
+              <i class="bi bi-palette"></i> Gradiente
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#custom-css-seller" type="button">
+              <i class="bi bi-code-square"></i> CSS
+            </button>
+          </li>
+        </ul>
+        
+        <!-- Color Picker Content -->
+        <div class="tab-content">
+          <!-- Solid Color -->
+          <div class="tab-pane fade show active" id="solid-color-seller">
+            <div class="input-group">
+              <input type="color" id="seller-color-picker" class="form-control form-control-color" value="{{ seller.color or '#6b7280' }}">
+              {{ form.color(class="form-control", id="seller-color-input", placeholder="#6b7280", value=seller.color or '#6b7280') }}
+            </div>
+          </div>
+          
+          <!-- Gradient Presets -->
+          <div class="tab-pane fade" id="gradient-seller">
+            <div class="row g-2 mb-3">
+              <div class="col-4">
+                <button type="button" class="btn btn-sm w-100 gradient-preset" data-gradient="linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)" style="background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); color: white;">
+                  Instagram
+                </button>
+              </div>
+              <div class="col-4">
+                <button type="button" class="btn btn-sm w-100 gradient-preset" data-gradient="linear-gradient(135deg, #667eea 0%, #764ba2 100%)" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                  Roxo
+                </button>
+              </div>
+              <div class="col-4">
+                <button type="button" class="btn btn-sm w-100 gradient-preset" data-gradient="linear-gradient(135deg, #f093fb 0%, #f5576c 100%)" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;">
+                  Rosa
+                </button>
+              </div>
+              <div class="col-4">
+                <button type="button" class="btn btn-sm w-100 gradient-preset" data-gradient="linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white;">
+                  Azul
+                </button>
+              </div>
+              <div class="col-4">
+                <button type="button" class="btn btn-sm w-100 gradient-preset" data-gradient="linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white;">
+                  Verde
+                </button>
+              </div>
+              <div class="col-4">
+                <button type="button" class="btn btn-sm w-100 gradient-preset" data-gradient="linear-gradient(135deg, #fa709a 0%, #fee140 100%)" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white;">
+                  Pôr do Sol
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Custom CSS -->
+          <div class="tab-pane fade" id="custom-css-seller">
+            <textarea class="form-control font-monospace" id="seller-custom-css" rows="2" placeholder="Ex: linear-gradient(45deg, #f00, #00f)"></textarea>
+            <small class="text-muted d-block mt-1">
+              <i class="bi bi-info-circle"></i> Cole aqui qualquer valor CSS válido
+            </small>
+          </div>
+        </div>
+        
+        <!-- Preview -->
+        <div class="mt-3 p-3 rounded d-flex align-items-center justify-content-center" id="seller-color-preview" style="height: 80px; background: {{ seller.color or '#6b7280' }}; border: 2px solid var(--border-color);">
+          <span class="fw-bold" style="color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">Pré-visualização</span>
+        </div>
+      </div>
+      
+      <div class="col-12">
+        <hr class="my-4">
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-check-circle"></i> Salvar Alterações
+          </button>
+          <a href="{{ url_for('web.admin_sellers') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-x-circle"></i> Cancelar
+          </a>
+        </div>
+      </div>
+    </form>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Color Picker for Seller
+document.addEventListener('DOMContentLoaded', function() {
+  const colorPicker = document.getElementById('seller-color-picker');
+  const colorInput = document.getElementById('seller-color-input');
+  const colorPreview = document.getElementById('seller-color-preview');
+  const customCss = document.getElementById('seller-custom-css');
+  const gradientPresets = document.querySelectorAll('.gradient-preset');
+  
+  // Update preview function
+  function updatePreview(value) {
+    if (value.startsWith('#')) {
+      colorPreview.style.background = value;
+    } else if (value.startsWith('linear-gradient') || value.startsWith('radial-gradient')) {
+      colorPreview.style.background = value;
+    } else {
+      colorPreview.style.background = value;
+    }
+    colorInput.value = value;
+  }
+  
+  // Solid color picker
+  if (colorPicker) {
+    colorPicker.addEventListener('input', function() {
+      updatePreview(this.value);
+    });
+  }
+  
+  // Manual hex input
+  if (colorInput) {
+    colorInput.addEventListener('input', function() {
+      if (this.value.startsWith('#')) {
+        colorPicker.value = this.value;
+        updatePreview(this.value);
+      } else {
+        updatePreview(this.value);
+      }
+    });
+  }
+  
+  // Gradient presets
+  gradientPresets.forEach(button => {
+    button.addEventListener('click', function() {
+      const gradient = this.getAttribute('data-gradient');
+      updatePreview(gradient);
+    });
+  });
+  
+  // Custom CSS
+  if (customCss) {
+    customCss.addEventListener('input', function() {
+      updatePreview(this.value);
+    });
+  }
+});
+</script>
+{% endblock %}
+

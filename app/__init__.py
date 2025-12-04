@@ -17,6 +17,7 @@ def create_app(config_name: str | None = None) -> Flask:
     register_extensions(app)
     register_blueprints(app)
     register_shellcontext(app)
+    register_template_filters(app)
     seed_default_groups(app)
 
     return app
@@ -37,6 +38,16 @@ def register_blueprints(app: Flask) -> None:
 
     app.register_blueprint(web_bp)
     app.register_blueprint(api_bp)
+
+
+def register_template_filters(app: Flask) -> None:
+    """Register custom Jinja2 template filters."""
+    from .utils.currency import get_currency_symbol
+    
+    @app.template_filter('currency_symbol')
+    def currency_symbol_filter(currency_code):
+        """Convert currency code to symbol (e.g., BRL -> R$)"""
+        return get_currency_symbol(currency_code)
 
 
 def register_shellcontext(app: Flask) -> None:

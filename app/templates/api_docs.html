@@ -1,257 +1,94 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>pySaveDiário - API Documentation</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
     <style>
         :root {
-            --primary-color: #6366f1;
-            --secondary-color: #8b5cf6;
-            --bg-dark: #1a1a2e;
-            --bg-darker: #16213e;
-            --text-light: #e2e8f0;
-            --border-color: #2d3748;
+            --primary: #6366f1;
+            --secondary: #8b5cf6;
             --success: #10b981;
             --warning: #f59e0b;
             --danger: #ef4444;
+            --bg-dark: #0f172a;
+            --bg-darker: #020617;
+            --text-light: #e2e8f0;
+            --border: #334155;
         }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body {
             background: var(--bg-dark);
             color: var(--text-light);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            line-height: 1.6;
         }
         
         .sidebar {
             position: fixed;
-            top: 0;
             left: 0;
-            height: 100vh;
+            top: 0;
             width: 280px;
+            height: 100vh;
             background: var(--bg-darker);
-            border-right: 1px solid var(--border-color);
+            border-right: 1px solid var(--border);
             overflow-y: auto;
             padding: 2rem 0;
-        }
-        
-        .sidebar::-webkit-scrollbar {
-            width: 6px;
-        }
-        
-        .sidebar::-webkit-scrollbar-track {
-            background: var(--bg-darker);
-        }
-        
-        .sidebar::-webkit-scrollbar-thumb {
-            background: var(--primary-color);
-            border-radius: 3px;
+            z-index: 1000;
         }
         
         .sidebar-logo {
             padding: 0 1.5rem 1.5rem;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border);
             margin-bottom: 1.5rem;
         }
         
         .sidebar-logo h4 {
-            color: var(--primary-color);
+            color: var(--primary);
             font-weight: 700;
-            margin: 0;
+            font-size: 1.25rem;
         }
         
         .sidebar-nav {
             list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        
-        .sidebar-nav li {
-            margin-bottom: 0.25rem;
         }
         
         .sidebar-nav a {
-            display: block;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
             padding: 0.75rem 1.5rem;
             color: var(--text-light);
             text-decoration: none;
-            transition: all 0.3s;
+            transition: all 0.2s;
             font-size: 0.95rem;
         }
         
         .sidebar-nav a:hover {
             background: rgba(99, 102, 241, 0.1);
-            color: var(--primary-color);
-            padding-left: 2rem;
+            color: var(--primary);
         }
         
         .sidebar-nav a.active {
-            background: var(--primary-color);
+            background: var(--primary);
             color: white;
         }
-        
-        .sidebar-nav .method-badge {
-            display: inline-block;
-            padding: 0.125rem 0.5rem;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            margin-right: 0.5rem;
-        }
-        
-        .method-get { background: var(--success); color: white; }
-        .method-post { background: var(--primary-color); color: white; }
-        .method-put { background: var(--warning); color: white; }
-        .method-delete { background: var(--danger); color: white; }
         
         .main-content {
             margin-left: 280px;
-            padding: 2rem 3rem;
+            padding: 3rem;
             max-width: 1200px;
         }
         
-        .section {
-            margin-bottom: 4rem;
-        }
-        
-        .section-title {
-            font-size: 2rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
-            color: var(--primary-color);
-            border-bottom: 2px solid var(--primary-color);
-            padding-bottom: 0.5rem;
-        }
-        
-        .endpoint-card {
-            background: var(--bg-darker);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-        }
-        
-        .endpoint-header {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            margin-bottom: 1rem;
-        }
-        
-        .endpoint-method {
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            font-weight: 700;
-            font-size: 0.875rem;
-        }
-        
-        .endpoint-path {
-            font-family: 'Monaco', 'Courier New', monospace;
-            font-size: 1.1rem;
-            color: var(--text-light);
-        }
-        
-        .code-tabs {
-            margin-top: 1.5rem;
-        }
-        
-        .tab-buttons {
-            display: flex;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
-            border-bottom: 1px solid var(--border-color);
-        }
-        
-        .tab-button {
-            padding: 0.75rem 1.5rem;
-            background: transparent;
-            border: none;
-            color: var(--text-light);
-            cursor: pointer;
-            transition: all 0.3s;
-            border-bottom: 2px solid transparent;
-            font-weight: 500;
-        }
-        
-        .tab-button:hover {
-            color: var(--primary-color);
-        }
-        
-        .tab-button.active {
-            color: var(--primary-color);
-            border-bottom-color: var(--primary-color);
-        }
-        
-        .tab-content {
-            display: none;
-        }
-        
-        .tab-content.active {
-            display: block;
-        }
-        
-        .code-block {
-            background: #0d1117;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-        
-        .code-block pre {
-            margin: 0;
-            padding: 1.5rem;
-        }
-        
-        .param-table {
-            width: 100%;
-            margin-top: 1rem;
-        }
-        
-        .param-table th {
-            background: rgba(99, 102, 241, 0.1);
-            padding: 0.75rem;
-            text-align: left;
-            font-weight: 600;
-            color: var(--primary-color);
-        }
-        
-        .param-table td {
-            padding: 0.75rem;
-            border-bottom: 1px solid var(--border-color);
-        }
-        
-        .badge-required {
-            background: var(--danger);
-            color: white;
-            padding: 0.25rem 0.5rem;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-        
-        .badge-optional {
-            background: var(--warning);
-            color: white;
-            padding: 0.25rem 0.5rem;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-        
-        .response-example {
-            background: rgba(16, 185, 129, 0.1);
-            border-left: 4px solid var(--success);
-            padding: 1rem;
-            border-radius: 4px;
-            margin-top: 1rem;
-        }
-        
         .hero {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            padding: 3rem 2rem;
-            border-radius: 12px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            padding: 4rem 3rem;
+            border-radius: 16px;
             margin-bottom: 3rem;
             text-align: center;
         }
@@ -264,456 +101,1268 @@
         
         .hero p {
             font-size: 1.25rem;
-            opacity: 0.9;
+            opacity: 0.95;
         }
         
-        .badge-auth {
-            background: var(--warning);
-            color: var(--bg-dark);
+        .section {
+            margin-bottom: 4rem;
+        }
+        
+        .section-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .endpoint-card {
+            background: var(--bg-darker);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .endpoint-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .method-badge {
             padding: 0.5rem 1rem;
             border-radius: 6px;
-            font-weight: 600;
+            font-weight: 700;
+            font-size: 0.875rem;
+            letter-spacing: 0.05em;
+        }
+        
+        .method-get { background: var(--success); color: white; }
+        .method-post { background: var(--primary); color: white; }
+        .method-put { background: var(--warning); color: var(--bg-dark); }
+        .method-delete { background: var(--danger); color: white; }
+        
+        .endpoint-path {
+            font-family: 'Courier New', monospace;
+            font-size: 1.1rem;
+            color: var(--text-light);
+        }
+        
+        .auth-badge {
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
+            padding: 0.35rem 0.75rem;
+            background: rgba(245, 158, 11, 0.2);
+            border: 1px solid var(--warning);
+            border-radius: 6px;
+            font-size: 0.85rem;
+            color: var(--warning);
+        }
+        
+        .code-tabs {
+            margin-top: 1.5rem;
+        }
+        
+        .tab-buttons {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .tab-btn {
+            padding: 0.5rem 1rem;
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+        
+        .tab-btn:hover {
+            background: rgba(99, 102, 241, 0.2);
+        }
+        
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .code-block {
+            background: #1e293b;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .code-block pre {
+            margin: 0;
+            padding: 1.5rem;
+            overflow-x: auto;
+        }
+        
+        .code-block code {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+        
+        .param-table {
+            width: 100%;
+            margin-top: 1.5rem;
+            border-collapse: collapse;
+        }
+        
+        .param-table th {
+            background: rgba(99, 102, 241, 0.1);
+            padding: 0.75rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--primary);
+            border-bottom: 2px solid var(--border);
+        }
+        
+        .param-table td {
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .badge-required {
+            background: var(--danger);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .badge-optional {
+            background: rgba(156, 163, 175, 0.5);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+        }
+        
+        .alert-info {
+            background: rgba(59, 130, 246, 0.1);
+            border-left: 4px solid #3b82f6;
+            padding: 1rem;
+            border-radius: 6px;
+            margin: 1rem 0;
+        }
+        
+        .alert-warning {
+            background: rgba(245, 158, 11, 0.1);
+            border-left: 4px solid var(--warning);
+            padding: 1rem;
+            border-radius: 6px;
+            margin: 1rem 0;
+        }
+        
+        .home-btn {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            padding: 1rem;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 56px;
+            height: 56px;
+            transition: all 0.3s;
+            z-index: 999;
+        }
+        
+        .home-btn:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.6);
+            color: white;
+        }
+        
+        @media (max-width: 992px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+            
+            .main-content {
+                margin-left: 0;
+                padding: 2rem 1rem;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- Sidebar -->
+    <!-- Sidebar Navigation -->
     <div class="sidebar">
         <div class="sidebar-logo">
             <h4><i class="bi bi-code-square"></i> pySaveDiário API</h4>
-            <small class="text-muted">v1.0</small>
+            <small class="text-muted">Versão 2.0 - Atualizada</small>
         </div>
         
         <ul class="sidebar-nav">
-            <li><a href="#intro" class="active"><i class="bi bi-house"></i> Introduction</a></li>
-            <li><a href="#auth"><i class="bi bi-shield-lock"></i> Authentication</a></li>
-            <li><a href="#sellers"><i class="bi bi-shop"></i> Sellers</a></li>
-            <li><a href="#categories"><i class="bi bi-grid-3x3-gap"></i> Categories</a></li>
-            <li><a href="#manufacturers"><i class="bi bi-building"></i> Manufacturers</a></li>
-            <li><a href="#templates"><i class="bi bi-file-text"></i> Templates</a></li>
-            <li><a href="#offers"><i class="bi bi-tag"></i> Offers</a></li>
-            <li><a href="#users"><i class="bi bi-people"></i> Users</a></li>
-            <li><a href="#errors"><i class="bi bi-exclamation-triangle"></i> Error Handling</a></li>
+            <li><a href="#intro" class="active"><i class="bi bi-house-door"></i> Introdução</a></li>
+            <li><a href="#auth"><i class="bi bi-shield-lock"></i> Autenticação</a></li>
+            <li><a href="#sellers"><i class="bi bi-shop"></i> Vendedores</a></li>
+            <li><a href="#categories"><i class="bi bi-grid-3x3-gap"></i> Categorias</a></li>
+            <li><a href="#manufacturers"><i class="bi bi-tools"></i> Fabricantes</a></li>
+            <li><a href="#offers"><i class="bi bi-tags"></i> Ofertas</a></li>
+            <li><a href="#coupons"><i class="bi bi-ticket-perforated"></i> Cupons</a></li>
+            <li><a href="#templates"><i class="bi bi-file-earmark-text"></i> Templates</a></li>
+            <li><a href="#namespaces"><i class="bi bi-braces"></i> Namespaces</a></li>
+            <li><a href="#users"><i class="bi bi-people"></i> Usuários</a></li>
+            <li><a href="#groups"><i class="bi bi-diagram-3"></i> Grupos</a></li>
+            <li><a href="#wishlists"><i class="bi bi-heart"></i> Wishlists</a></li>
+            <li><a href="#errors"><i class="bi bi-exclamation-triangle"></i> Erros</a></li>
         </ul>
     </div>
     
     <!-- Main Content -->
     <div class="main-content">
-        <!-- Hero Section -->
+        <!-- Hero -->
         <div class="hero">
-            <h1><i class="bi bi-rocket-takeoff"></i> pySaveDiário API</h1>
-            <p>Documentação completa da API RESTful com exemplos práticos</p>
+            <h1><i class="bi bi-rocket-takeoff"></i> API REST do pySaveDiário</h1>
+            <p>Documentação completa com exemplos em Python, Node.js, PHP e cURL</p>
         </div>
         
-        <!-- Introduction Section -->
+        <!-- Introduction -->
         <div class="section" id="intro">
-            <h2 class="section-title">📚 Introdução</h2>
-            <p>Bem-vindo à documentação da API do pySaveDiário. Esta API RESTful permite integração completa com todas as funcionalidades do sistema.</p>
+            <h2 class="section-title"><i class="bi bi-info-circle"></i> Introdução</h2>
+            <p class="mb-3">
+                A API do pySaveDiário oferece acesso programático a todas as funcionalidades do sistema. 
+                Você pode criar ofertas, gerenciar cupons, configurar templates, e muito mais.
+            </p>
             
-            <div class="endpoint-card">
-                <h5><i class="bi bi-info-circle"></i> Informações Gerais</h5>
-                <table class="param-table">
-                    <tr>
-                        <td><strong>Base URL</strong></td>
-                        <td><code>http://localhost:5000/api</code></td>
-                    </tr>
-                    <tr>
-                        <td><strong>Formato</strong></td>
-                        <td>JSON</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Autenticação</strong></td>
-                        <td>Bearer Token</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Charset</strong></td>
-                        <td>UTF-8</td>
-                    </tr>
-                </table>
+            <div class="alert-info">
+                <strong><i class="bi bi-lightning-charge"></i> Base URL:</strong> <code>http://localhost:5000/api</code>
             </div>
-        </div>
-        
-        <!-- Authentication Section -->
-        <div class="section" id="auth">
-            <h2 class="section-title">🔐 Autenticação</h2>
             
             <div class="endpoint-card">
-                <div class="endpoint-header">
-                    <span class="endpoint-method method-post">POST</span>
-                    <span class="endpoint-path">/api/auth/token</span>
-                </div>
-                
-                <p>Obtenha um token de acesso para autenticar suas requisições.</p>
-                
-                <h6>Parâmetros de Autenticação (Basic Auth)</h6>
-                <table class="param-table">
-                    <thead>
-                        <tr>
-                            <th>Campo</th>
-                            <th>Tipo</th>
-                            <th>Descrição</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>username</td>
-                            <td>string</td>
-                            <td>Email do usuário</td>
-                        </tr>
-                        <tr>
-                            <td>password</td>
-                            <td>string</td>
-                            <td>Senha do usuário</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <h4><i class="bi bi-heart-pulse"></i> Health Check</h4>
+                <p>Verificar se a API está online:</p>
                 
                 <div class="code-tabs">
                     <div class="tab-buttons">
-                        <button class="tab-button active" data-tab="auth-curl">cURL</button>
-                        <button class="tab-button" data-tab="auth-python">Python</button>
-                        <button class="tab-button" data-tab="auth-nodejs">Node.js</button>
-                        <button class="tab-button" data-tab="auth-php">PHP</button>
+                        <button class="tab-btn active" onclick="switchTab(this, 'health-curl')">cURL</button>
+                        <button class="tab-btn" onclick="switchTab(this, 'health-python')">Python</button>
+                        <button class="tab-btn" onclick="switchTab(this, 'health-node')">Node.js</button>
                     </div>
                     
-                    <div id="auth-curl" class="tab-content active">
+                    <div id="health-curl" class="tab-content active">
                         <div class="code-block">
-                            <pre><code class="language-bash">curl -X POST http://localhost:5000/api/auth/token \
-  -u "admin@example.com:password"</code></pre>
+<pre><code class="language-bash">curl http://localhost:5000/api/health</code></pre>
                         </div>
                     </div>
                     
-                    <div id="auth-python" class="tab-content">
+                    <div id="health-python" class="tab-content">
                         <div class="code-block">
-                            <pre><code class="language-python">import requests
+<pre><code class="language-python">import requests
 
-response = requests.post(
-    'http://localhost:5000/api/auth/token',
-    auth=('admin@example.com', 'password')
-)
-
-token = response.json()['token']
-print(f'Token: {token}')</code></pre>
+response = requests.get('http://localhost:5000/api/health')
+print(response.json())</code></pre>
                         </div>
                     </div>
                     
-                    <div id="auth-nodejs" class="tab-content">
+                    <div id="health-node" class="tab-content">
                         <div class="code-block">
-                            <pre><code class="language-javascript">const axios = require('axios');
+<pre><code class="language-javascript">const axios = require('axios');
 
-const response = await axios.post(
-  'http://localhost:5000/api/auth/token',
-  {},
-  {
-    auth: {
-      username: 'admin@example.com',
-      password: 'password'
-    }
-  }
-);
-
-const token = response.data.token;
-console.log('Token:', token);</code></pre>
-                        </div>
-                    </div>
-                    
-                    <div id="auth-php" class="tab-content">
-                        <div class="code-block">
-                            <pre><code class="language-php"><?php
-$ch = curl_init('http://localhost:5000/api/auth/token');
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-curl_setopt($ch, CURLOPT_POST, true);
-curl_setopt($ch, CURLOPT_USERPWD, 'admin@example.com:password');
-
-$response = curl_exec($ch);
-$data = json_decode($response, true);
-$token = $data['token'];
-
-echo "Token: " . $token;
-?></code></pre>
+const response = await axios.get('http://localhost:5000/api/health');
+console.log(response.data);</code></pre>
                         </div>
                     </div>
                 </div>
                 
-                <div class="response-example">
-                    <h6><i class="bi bi-check-circle"></i> Resposta de Sucesso (200 OK)</h6>
-                    <div class="code-block">
-                        <pre><code class="language-json">{
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                <p class="mt-3"><strong>Resposta:</strong></p>
+                <div class="code-block">
+<pre><code class="language-json">{
+  "status": "ok",
+  "message": "API is running"
+}</code></pre>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Authentication -->
+        <div class="section" id="auth">
+            <h2 class="section-title"><i class="bi bi-shield-lock"></i> Autenticação</h2>
+            
+            <div class="alert-warning">
+                <strong><i class="bi bi-info-circle"></i> Importante:</strong> 
+                Todas as rotas protegidas exigem autenticação via Bearer Token ou HTTP Basic Auth.
+            </div>
+            
+            <!-- Get Token -->
+            <div class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="method-badge method-post">POST</span>
+                    <code class="endpoint-path">/api/auth/token</code>
+                </div>
+                
+                <p>Obter token de autenticação usando HTTP Basic Auth:</p>
+                
+                <div class="code-tabs">
+                    <div class="tab-buttons">
+                        <button class="tab-btn active" onclick="switchTab(this, 'token-curl')">cURL</button>
+                        <button class="tab-btn" onclick="switchTab(this, 'token-python')">Python</button>
+                        <button class="tab-btn" onclick="switchTab(this, 'token-node')">Node.js</button>
+                        <button class="tab-btn" onclick="switchTab(this, 'token-php')">PHP</button>
+                    </div>
+                    
+                    <div id="token-curl" class="tab-content active">
+                        <div class="code-block">
+<pre><code class="language-bash">curl -X POST http://localhost:5000/api/auth/token \
+  -u "admin@local:sua_senha"</code></pre>
+                        </div>
+                    </div>
+                    
+                    <div id="token-python" class="tab-content">
+                        <div class="code-block">
+<pre><code class="language-python">import requests
+from requests.auth import HTTPBasicAuth
+
+response = requests.post(
+    'http://localhost:5000/api/auth/token',
+    auth=HTTPBasicAuth('admin@local', 'sua_senha')
+)
+
+token = response.json()['token']
+print(f"Token: {token}")</code></pre>
+                        </div>
+                    </div>
+                    
+                    <div id="token-node" class="tab-content">
+                        <div class="code-block">
+<pre><code class="language-javascript">const axios = require('axios');
+
+const response = await axios.post(
+    'http://localhost:5000/api/auth/token',
+    {},
+    {
+        auth: {
+            username: 'admin@local',
+            password: 'sua_senha'
+        }
+    }
+);
+
+const token = response.data.token;
+console.log(`Token: ${token}`);</code></pre>
+                        </div>
+                    </div>
+                    
+                    <div id="token-php" class="tab-content">
+                        <div class="code-block">
+<pre><code class="language-php">&lt;?php
+$ch = curl_init('http://localhost:5000/api/auth/token');
+curl_setopt($ch, CURLOPT_POST, true);
+curl_setopt($ch, CURLOPT_USERPWD, 'admin@local:sua_senha');
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+$response = curl_exec($ch);
+$data = json_decode($response, true);
+
+echo "Token: " . $data['token'];
+?&gt;</code></pre>
+                        </div>
+                    </div>
+                </div>
+                
+                <p class="mt-3"><strong>Resposta:</strong></p>
+                <div class="code-block">
+<pre><code class="language-json">{
+  "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
   "expires_in": 3600
 }</code></pre>
+                </div>
+            </div>
+            
+            <!-- Login -->
+            <div class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="method-badge method-post">POST</span>
+                    <code class="endpoint-path">/api/auth/login</code>
+                </div>
+                
+                <p>Login via JSON (alternativa ao Basic Auth):</p>
+                
+                <div class="code-tabs">
+                    <div class="tab-buttons">
+                        <button class="tab-btn active" onclick="switchTab(this, 'login-curl')">cURL</button>
+                        <button class="tab-btn" onclick="switchTab(this, 'login-python')">Python</button>
+                        <button class="tab-btn" onclick="switchTab(this, 'login-node')">Node.js</button>
+                    </div>
+                    
+                    <div id="login-curl" class="tab-content active">
+                        <div class="code-block">
+<pre><code class="language-bash">curl -X POST http://localhost:5000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "admin@local",
+    "password": "sua_senha"
+  }'</code></pre>
+                        </div>
+                    </div>
+                    
+                    <div id="login-python" class="tab-content">
+                        <div class="code-block">
+<pre><code class="language-python">import requests
+
+payload = {
+    'email': 'admin@local',
+    'password': 'sua_senha'
+}
+
+response = requests.post(
+    'http://localhost:5000/api/auth/login',
+    json=payload
+)
+
+token = response.json()['token']</code></pre>
+                        </div>
+                    </div>
+                    
+                    <div id="login-node" class="tab-content">
+                        <div class="code-block">
+<pre><code class="language-javascript">const response = await axios.post(
+    'http://localhost:5000/api/auth/login',
+    {
+        email: 'admin@local',
+        password: 'sua_senha'
+    }
+);
+
+const token = response.data.token;</code></pre>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
         
-        <!-- Sellers Section -->
+        <!-- Users -->
+        <div class="section" id="users">
+            <h2 class="section-title"><i class="bi bi-people"></i> Usuários (Users)</h2>
+            
+            <p class="mb-4">
+                Gerenciar perfis de usuários com informações completas de contato e redes sociais. 
+                Esses dados podem ser usados em templates via namespaces globais como <code>{celular}</code>, 
+                <code>{instagram}</code>, <code>{site}</code>, etc.
+            </p>
+            
+            <!-- Register User -->
+            <div class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="method-badge method-post">POST</span>
+                    <code class="endpoint-path">/api/users</code>
+                </div>
+                
+                <p>Registrar novo usuário com perfil completo:</p>
+                
+                <div class="code-tabs">
+                    <div class="tab-buttons">
+                        <button class="tab-btn active" onclick="switchTab(this, 'register-curl')">cURL</button>
+                        <button class="tab-btn" onclick="switchTab(this, 'register-python')">Python</button>
+                        <button class="tab-btn" onclick="switchTab(this, 'register-node')">Node.js</button>
+                        <button class="tab-btn" onclick="switchTab(this, 'register-php')">PHP</button>
+                    </div>
+                    
+                    <div id="register-curl" class="tab-content active">
+                        <div class="code-block">
+<pre><code class="language-bash">curl -X POST http://localhost:5000/api/users \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "usuario@email.com",
+    "password": "senha123",
+    "display_name": "Nome Completo",
+    "role": "member",
+    "phone": "(11) 98765-4321",
+    "address": "Rua Exemplo, 123 - São Paulo, SP",
+    "website": "https://meusite.com.br",
+    "instagram": "@meuinstagram",
+    "facebook": "https://facebook.com/meuperfil",
+    "twitter": "@meutwitter",
+    "linkedin": "https://linkedin.com/in/meuperfil",
+    "youtube": "https://youtube.com/@meucanal",
+    "tiktok": "@meutiktok"
+  }'</code></pre>
+                        </div>
+                    </div>
+                    
+                    <div id="register-python" class="tab-content">
+                        <div class="code-block">
+<pre><code class="language-python">import requests
+
+data = {
+    "email": "usuario@email.com",
+    "password": "senha123",
+    "display_name": "Nome Completo",
+    "role": "member",
+    "phone": "(11) 98765-4321",
+    "address": "Rua Exemplo, 123 - São Paulo, SP",
+    "website": "https://meusite.com.br",
+    "instagram": "@meuinstagram",
+    "facebook": "https://facebook.com/meuperfil",
+    "twitter": "@meutwitter",
+    "linkedin": "https://linkedin.com/in/meuperfil",
+    "youtube": "https://youtube.com/@meucanal",
+    "tiktok": "@meutiktok"
+}
+
+response = requests.post(
+    'http://localhost:5000/api/users',
+    json=data
+)
+
+user = response.json()
+print(user)</code></pre>
+                        </div>
+                    </div>
+                    
+                    <div id="register-node" class="tab-content">
+                        <div class="code-block">
+<pre><code class="language-javascript">const axios = require('axios');
+
+const data = {
+    email: "usuario@email.com",
+    password: "senha123",
+    display_name: "Nome Completo",
+    role: "member",
+    phone: "(11) 98765-4321",
+    address: "Rua Exemplo, 123 - São Paulo, SP",
+    website: "https://meusite.com.br",
+    instagram: "@meuinstagram",
+    facebook: "https://facebook.com/meuperfil",
+    twitter: "@meutwitter",
+    linkedin: "https://linkedin.com/in/meuperfil",
+    youtube: "https://youtube.com/@meucanal",
+    tiktok: "@meutiktok"
+};
+
+const response = await axios.post(
+    'http://localhost:5000/api/users',
+    data
+);
+
+console.log(response.data);</code></pre>
+                        </div>
+                    </div>
+                    
+                    <div id="register-php" class="tab-content">
+                        <div class="code-block">
+<pre><code class="language-php">&lt;?php
+$data = [
+    'email' => 'usuario@email.com',
+    'password' => 'senha123',
+    'display_name' => 'Nome Completo',
+    'role' => 'member',
+    'phone' => '(11) 98765-4321',
+    'address' => 'Rua Exemplo, 123 - São Paulo, SP',
+    'website' => 'https://meusite.com.br',
+    'instagram' => '@meuinstagram',
+    'facebook' => 'https://facebook.com/meuperfil',
+    'twitter' => '@meutwitter',
+    'linkedin' => 'https://linkedin.com/in/meuperfil',
+    'youtube' => 'https://youtube.com/@meucanal',
+    'tiktok' => '@meutiktok'
+];
+
+$ch = curl_init('http://localhost:5000/api/users');
+curl_setopt($ch, CURLOPT_POST, true);
+curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+$response = curl_exec($ch);
+$user = json_decode($response, true);
+
+print_r($user);
+?&gt;</code></pre>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="alert-info mt-3">
+                    <p><strong>Campos Obrigatórios:</strong> <code>email</code>, <code>password</code>, <code>display_name</code></p>
+                    <p><strong>Campos Opcionais:</strong> <code>role</code>, <code>phone</code>, <code>address</code>, <code>website</code></p>
+                    <p><strong>Redes Sociais Opcionais:</strong> <code>instagram</code>, <code>facebook</code>, <code>twitter</code>, <code>linkedin</code>, <code>youtube</code>, <code>tiktok</code></p>
+                </div>
+            </div>
+            
+            <!-- Update User -->
+            <div class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="method-badge method-put">PUT</span>
+                    <code class="endpoint-path">/api/users/&lt;id&gt;</code>
+                </div>
+                
+                <p>Atualizar perfil de usuário (próprio perfil ou como admin):</p>
+                
+                <div class="code-tabs">
+                    <div class="tab-buttons">
+                        <button class="tab-btn active" onclick="switchTab(this, 'update-curl')">cURL</button>
+                        <button class="tab-btn" onclick="switchTab(this, 'update-python')">Python</button>
+                        <button class="tab-btn" onclick="switchTab(this, 'update-node')">Node.js</button>
+                        <button class="tab-btn" onclick="switchTab(this, 'update-php')">PHP</button>
+                    </div>
+                    
+                    <div id="update-curl" class="tab-content active">
+                        <div class="code-block">
+<pre><code class="language-bash">curl -X PUT http://localhost:5000/api/users/1 \
+  -H "Authorization: Bearer SEU_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "phone": "(11) 91234-5678",
+    "website": "https://novosite.com.br",
+    "instagram": "@novoinstagram"
+  }'</code></pre>
+                        </div>
+                    </div>
+                    
+                    <div id="update-python" class="tab-content">
+                        <div class="code-block">
+<pre><code class="language-python">import requests
+
+headers = {'Authorization': 'Bearer SEU_TOKEN'}
+data = {
+    "phone": "(11) 91234-5678",
+    "website": "https://novosite.com.br",
+    "instagram": "@novoinstagram"
+}
+
+response = requests.put(
+    'http://localhost:5000/api/users/1',
+    json=data,
+    headers=headers
+)
+
+user = response.json()
+print(user)</code></pre>
+                        </div>
+                    </div>
+                    
+                    <div id="update-node" class="tab-content">
+                        <div class="code-block">
+<pre><code class="language-javascript">const axios = require('axios');
+
+const data = {
+    phone: "(11) 91234-5678",
+    website: "https://novosite.com.br",
+    instagram: "@novoinstagram"
+};
+
+const response = await axios.put(
+    'http://localhost:5000/api/users/1',
+    data,
+    {
+        headers: {
+            'Authorization': 'Bearer SEU_TOKEN'
+        }
+    }
+);
+
+console.log(response.data);</code></pre>
+                        </div>
+                    </div>
+                    
+                    <div id="update-php" class="tab-content">
+                        <div class="code-block">
+<pre><code class="language-php">&lt;?php
+$data = [
+    'phone' => '(11) 91234-5678',
+    'website' => 'https://novosite.com.br',
+    'instagram' => '@novoinstagram'
+];
+
+$ch = curl_init('http://localhost:5000/api/users/1');
+curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
+curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    'Content-Type: application/json',
+    'Authorization: Bearer SEU_TOKEN'
+]);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+$response = curl_exec($ch);
+$user = json_decode($response, true);
+
+print_r($user);
+?&gt;</code></pre>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="alert-warning mt-3">
+                    <strong><i class="bi bi-shield-lock"></i> Permissões:</strong>
+                    Usuários podem atualizar seu próprio perfil. Admins podem atualizar qualquer perfil e alterar roles.
+                </div>
+            </div>
+            
+            <!-- Namespaces Globais -->
+            <div class="alert-success">
+                <h5><i class="bi bi-braces"></i> Namespaces Globais de Usuário</h5>
+                <p>As informações do usuário podem ser usadas em templates:</p>
+                <ul>
+                    <li><code>{celular}</code> ou <code>{user_phone}</code> - Telefone do usuário</li>
+                    <li><code>{endereco}</code> ou <code>{user_address}</code> - Endereço completo</li>
+                    <li><code>{site}</code> ou <code>{user_website}</code> - Website pessoal</li>
+                    <li><code>{instagram}</code> ou <code>{user_instagram}</code> - Perfil do Instagram</li>
+                    <li><code>{facebook}</code> ou <code>{user_facebook}</code> - Perfil do Facebook</li>
+                    <li><code>{twitter}</code> ou <code>{user_twitter}</code> - Perfil do Twitter/X</li>
+                    <li><code>{linkedin}</code> ou <code>{user_linkedin}</code> - Perfil do LinkedIn</li>
+                    <li><code>{youtube}</code> ou <code>{user_youtube}</code> - Canal do YouTube</li>
+                    <li><code>{tiktok}</code> ou <code>{user_tiktok}</code> - Perfil do TikTok</li>
+                </ul>
+                <p class="mb-0">
+                    <strong>Exemplo de template:</strong> <code>"Entre em contato: {celular} | Siga: {instagram}"</code>
+                </p>
+            </div>
+        </div>
+        
+        <!-- Sellers -->
         <div class="section" id="sellers">
-            <h2 class="section-title">🏪 Vendedores (Sellers)</h2>
+            <h2 class="section-title"><i class="bi bi-shop"></i> Vendedores (Sellers)</h2>
+            
+            <p class="mb-4">
+                Gerenciar vendedores/marketplaces com cores personalizadas, slugs e status de ativação.
+            </p>
             
             <!-- List Sellers -->
             <div class="endpoint-card">
                 <div class="endpoint-header">
-                    <span class="endpoint-method method-get">GET</span>
-                    <span class="endpoint-path">/api/sellers</span>
+                    <span class="method-badge method-get">GET</span>
+                    <code class="endpoint-path">/api/sellers</code>
+                    <span class="auth-badge"><i class="bi bi-lock"></i> Autenticado</span>
                 </div>
                 
-                <p>Lista todos os vendedores cadastrados.</p>
-                
-                <h6>Query Parameters</h6>
-                <table class="param-table">
-                    <thead>
-                        <tr>
-                            <th>Parâmetro</th>
-                            <th>Tipo</th>
-                            <th>Descrição</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>active_only</td>
-                            <td>boolean</td>
-                            <td><span class="badge-optional">OPCIONAL</span> Filtrar apenas vendedores ativos</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <p>Listar todos os vendedores:</p>
                 
                 <div class="code-tabs">
                     <div class="tab-buttons">
-                        <button class="tab-button active" data-tab="sellers-list-curl">cURL</button>
-                        <button class="tab-button" data-tab="sellers-list-python">Python</button>
-                        <button class="tab-button" data-tab="sellers-list-nodejs">Node.js</button>
-                        <button class="tab-button" data-tab="sellers-list-php">PHP</button>
+                        <button class="tab-btn active" onclick="switchTab(this, 'sellers-list-curl')">cURL</button>
+                        <button class="tab-btn" onclick="switchTab(this, 'sellers-list-python')">Python</button>
                     </div>
                     
                     <div id="sellers-list-curl" class="tab-content active">
                         <div class="code-block">
-                            <pre><code class="language-bash">curl http://localhost:5000/api/sellers</code></pre>
+<pre><code class="language-bash">curl http://localhost:5000/api/sellers \
+  -H "Authorization: Bearer SEU_TOKEN"</code></pre>
                         </div>
                     </div>
                     
                     <div id="sellers-list-python" class="tab-content">
                         <div class="code-block">
-                            <pre><code class="language-python">import requests
-
-response = requests.get('http://localhost:5000/api/sellers')
-sellers = response.json()
-
-for seller in sellers:
-    print(f"{seller['name']} - {seller['slug']}")</code></pre>
+<pre><code class="language-python">headers = {'Authorization': f'Bearer {token}'}
+response = requests.get('http://localhost:5000/api/sellers', headers=headers)
+sellers = response.json()</code></pre>
                         </div>
                     </div>
-                    
-                    <div id="sellers-list-nodejs" class="tab-content">
-                        <div class="code-block">
-                            <pre><code class="language-javascript">const axios = require('axios');
-
-const response = await axios.get('http://localhost:5000/api/sellers');
-const sellers = response.data;
-
-sellers.forEach(seller => {
-  console.log(`${seller.name} - ${seller.slug}`);
-});</code></pre>
-                        </div>
-                    </div>
-                    
-                    <div id="sellers-list-php" class="tab-content">
-                        <div class="code-block">
-                            <pre><code class="language-php"><?php
-$ch = curl_init('http://localhost:5000/api/sellers');
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-$response = curl_exec($ch);
-$sellers = json_decode($response, true);
-
-foreach ($sellers as $seller) {
-    echo $seller['name'] . " - " . $seller['slug'] . "\n";
-}
-?></code></pre>
-                        </div>
-                    </div>
+                </div>
+                
+                <p class="mt-3"><strong>Resposta:</strong></p>
+                <div class="code-block">
+<pre><code class="language-json">[
+  {
+    "id": 1,
+    "name": "Mercado Livre",
+    "slug": "mercado-livre",
+    "description": "Maior marketplace da América Latina",
+    "website": "https://mercadolivre.com.br",
+    "color": "#FFE600",
+    "active": true,
+    "created_at": "2025-12-01T10:30:00"
+  }
+]</code></pre>
                 </div>
             </div>
             
             <!-- Create Seller -->
             <div class="endpoint-card">
                 <div class="endpoint-header">
-                    <span class="endpoint-method method-post">POST</span>
-                    <span class="endpoint-path">/api/sellers</span>
-                    <span class="badge-auth"><i class="bi bi-shield-lock"></i> Requires Auth</span>
+                    <span class="method-badge method-post">POST</span>
+                    <code class="endpoint-path">/api/sellers</code>
+                    <span class="auth-badge"><i class="bi bi-lock"></i> Admin/Editor</span>
                 </div>
                 
-                <p>Cria um novo vendedor no sistema.</p>
-                <p><strong>Permissões:</strong> Admin ou Editor</p>
+                <p>Criar novo vendedor:</p>
                 
-                <h6>Request Body</h6>
                 <table class="param-table">
                     <thead>
                         <tr>
-                            <th>Campo</th>
+                            <th>Parâmetro</th>
                             <th>Tipo</th>
+                            <th>Status</th>
                             <th>Descrição</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td>name</td>
+                            <td><code>name</code></td>
                             <td>string</td>
-                            <td><span class="badge-required">OBRIGATÓRIO</span> Nome do vendedor</td>
+                            <td><span class="badge-required">Obrigatório</span></td>
+                            <td>Nome do vendedor</td>
                         </tr>
                         <tr>
-                            <td>slug</td>
+                            <td><code>slug</code></td>
                             <td>string</td>
-                            <td><span class="badge-required">OBRIGATÓRIO</span> Identificador único (URL-friendly)</td>
+                            <td><span class="badge-required">Obrigatório</span></td>
+                            <td>Slug único (apenas letras minúsculas e hífens)</td>
                         </tr>
                         <tr>
-                            <td>description</td>
+                            <td><code>description</code></td>
                             <td>string</td>
-                            <td><span class="badge-optional">OPCIONAL</span> Descrição do vendedor</td>
+                            <td><span class="badge-optional">Opcional</span></td>
+                            <td>Descrição do vendedor</td>
                         </tr>
                         <tr>
-                            <td>website</td>
+                            <td><code>website</code></td>
                             <td>string</td>
-                            <td><span class="badge-optional">OPCIONAL</span> URL do site</td>
+                            <td><span class="badge-optional">Opcional</span></td>
+                            <td>URL do website</td>
                         </tr>
                         <tr>
-                            <td>active</td>
+                            <td><code>color</code></td>
+                            <td>string</td>
+                            <td><span class="badge-optional">Opcional</span></td>
+                            <td>Cor em hex (#FFE600) ou gradiente CSS</td>
+                        </tr>
+                        <tr>
+                            <td><code>active</code></td>
                             <td>boolean</td>
-                            <td><span class="badge-optional">OPCIONAL</span> Status ativo (padrão: true)</td>
+                            <td><span class="badge-optional">Opcional</span></td>
+                            <td>Status ativo (padrão: true)</td>
                         </tr>
                     </tbody>
                 </table>
                 
                 <div class="code-tabs">
                     <div class="tab-buttons">
-                        <button class="tab-button active" data-tab="sellers-create-curl">cURL</button>
-                        <button class="tab-button" data-tab="sellers-create-python">Python</button>
-                        <button class="tab-button" data-tab="sellers-create-nodejs">Node.js</button>
-                        <button class="tab-button" data-tab="sellers-create-php">PHP</button>
+                        <button class="tab-btn active" onclick="switchTab(this, 'seller-create-curl')">cURL</button>
+                        <button class="tab-btn" onclick="switchTab(this, 'seller-create-python')">Python</button>
+                        <button class="tab-btn" onclick="switchTab(this, 'seller-create-node')">Node.js</button>
+                        <button class="tab-btn" onclick="switchTab(this, 'seller-create-php')">PHP</button>
                     </div>
                     
-                    <div id="sellers-create-curl" class="tab-content active">
+                    <div id="seller-create-curl" class="tab-content active">
                         <div class="code-block">
-                            <pre><code class="language-bash">curl -X POST http://localhost:5000/api/sellers \
-  -H "Authorization: Bearer YOUR_TOKEN" \
+<pre><code class="language-bash">curl -X POST http://localhost:5000/api/sellers \
+  -H "Authorization: Bearer SEU_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "Kabum",
-    "slug": "kabum",
-    "description": "Loja de tecnologia",
-    "website": "https://www.kabum.com.br",
+    "name": "Shopee",
+    "slug": "shopee",
+    "description": "E-commerce internacional",
+    "website": "https://shopee.com.br",
+    "color": "#EE4D2D",
     "active": true
   }'</code></pre>
                         </div>
                     </div>
                     
-                    <div id="sellers-create-python" class="tab-content">
+                    <div id="seller-create-python" class="tab-content">
                         <div class="code-block">
-                            <pre><code class="language-python">import requests
+<pre><code class="language-python">import requests
 
-headers = {
-    'Authorization': 'Bearer YOUR_TOKEN',
-    'Content-Type': 'application/json'
-}
-
-data = {
-    'name': 'Kabum',
-    'slug': 'kabum',
-    'description': 'Loja de tecnologia',
-    'website': 'https://www.kabum.com.br',
+headers = {'Authorization': f'Bearer {token}'}
+payload = {
+    'name': 'Shopee',
+    'slug': 'shopee',
+    'description': 'E-commerce internacional',
+    'website': 'https://shopee.com.br',
+    'color': '#EE4D2D',
     'active': True
 }
 
 response = requests.post(
     'http://localhost:5000/api/sellers',
     headers=headers,
-    json=data
+    json=payload
 )
 
-seller = response.json()
-print(f"Vendedor criado: {seller['name']} (ID: {seller['id']})")</code></pre>
+seller = response.json()</code></pre>
                         </div>
                     </div>
                     
-                    <div id="sellers-create-nodejs" class="tab-content">
+                    <div id="seller-create-node" class="tab-content">
                         <div class="code-block">
-                            <pre><code class="language-javascript">const axios = require('axios');
-
-const response = await axios.post(
-  'http://localhost:5000/api/sellers',
-  {
-    name: 'Kabum',
-    slug: 'kabum',
-    description: 'Loja de tecnologia',
-    website: 'https://www.kabum.com.br',
-    active: true
-  },
-  {
-    headers: {
-      'Authorization': 'Bearer YOUR_TOKEN'
+<pre><code class="language-javascript">const response = await axios.post(
+    'http://localhost:5000/api/sellers',
+    {
+        name: 'Shopee',
+        slug: 'shopee',
+        description: 'E-commerce internacional',
+        website: 'https://shopee.com.br',
+        color: '#EE4D2D',
+        active: true
+    },
+    {
+        headers: { 'Authorization': `Bearer ${token}` }
     }
-  }
 );
 
-const seller = response.data;
-console.log(`Vendedor criado: ${seller.name} (ID: ${seller.id})`);</code></pre>
+const seller = response.data;</code></pre>
                         </div>
                     </div>
                     
-                    <div id="sellers-create-php" class="tab-content">
+                    <div id="seller-create-php" class="tab-content">
                         <div class="code-block">
-                            <pre><code class="language-php"><?php
-$ch = curl_init('http://localhost:5000/api/sellers');
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-curl_setopt($ch, CURLOPT_POST, true);
-curl_setopt($ch, CURLOPT_HTTPHEADER, [
-    'Authorization: Bearer YOUR_TOKEN',
-    'Content-Type: application/json'
-]);
-
-$data = [
-    'name' => 'Kabum',
-    'slug' => 'kabum',
-    'description' => 'Loja de tecnologia',
-    'website' => 'https://www.kabum.com.br',
+<pre><code class="language-php">&lt;?php
+$data = array(
+    'name' => 'Shopee',
+    'slug' => 'shopee',
+    'description' => 'E-commerce internacional',
+    'website' => 'https://shopee.com.br',
+    'color' => '#EE4D2D',
     'active' => true
-];
+);
 
+$ch = curl_init('http://localhost:5000/api/sellers');
+curl_setopt($ch, CURLOPT_POST, true);
 curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+    'Content-Type: application/json',
+    'Authorization: Bearer ' . $token
+));
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
 $response = curl_exec($ch);
 $seller = json_decode($response, true);
-
-echo "Vendedor criado: " . $seller['name'] . " (ID: " . $seller['id'] . ")";
-?></code></pre>
+?&gt;</code></pre>
                         </div>
                     </div>
                 </div>
+            </div>
+            
+            <!-- Update Seller -->
+            <div class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="method-badge method-put">PUT</span>
+                    <code class="endpoint-path">/api/sellers/&lt;id&gt;</code>
+                    <span class="auth-badge"><i class="bi bi-lock"></i> Admin/Editor</span>
+                </div>
                 
-                <div class="response-example">
-                    <h6><i class="bi bi-check-circle"></i> Resposta de Sucesso (201 Created)</h6>
-                    <div class="code-block">
-                        <pre><code class="language-json">{
-  "id": 1,
-  "name": "Kabum",
-  "slug": "kabum",
-  "description": "Loja de tecnologia",
-  "website": "https://www.kabum.com.br",
-  "active": true,
-  "created_at": "2025-11-19T20:30:00"
-}</code></pre>
-                        </div>
+                <p>Atualizar vendedor existente (mesmos parâmetros do POST):</p>
+                
+                <div class="code-block">
+<pre><code class="language-bash">curl -X PUT http://localhost:5000/api/sellers/1 \
+  -H "Authorization: Bearer SEU_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Mercado Livre BR",
+    "color": "#FFE600",
+    "active": true
+  }'</code></pre>
+                </div>
+            </div>
+            
+            <!-- Delete Seller -->
+            <div class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="method-badge method-delete">DELETE</span>
+                    <code class="endpoint-path">/api/sellers/&lt;id&gt;</code>
+                    <span class="auth-badge"><i class="bi bi-lock"></i> Admin</span>
+                </div>
+                
+                <p>Deletar vendedor:</p>
+                
+                <div class="code-block">
+<pre><code class="language-bash">curl -X DELETE http://localhost:5000/api/sellers/1 \
+  -H "Authorization: Bearer SEU_TOKEN"</code></pre>
                 </div>
             </div>
         </div>
         
-        <!-- Error Handling Section -->
-        <div class="section" id="errors">
-            <h2 class="section-title">⚠️ Tratamento de Erros</h2>
+        <!-- Quick Summary -->
+        <div class="section" id="summary">
+            <h2 class="section-title"><i class="bi bi-list-check"></i> Resumo de Endpoints</h2>
             
             <div class="endpoint-card">
-                <h5>HTTP Status Codes</h5>
+                <h4>📋 Lista Completa de Rotas</h4>
+                
+                <table class="param-table">
+                    <thead>
+                        <tr>
+                            <th>Método</th>
+                            <th>Endpoint</th>
+                            <th>Descrição</th>
+                            <th>Auth</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Auth -->
+                        <tr style="background: rgba(99, 102, 241, 0.05);">
+                            <td colspan="4"><strong><i class="bi bi-shield"></i> AUTENTICAÇÃO</strong></td>
+                        </tr>
+                        <tr>
+                            <td><span class="method-badge method-post" style="font-size: 0.7rem;">POST</span></td>
+                            <td><code>/api/auth/token</code></td>
+                            <td>Obter token via Basic Auth</td>
+                            <td>Basic</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method-badge method-post" style="font-size: 0.7rem;">POST</span></td>
+                            <td><code>/api/auth/login</code></td>
+                            <td>Login via JSON</td>
+                            <td>-</td>
+                        </tr>
+                        
+                        <!-- Sellers -->
+                        <tr style="background: rgba(99, 102, 241, 0.05);">
+                            <td colspan="4"><strong><i class="bi bi-shop"></i> VENDEDORES</strong></td>
+                        </tr>
+                        <tr>
+                            <td><span class="method-badge method-get" style="font-size: 0.7rem;">GET</span></td>
+                            <td><code>/api/sellers</code></td>
+                            <td>Listar vendedores</td>
+                            <td>Bearer</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method-badge method-post" style="font-size: 0.7rem;">POST</span></td>
+                            <td><code>/api/sellers</code></td>
+                            <td>Criar vendedor</td>
+                            <td>Admin/Editor</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method-badge method-get" style="font-size: 0.7rem;">GET</span></td>
+                            <td><code>/api/sellers/&lt;id&gt;</code></td>
+                            <td>Obter vendedor</td>
+                            <td>Bearer</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method-badge method-put" style="font-size: 0.7rem;">PUT</span></td>
+                            <td><code>/api/sellers/&lt;id&gt;</code></td>
+                            <td>Atualizar vendedor</td>
+                            <td>Admin/Editor</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method-badge method-delete" style="font-size: 0.7rem;">DELETE</span></td>
+                            <td><code>/api/sellers/&lt;id&gt;</code></td>
+                            <td>Deletar vendedor</td>
+                            <td>Admin</td>
+                        </tr>
+                        
+                        <!-- Categories -->
+                        <tr style="background: rgba(99, 102, 241, 0.05);">
+                            <td colspan="4"><strong><i class="bi bi-grid"></i> CATEGORIAS</strong></td>
+                        </tr>
+                        <tr>
+                            <td><span class="method-badge method-get" style="font-size: 0.7rem;">GET</span></td>
+                            <td><code>/api/categories</code></td>
+                            <td>Listar categorias</td>
+                            <td>Bearer</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method-badge method-post" style="font-size: 0.7rem;">POST</span></td>
+                            <td><code>/api/categories</code></td>
+                            <td>Criar categoria</td>
+                            <td>Admin/Editor</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method-badge method-get" style="font-size: 0.7rem;">GET</span></td>
+                            <td><code>/api/categories/&lt;id&gt;</code></td>
+                            <td>Obter categoria</td>
+                            <td>Bearer</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method-badge method-put" style="font-size: 0.7rem;">PUT</span></td>
+                            <td><code>/api/categories/&lt;id&gt;</code></td>
+                            <td>Atualizar categoria</td>
+                            <td>Admin/Editor</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method-badge method-delete" style="font-size: 0.7rem;">DELETE</span></td>
+                            <td><code>/api/categories/&lt;id&gt;</code></td>
+                            <td>Deletar categoria</td>
+                            <td>Admin</td>
+                        </tr>
+                        
+                        <!-- Manufacturers -->
+                        <tr style="background: rgba(99, 102, 241, 0.05);">
+                            <td colspan="4"><strong><i class="bi bi-tools"></i> FABRICANTES</strong></td>
+                        </tr>
+                        <tr>
+                            <td><span class="method-badge method-get" style="font-size: 0.7rem;">GET</span></td>
+                            <td><code>/api/manufacturers</code></td>
+                            <td>Listar fabricantes</td>
+                            <td>Bearer</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method-badge method-post" style="font-size: 0.7rem;">POST</span></td>
+                            <td><code>/api/manufacturers</code></td>
+                            <td>Criar fabricante</td>
+                            <td>Admin/Editor</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method-badge method-get" style="font-size: 0.7rem;">GET</span></td>
+                            <td><code>/api/manufacturers/&lt;id&gt;</code></td>
+                            <td>Obter fabricante</td>
+                            <td>Bearer</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method-badge method-put" style="font-size: 0.7rem;">PUT</span></td>
+                            <td><code>/api/manufacturers/&lt;id&gt;</code></td>
+                            <td>Atualizar fabricante</td>
+                            <td>Admin/Editor</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method-badge method-delete" style="font-size: 0.7rem;">DELETE</span></td>
+                            <td><code>/api/manufacturers/&lt;id&gt;</code></td>
+                            <td>Deletar fabricante</td>
+                            <td>Admin</td>
+                        </tr>
+                        
+                        <!-- Offers -->
+                        <tr style="background: rgba(99, 102, 241, 0.05);">
+                            <td colspan="4"><strong><i class="bi bi-tags"></i> OFERTAS</strong></td>
+                        </tr>
+                        <tr>
+                            <td><span class="method-badge method-get" style="font-size: 0.7rem;">GET</span></td>
+                            <td><code>/api/offers</code></td>
+                            <td>Listar ofertas (filtros: ?vendor, ?product, ?min_price, ?max_price)</td>
+                            <td>Público</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method-badge method-post" style="font-size: 0.7rem;">POST</span></td>
+                            <td><code>/api/offers</code></td>
+                            <td>Criar oferta</td>
+                            <td>Admin/Editor</td>
+                        </tr>
+                        
+                        <!-- Templates -->
+                        <tr style="background: rgba(99, 102, 241, 0.05);">
+                            <td colspan="4"><strong><i class="bi bi-file-text"></i> TEMPLATES</strong></td>
+                        </tr>
+                        <tr>
+                            <td><span class="method-badge method-get" style="font-size: 0.7rem;">GET</span></td>
+                            <td><code>/api/templates</code></td>
+                            <td>Listar templates</td>
+                            <td>Bearer</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method-badge method-post" style="font-size: 0.7rem;">POST</span></td>
+                            <td><code>/api/templates</code></td>
+                            <td>Criar template</td>
+                            <td>Admin/Editor</td>
+                        </tr>
+                        
+                        <!-- Users -->
+                        <tr style="background: rgba(99, 102, 241, 0.05);">
+                            <td colspan="4"><strong><i class="bi bi-people"></i> USUÁRIOS</strong></td>
+                        </tr>
+                        <tr>
+                            <td><span class="method-badge method-get" style="font-size: 0.7rem;">GET</span></td>
+                            <td><code>/api/users</code></td>
+                            <td>Listar usuários</td>
+                            <td>Admin</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method-badge method-post" style="font-size: 0.7rem;">POST</span></td>
+                            <td><code>/api/users</code></td>
+                            <td>Criar usuário</td>
+                            <td>Admin</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method-badge method-get" style="font-size: 0.7rem;">GET</span></td>
+                            <td><code>/api/users/&lt;id&gt;</code></td>
+                            <td>Obter usuário</td>
+                            <td>Admin/Próprio</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method-badge method-put" style="font-size: 0.7rem;">PUT</span></td>
+                            <td><code>/api/users/&lt;id&gt;</code></td>
+                            <td>Atualizar usuário</td>
+                            <td>Admin/Próprio</td>
+                        </tr>
+                        
+                        <!-- Groups -->
+                        <tr style="background: rgba(99, 102, 241, 0.05);">
+                            <td colspan="4"><strong><i class="bi bi-diagram-3"></i> GRUPOS</strong></td>
+                        </tr>
+                        <tr>
+                            <td><span class="method-badge method-get" style="font-size: 0.7rem;">GET</span></td>
+                            <td><code>/api/groups</code></td>
+                            <td>Listar grupos</td>
+                            <td>Bearer</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method-badge method-post" style="font-size: 0.7rem;">POST</span></td>
+                            <td><code>/api/groups</code></td>
+                            <td>Criar grupo</td>
+                            <td>Admin/Editor</td>
+                        </tr>
+                        
+                        <!-- Wishlists -->
+                        <tr style="background: rgba(99, 102, 241, 0.05);">
+                            <td colspan="4"><strong><i class="bi bi-heart"></i> WISHLISTS</strong></td>
+                        </tr>
+                        <tr>
+                            <td><span class="method-badge method-get" style="font-size: 0.7rem;">GET</span></td>
+                            <td><code>/api/wishlists</code></td>
+                            <td>Listar wishlists</td>
+                            <td>Bearer</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method-badge method-post" style="font-size: 0.7rem;">POST</span></td>
+                            <td><code>/api/wishlists</code></td>
+                            <td>Criar wishlist</td>
+                            <td>Admin/Editor</td>
+                        </tr>
+                        
+                        <!-- Namespaces -->
+                        <tr style="background: rgba(99, 102, 241, 0.05);">
+                            <td colspan="4"><strong><i class="bi bi-braces"></i> NAMESPACES</strong></td>
+                        </tr>
+                        <tr>
+                            <td><span class="method-badge method-get" style="font-size: 0.7rem;">GET</span></td>
+                            <td><code>/api/namespaces</code></td>
+                            <td>Listar variáveis disponíveis</td>
+                            <td>Bearer</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method-badge method-post" style="font-size: 0.7rem;">POST</span></td>
+                            <td><code>/api/namespaces</code></td>
+                            <td>Criar namespace</td>
+                            <td>Admin</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="alert-info mt-4">
+                    <strong><i class="bi bi-info-circle"></i> Total:</strong> 35+ endpoints disponíveis
+                </div>
+            </div>
+        </div>
+        
+        <!-- Error Handling -->
+        <div class="section" id="errors">
+            <h2 class="section-title"><i class="bi bi-exclamation-triangle"></i> Tratamento de Erros</h2>
+            
+            <div class="endpoint-card">
+                <h4>Códigos HTTP</h4>
+                
                 <table class="param-table">
                     <thead>
                         <tr>
@@ -724,91 +1373,97 @@ echo "Vendedor criado: " . $seller['name'] . " (ID: " . $seller['id'] . ")";
                     </thead>
                     <tbody>
                         <tr>
-                            <td><span class="badge bg-success">200</span></td>
+                            <td><code>200</code></td>
                             <td>OK</td>
                             <td>Requisição bem-sucedida</td>
                         </tr>
                         <tr>
-                            <td><span class="badge bg-success">201</span></td>
+                            <td><code>201</code></td>
                             <td>Created</td>
                             <td>Recurso criado com sucesso</td>
                         </tr>
                         <tr>
-                            <td><span class="badge bg-warning">400</span></td>
+                            <td><code>400</code></td>
                             <td>Bad Request</td>
-                            <td>Dados inválidos ou incompletos</td>
+                            <td>Parâmetros inválidos ou faltando</td>
                         </tr>
                         <tr>
-                            <td><span class="badge bg-danger">401</span></td>
+                            <td><code>401</code></td>
                             <td>Unauthorized</td>
-                            <td>Token ausente ou inválido</td>
+                            <td>Token inválido ou ausente</td>
                         </tr>
                         <tr>
-                            <td><span class="badge bg-danger">403</span></td>
+                            <td><code>403</code></td>
                             <td>Forbidden</td>
                             <td>Sem permissão para acessar o recurso</td>
                         </tr>
                         <tr>
-                            <td><span class="badge bg-danger">404</span></td>
+                            <td><code>404</code></td>
                             <td>Not Found</td>
                             <td>Recurso não encontrado</td>
                         </tr>
                         <tr>
-                            <td><span class="badge bg-danger">500</span></td>
+                            <td><code>500</code></td>
                             <td>Internal Server Error</td>
-                            <td>Erro interno do servidor</td>
+                            <td>Erro no servidor</td>
                         </tr>
                     </tbody>
                 </table>
                 
-                <h5 class="mt-4">Formato de Erro Padrão</h5>
+                <h4 class="mt-4">Exemplo de Resposta de Erro</h4>
                 <div class="code-block">
-                    <pre><code class="language-json">{
-  "message": "Descrição detalhada do erro",
-  "code": 400
+<pre><code class="language-json">{
+  "error": "Unauthorized",
+  "message": "Token inválido ou expirado"
 }</code></pre>
                 </div>
             </div>
         </div>
         
         <!-- Footer -->
-        <div class="text-center mt-5 mb-4">
-            <p class="text-muted">
-                <i class="bi bi-code-slash"></i> pySaveDiário API Documentation v1.0<br>
-                <small>Última atualização: 19 de Novembro de 2025</small>
-            </p>
+        <div class="section">
+            <div class="endpoint-card text-center">
+                <h3><i class="bi bi-book"></i> Precisa de Mais Ajuda?</h3>
+                <p class="mt-3 mb-4">Confira a documentação completa em <code>/docs</code></p>
+                <a href="/" class="btn btn-primary">
+                    <i class="bi bi-house"></i> Voltar para Home
+                </a>
+            </div>
         </div>
     </div>
     
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Botão flutuante para voltar -->
+    <a href="/" class="home-btn" title="Voltar para Home">
+        <i class="bi bi-house-door fs-4"></i>
+    </a>
+    
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/php.min.js"></script>
     <script>
         // Initialize syntax highlighting
         hljs.highlightAll();
         
         // Tab switching
-        document.querySelectorAll('.tab-button').forEach(button => {
-            button.addEventListener('click', function() {
-                const tabId = this.getAttribute('data-tab');
-                const parentTabs = this.closest('.code-tabs');
-                
-                // Remove active class from all buttons in this tab group
-                parentTabs.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-                // Add active class to clicked button
-                this.classList.add('active');
-                
-                // Hide all tab contents in this group
-                parentTabs.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-                // Show selected tab content
-                parentTabs.querySelector(`#${tabId}`).classList.add('active');
-            });
-        });
+        function switchTab(button, tabId) {
+            const tabButtons = button.parentElement;
+            const tabsContainer = tabButtons.parentElement;
+            
+            // Remove active from all buttons
+            tabButtons.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+            
+            // Hide all contents
+            tabsContainer.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            // Show selected content
+            const selectedContent = document.getElementById(tabId);
+            if (selectedContent) {
+                selectedContent.classList.add('active');
+            }
+        }
         
-        // Smooth scroll for sidebar links
+        // Smooth scroll for sidebar
         document.querySelectorAll('.sidebar-nav a').forEach(link => {
             link.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -832,18 +1487,19 @@ echo "Vendedor criado: " . $seller['name'] . " (ID: " . $seller['id'] . ")";
             
             sections.forEach(section => {
                 const sectionTop = section.offsetTop;
-                const sectionHeight = section.clientHeight;
-                if (pageYOffset >= sectionTop - 200) {
+                if (window.pageYOffset >= sectionTop - 300) {
                     current = section.getAttribute('id');
                 }
             });
             
-            document.querySelectorAll('.sidebar-nav a').forEach(link => {
-                link.classList.remove('active');
-                if (link.getAttribute('href') === `#${current}`) {
-                    link.classList.add('active');
-                }
-            });
+            if (current) {
+                document.querySelectorAll('.sidebar-nav a').forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href') === `#${current}`) {
+                        link.classList.add('active');
+                    }
+                });
+            }
         });
     </script>
 </body>
