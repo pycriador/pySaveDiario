@@ -43,7 +43,10 @@
         <label class="form-label" for="{{ form.product_description.id }}">
           <i class="bi bi-text-paragraph"></i> Descrição do produto
         </label>
-        {{ form.product_description(class="form-control html-editor", id="product_description", rows="3", placeholder="Descrição detalhada do produto com formatação HTML...") }}
+        {{ form.product_description(class="form-control", id="product_description", rows="6", placeholder="Descrição detalhada do produto...") }}
+        <small class="text-muted">
+          <i class="bi bi-info-circle"></i> Formatação será aplicada na página de compartilhamento
+        </small>
       </div>
       
       <!-- Separator -->
@@ -219,10 +222,5 @@
   </div>
 </section>
 
-{% endblock %}
-
-{% block scripts %}
-<!-- HTML Editor Component -->
-{% include 'components/html_editor.html' %}
 {% endblock %}
 
