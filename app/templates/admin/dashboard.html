@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% block title %}Administração{% endblock %}
+
+{% block content %}
+<section>
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+    <div>
+      <p class="eyebrow"><i class="bi bi-gear-fill"></i> Painel administrativo</p>
+      <h1 class="mb-0">Administração</h1>
+      <p class="muted mb-0">Gerencie vendedores, categorias e fabricantes</p>
+    </div>
+    <div class="d-flex gap-2">
+      {% if current_user.role.value == 'admin' %}
+      <a class="btn btn-outline-primary btn-sm" href="{{ url_for('web.admin_settings') }}">
+        <i class="bi bi-sliders"></i> Configurações
+      </a>
+      {% endif %}
+      <a class="btn btn-outline-light btn-sm" href="{{ url_for('web.dashboard') }}">
+        <i class="bi bi-arrow-left"></i> Voltar ao painel
+      </a>
+    </div>
+  </div>
+
+  <div class="grid three">
+    <!-- Sellers Card -->
+    <article class="panel card">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <div>
+          <h3 class="mb-1">
+            <i class="bi bi-shop"></i> Vendedores
+          </h3>
+          <p class="muted mb-0">Marketplaces e lojas</p>
+        </div>
+        <span class="badge bg-primary bg-opacity-25 text-white fs-4">{{ sellers_count }}</span>
+      </div>
+      <a href="{{ url_for('web.admin_sellers') }}" class="btn btn-primary btn-sm w-100">
+        <i class="bi bi-list-ul"></i> Gerenciar vendedores
+      </a>
+    </article>
+
+    <!-- Categories Card -->
+    <article class="panel card">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <div>
+          <h3 class="mb-1">
+            <i class="bi bi-grid-3x3-gap-fill"></i> Categorias
+          </h3>
+          <p class="muted mb-0">Tipos de produtos</p>
+        </div>
+        <span class="badge bg-success bg-opacity-25 text-white fs-4">{{ categories_count }}</span>
+      </div>
+      <a href="{{ url_for('web.admin_categories') }}" class="btn btn-success btn-sm w-100">
+        <i class="bi bi-list-ul"></i> Gerenciar categorias
+      </a>
+    </article>
+
+    <!-- Manufacturers Card -->
+    <article class="panel card">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <div>
+          <h3 class="mb-1">
+            <i class="bi bi-building"></i> Fabricantes
+          </h3>
+          <p class="muted mb-0">Marcas e empresas</p>
+        </div>
+        <span class="badge bg-info bg-opacity-25 text-white fs-4">{{ manufacturers_count }}</span>
+      </div>
+      <a href="{{ url_for('web.admin_manufacturers') }}" class="btn btn-info btn-sm w-100">
+        <i class="bi bi-list-ul"></i> Gerenciar fabricantes
+      </a>
+    </article>
+  </div>
+  
+  <!-- Settings Card -->
+  {% if current_user.role.value == 'admin' %}
+  <div class="panel mt-4">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+      <div>
+        <h3 class="mb-1">
+          <i class="bi bi-sliders"></i> Configurações do Sistema
+        </h3>
+        <p class="muted mb-0">Defina moeda padrão e outras preferências</p>
+      </div>
+    </div>
+    <a href="{{ url_for('web.admin_settings') }}" class="btn btn-outline-primary btn-sm">
+      <i class="bi bi-gear-fill"></i> Acessar Configurações
+    </a>
+  </div>
+  {% endif %}
+
+  <!-- Quick Stats -->
+  <div class="panel mt-4">
+    <h3 class="mb-3">
+      <i class="bi bi-bar-chart-fill"></i> Estatísticas gerais
+    </h3>
+    <div class="row g-3">
+      <div class="col-md-4">
+        <div class="d-flex align-items-center gap-3">
+          <i class="bi bi-shop fs-2 text-primary"></i>
+          <div>
+            <small class="text-muted d-block">Total de vendedores</small>
+            <strong class="fs-4">{{ sellers_count }}</strong>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="d-flex align-items-center gap-3">
+          <i class="bi bi-grid-3x3-gap-fill fs-2 text-success"></i>
+          <div>
+            <small class="text-muted d-block">Total de categorias</small>
+            <strong class="fs-4">{{ categories_count }}</strong>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="d-flex align-items-center gap-3">
+          <i class="bi bi-building fs-2 text-info"></i>
+          <div>
+            <small class="text-muted d-block">Total de fabricantes</small>
+            <strong class="fs-4">{{ manufacturers_count }}</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+

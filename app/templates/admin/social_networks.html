@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+{% block title %}Configuração de Redes Sociais{% endblock %}
+
+{% block content %}
+<section>
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+    <div>
+      <p class="eyebrow"><i class="bi bi-broadcast"></i> Redes Sociais</p>
+      <h1 class="mb-0">Configuração de Compartilhamento</h1>
+      <p class="muted mb-0">Configure textos e hashtags específicas para cada rede social</p>
+    </div>
+    <div class="d-flex gap-2">
+      <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newSocialNetworkModal">
+        <i class="bi bi-plus-circle"></i> Nova Rede Social
+      </button>
+      <a href="{{ url_for('web.admin_dashboard') }}" class="btn btn-outline-light btn-sm">
+        <i class="bi bi-arrow-left"></i> Voltar ao Painel
+      </a>
+    </div>
+  </div>
+
+  <div class="alert alert-info mb-4">
+    <i class="bi bi-info-circle"></i>
+    <strong>Sobre as configurações:</strong>
+    <ul class="mb-0 mt-2">
+      <li><strong>Texto Inicial:</strong> Aparece ANTES do conteúdo do template (ex: "🔥 OFERTA IMPERDÍVEL!")</li>
+      <li><strong>Texto Final / Hashtags:</strong> Aparece DEPOIS do conteúdo do template (ex: hashtags, call-to-action)</li>
+      <li>Deixe em branco para não adicionar texto extra</li>
+    </ul>
+  </div>
+
+  <div class="row g-4">
+    {% for config in configs %}
+    <div class="col-md-6">
+      <div class="panel">
+        <form method="POST" class="mb-0">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+          <input type="hidden" name="network_id" value="{{ config.id }}">
+          
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <h4 class="mb-0">
+              {% if config.network == 'instagram' %}
+              <i class="bi bi-instagram text-danger"></i> Instagram
+              {% elif config.network == 'facebook' %}
+              <i class="bi bi-facebook text-primary"></i> Facebook
+              {% elif config.network == 'whatsapp' %}
+              <i class="bi bi-whatsapp text-success"></i> WhatsApp
+              {% elif config.network == 'telegram' %}
+              <i class="bi bi-telegram text-info"></i> Telegram
+              {% else %}
+              <i class="bi bi-share"></i> {{ config.network.title() }}
+              {% endif %}
+            </h4>
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" name="active" id="active_{{ config.id }}" 
+                     {% if config.active %}checked{% endif %}>
+              <label class="form-check-label" for="active_{{ config.id }}">
+                {% if config.active %}Ativa{% else %}Inativa{% endif %}
+              </label>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label" for="prefix_{{ config.id }}">
+              <i class="bi bi-arrow-bar-up"></i> Texto Inicial
+            </label>
+            <textarea class="form-control" 
+                      id="prefix_{{ config.id }}" 
+                      name="prefix_text" 
+                      rows="3" 
+                      placeholder="Texto que aparece antes do conteúdo do template">{{ config.prefix_text or '' }}</textarea>
+            <small class="text-muted">
+              <i class="bi bi-info-circle"></i> Exemplo: "🔥 OFERTA IMPERDÍVEL!\n\n"
+            </small>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label" for="suffix_{{ config.id }}">
+              <i class="bi bi-arrow-bar-down"></i> Texto Final / Hashtags
+            </label>
+            <textarea class="form-control" 
+                      id="suffix_{{ config.id }}" 
+                      name="suffix_text" 
+                      rows="3" 
+                      placeholder="Texto que aparece depois do conteúdo (hashtags, etc)">{{ config.suffix_text or '' }}</textarea>
+            <small class="text-muted">
+              <i class="bi bi-info-circle"></i> Exemplo: "\n\n#ofertas #descontos #promoção"
+            </small>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center">
+            <form method="POST" action="{{ url_for('web.admin_social_network_delete', config_id=config.id) }}" 
+                  onsubmit="return confirm('Tem certeza que deseja deletar esta rede social? Todos os templates associados perderão esta configuração.')">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+              <button type="submit" class="btn btn-sm btn-outline-danger">
+                <i class="bi bi-trash"></i> Deletar
+              </button>
+            </form>
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-save"></i> Salvar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  
+  <!-- Modal: Nova Rede Social -->
+  <div class="modal fade" id="newSocialNetworkModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content" style="background: var(--panel-solid); border: 1px solid var(--border-color);">
+        <div class="modal-header border-0">
+          <h5 class="modal-title">
+            <i class="bi bi-plus-circle"></i> Nova Rede Social
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <form method="POST">
+          {{ form.hidden_tag() }}
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label" for="{{ form.network.id }}">
+                <i class="bi bi-broadcast"></i> Nome da Rede Social *
+              </label>
+              {{ form.network(class="form-control", placeholder="Ex: twitter, linkedin, tiktok", required=True) }}
+              <small class="text-muted">
+                <i class="bi bi-info-circle"></i> Use letras minúsculas, sem espaços
+              </small>
+            </div>
+            
+            <div class="mb-3">
+              <label class="form-label" for="{{ form.prefix_text.id }}">
+                <i class="bi bi-arrow-bar-up"></i> Texto Inicial
+              </label>
+              {{ form.prefix_text(class="form-control", rows="3") }}
+            </div>
+            
+            <div class="mb-3">
+              <label class="form-label" for="{{ form.suffix_text.id }}">
+                <i class="bi bi-arrow-bar-down"></i> Texto Final / Hashtags
+              </label>
+              {{ form.suffix_text(class="form-control", rows="3") }}
+            </div>
+            
+            <div class="form-check">
+              {{ form.active(class="form-check-input", id="active_new") }}
+              <label class="form-check-label" for="active_new">
+                Ativa
+              </label>
+            </div>
+          </div>
+          <div class="modal-footer border-0">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            {{ form.submit(class="btn btn-primary") }}
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  {% if not configs %}
+  <div class="alert alert-warning">
+    <i class="bi bi-exclamation-triangle"></i>
+    Nenhuma rede social configurada. Execute o script de inicialização: 
+    <code>python scripts/init_social_networks.py</code>
+  </div>
+  {% endif %}
+</section>
+
+<style>
+.form-check-input:checked {
+  background-color: var(--primary);
+  border-color: var(--primary);
+}
+
+.panel h4 {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.panel .form-label {
+  font-weight: 500;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.panel textarea {
+  font-size: 0.9rem;
+  resize: vertical;
+}
+
+code {
+  background: var(--card-bg);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+</style>
+{% endblock %}
+

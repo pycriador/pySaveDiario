@@ -118,6 +118,10 @@ coverage.xml
 docs/_build/
 site/
 
+# Markdown files in root (except README.md - keep docs in docs/)
+/*.md
+!README.md
+
 # === Temporary Files ===
 *.tmp
 *.temp
@@ -160,4 +164,27 @@ config.local.py
 # === Backup Files ===
 *.backup
 *.old
+
+# === Scraping ===
+# Chrome profile for MercadoLivre scraper (contains session data)
+scripts/chrome_profile/
+
+# Scraping output files directory
+result_data/*.json
+result_data/*.csv
+result_data/ml_*
+result_data/mercadolivre_*
+
+# Keep the directory structure in git
+!result_data/README.md
+!result_data/.gitkeep
+
+# Legacy output files (if any remain in old locations)
+scripts/ml_*.json
+scripts/ml_*.csv
+scripts/mercadolivre_*.json
+scripts/mercadolivre_*.csv
+scripts/test_output.json
+ml_*.json
+ml_*.csv
 

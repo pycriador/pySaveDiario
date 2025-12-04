@@ -1,0 +1,292 @@
+{% extends "base.html" %}
+{% block title %}Editar Template{% endblock %}
+
+{% block content %}
+<section>
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+    <div>
+      <p class="eyebrow"><i class="bi bi-pencil-square"></i> Editar Template</p>
+      <h1 class="mb-0">Atualizar Dados</h1>
+      <p class="muted mb-0">Modifique o template conforme necessário</p>
+    </div>
+    <a href="{{ url_for('web.share_templates') }}" class="btn btn-outline-light btn-sm">
+      <i class="bi bi-arrow-left"></i> Voltar para Lista
+    </a>
+  </div>
+
+  <div class="panel">
+    <form method="post" class="row g-4">
+      {{ form.hidden_tag() }}
+      
+      <div class="col-md-6">
+        <label class="form-label" for="{{ form.name.id }}">
+          <i class="bi bi-file-text"></i> Nome do Template *
+        </label>
+        {{ form.name(class="form-control", placeholder="Ex: Oferta Black Friday", required=True) }}
+      </div>
+      
+      <div class="col-md-6">
+        <label class="form-label" for="{{ form.slug.id }}">
+          <i class="bi bi-link-45deg"></i> Slug *
+        </label>
+        {{ form.slug(class="form-control", placeholder="oferta-black-friday", required=True) }}
+        <small class="text-muted">
+          <i class="bi bi-info-circle"></i> Identificador único (sem espaços ou caracteres especiais)
+        </small>
+      </div>
+      
+      <div class="col-12">
+        <label class="form-label" for="{{ form.description.id }}">
+          <i class="bi bi-text-paragraph"></i> Descrição
+        </label>
+        {{ form.description(class="form-control", rows="2", placeholder="Descrição breve do template") }}
+      </div>
+      
+      <div class="col-12">
+        <label class="form-label">
+          <i class="bi bi-broadcast"></i> Redes Sociais
+        </label>
+        <div class="alert alert-info py-2 px-3 mb-2">
+          <small>
+            <i class="bi bi-info-circle"></i> Selecione as redes sociais onde este template poderá ser usado
+          </small>
+        </div>
+        <div class="row g-3">
+          {% if social_configs %}
+            {% set selected_network_ids = template.social_networks|map(attribute='id')|list %}
+            {% for config in social_configs %}
+            <div class="col-md-6">
+              <div class="form-check">
+                <input class="form-check-input" 
+                       type="checkbox" 
+                       name="social_networks" 
+                       value="{{ config.id }}" 
+                       id="social_{{ config.id }}"
+                       {% if config.id in selected_network_ids %}checked{% endif %}>
+                <label class="form-check-label" for="social_{{ config.id }}">
+                  {% if config.network == 'instagram' %}
+                  <i class="bi bi-instagram text-danger"></i> Instagram
+                  {% elif config.network == 'facebook' %}
+                  <i class="bi bi-facebook text-primary"></i> Facebook
+                  {% elif config.network == 'whatsapp' %}
+                  <i class="bi bi-whatsapp text-success"></i> WhatsApp
+                  {% elif config.network == 'telegram' %}
+                  <i class="bi bi-telegram text-info"></i> Telegram
+                  {% else %}
+                  <i class="bi bi-share"></i> {{ config.network.title() }}
+                  {% endif %}
+                </label>
+              </div>
+            </div>
+            {% endfor %}
+          {% else %}
+            <div class="col-12">
+              <small class="text-muted">
+                <i class="bi bi-exclamation-triangle"></i>
+                Nenhuma rede social cadastrada. <a href="{{ url_for('web.admin_social_networks') }}">Adicionar rede social</a>
+              </small>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+      
+      <div class="col-12">
+        <label class="form-label" for="{{ form.body.id }}">
+          <i class="bi bi-code-square"></i> Corpo do Template *
+        </label>
+        {{ form.body(class="form-control", rows="8", id="templateBody", placeholder="Digite o conteúdo do template...", required=True) }}
+        <small class="text-muted">
+          <i class="bi bi-info-circle"></i> Use variáveis abaixo para tornar o template dinâmico
+        </small>
+      </div>
+      
+      <div class="col-12">
+        <div class="alert alert-info d-flex align-items-start gap-2 mb-0">
+          <i class="bi bi-lightbulb-fill fs-5"></i>
+          <div class="flex-grow-1">
+            <strong>Variáveis Disponíveis:</strong>
+            <p class="mb-2 mt-1"><small>Clique para inserir no template</small></p>
+            
+            {% if namespaces and namespaces|length > 0 %}
+              {# Group namespaces by scope #}
+              {% set offer_ns = [] %}
+              {% set coupon_ns = [] %}
+              {% set global_ns = [] %}
+              {% for ns in namespaces %}
+                {% if ns.scope.value == 'OFFER' %}
+                  {% set _ = offer_ns.append(ns) %}
+                {% elif ns.scope.value == 'COUPON' %}
+                  {% set _ = coupon_ns.append(ns) %}
+                {% elif ns.scope.value == 'GLOBAL' %}
+                  {% set _ = global_ns.append(ns) %}
+                {% endif %}
+              {% endfor %}
+              
+              {# Offer Variables #}
+              {% if offer_ns and offer_ns|length > 0 %}
+              <div class="mb-3">
+                <h6 class="text-uppercase mb-2" style="font-size: 0.75rem; letter-spacing: 0.05em; color: var(--text-muted);">
+                  <i class="bi bi-tag"></i> Variáveis de Ofertas
+                </h6>
+                <div class="d-flex flex-wrap gap-2">
+                  {% for namespace in offer_ns %}
+                  <button type="button" 
+                          class="btn btn-sm {% if namespace.name == 'all_coupons' %}btn-outline-warning{% else %}btn-outline-primary{% endif %} namespace-btn" 
+                          data-namespace="{{ namespace.name }}"
+                          title="{{ namespace.description or namespace.label }}"
+                          onclick="insertNamespace('{{ namespace.name }}')">
+                    {% if namespace.name == 'all_coupons' %}<i class="bi bi-ticket-perforated-fill"></i>{% else %}<i class="bi bi-braces"></i>{% endif %}
+                    {{ '{' }}{{ namespace.name }}{{ '}' }}
+                    <small class="d-none d-md-inline">- {{ namespace.label }}</small>
+                  </button>
+                  {% endfor %}
+                </div>
+              </div>
+              {% endif %}
+              
+              {# Coupon Variables #}
+              {% if coupon_ns %}
+              <div class="mb-3">
+                <h6 class="text-uppercase mb-2" style="font-size: 0.75rem; letter-spacing: 0.05em; color: var(--text-muted);">
+                  <i class="bi bi-ticket-perforated"></i> Variáveis de Cupons
+                </h6>
+                <div class="d-flex flex-wrap gap-2">
+                  {% for namespace in coupon_ns %}
+                  <button type="button" 
+                          class="btn btn-sm btn-outline-success namespace-btn" 
+                          data-namespace="{{ namespace.name }}"
+                          title="{{ namespace.description or namespace.label }}"
+                          onclick="insertNamespace('{{ namespace.name }}')">
+                    <i class="bi bi-braces"></i>
+                    {{ '{' }}{{ namespace.name }}{{ '}' }}
+                    <small class="d-none d-md-inline">- {{ namespace.label }}</small>
+                  </button>
+                  {% endfor %}
+                </div>
+              </div>
+              {% endif %}
+              
+              {# Global Variables #}
+              {% if global_ns %}
+              <div class="mb-0">
+                <h6 class="text-uppercase mb-2 global-variables-title" style="font-size: 0.75rem; letter-spacing: 0.05em;">
+                  <i class="bi bi-globe"></i> Variáveis Globais
+                </h6>
+                <div class="d-flex flex-wrap gap-2">
+                  {% for namespace in global_ns %}
+                  <button type="button" 
+                          class="btn btn-sm btn-outline-secondary namespace-btn" 
+                          data-namespace="{{ namespace.name }}"
+                          title="{{ namespace.description or namespace.label }}"
+                          onclick="insertNamespace('{{ namespace.name }}')">
+                    <i class="bi bi-braces"></i>
+                    {{ '{' }}{{ namespace.name }}{{ '}' }}
+                    <small class="d-none d-md-inline">- {{ namespace.label }}</small>
+                  </button>
+                  {% endfor %}
+                </div>
+              </div>
+              {% endif %}
+            {% else %}
+              <small class="text-muted">
+                <i class="bi bi-info-circle"></i>
+                Nenhuma variável cadastrada no momento
+              </small>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-12 mt-4">
+        <hr>
+        <div class="d-flex justify-content-between align-items-center">
+          <button type="button" class="btn btn-outline-secondary" onclick="window.history.back()">
+            <i class="bi bi-x-circle"></i> Cancelar
+          </button>
+          <button type="submit" class="btn btn-primary btn-lg">
+            <i class="bi bi-check-circle"></i> Atualizar Template
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</section>
+
+<style>
+/* Remove flicker/blink effect from namespace info box */
+.alert-info {
+  animation: none !important;
+  transition: none !important;
+  background-color: transparent !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Global variables title color - orange in dark theme only */
+.global-variables-title {
+  color: var(--text-muted);
+}
+
+body[data-theme="dark"] .global-variables-title,
+html[data-theme="dark"] .global-variables-title {
+  color: #fb923c !important; /* Orange-400 - lighter and more visible */
+}
+
+/* Remove border from global variable buttons */
+.btn-outline-secondary.namespace-btn {
+  border: none !important;
+  background-color: transparent !important;
+  color: var(--text-secondary) !important;
+}
+
+.btn-outline-secondary.namespace-btn:hover {
+  background-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+
+.namespace-btn {
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.namespace-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.namespace-btn:active {
+  transform: translateY(0);
+}
+</style>
+
+<script>
+// Insert namespace at cursor position
+function insertNamespace(namespaceName) {
+  const textarea = document.getElementById('templateBody');
+  const cursorPos = textarea.selectionStart;
+  const textBefore = textarea.value.substring(0, cursorPos);
+  const textAfter = textarea.value.substring(textarea.selectionEnd);
+  
+  const namespaceText = `{${namespaceName}}`;
+  textarea.value = textBefore + namespaceText + textAfter;
+  
+  // Move cursor after inserted text
+  const newCursorPos = cursorPos + namespaceText.length;
+  textarea.setSelectionRange(newCursorPos, newCursorPos);
+  textarea.focus();
+}
+
+// Auto-generate slug from name
+document.querySelector('input[name="template-name"]')?.addEventListener('input', function() {
+  const slugField = document.querySelector('input[name="template-slug"]');
+  if (slugField && !slugField.value) {
+    const slug = this.value.toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+    slugField.value = slug;
+  }
+});
+</script>
+{% endblock %}
+

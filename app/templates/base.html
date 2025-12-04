@@ -42,16 +42,6 @@
           <div class="collapse navbar-collapse" id="primaryNav">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
               <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('web.users') }}">
-                  <i class="bi bi-people"></i> Usuários
-                </a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('web.groups') }}">
-                  <i class="bi bi-collection"></i> Grupos
-                </a>
-              </li>
-              <li class="nav-item">
                 <a class="nav-link" href="{{ url_for('web.offers') }}">
                   <i class="bi bi-tag"></i> Ofertas
                 </a>
@@ -62,7 +52,69 @@
                   <i class="bi bi-file-earmark-text"></i> Templates
                 </a>
               </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('web.coupons') }}">
+                  <i class="bi bi-ticket-perforated"></i> Cupons
+                </a>
+              </li>
               {% endif %}
+              {% if current_user.is_authenticated and current_user.role.value in ['admin', 'editor'] %}
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  <i class="bi bi-gear-fill"></i> Administração
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="adminDropdown">
+                  <li>
+                    <a class="dropdown-item" href="{{ url_for('web.admin_dashboard') }}">
+                      <i class="bi bi-speedometer2"></i> Painel
+                    </a>
+                  </li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li>
+                    <a class="dropdown-item" href="{{ url_for('web.users') }}">
+                      <i class="bi bi-people"></i> Usuários
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item" href="{{ url_for('web.groups') }}">
+                      <i class="bi bi-collection"></i> Grupos
+                    </a>
+                  </li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li>
+                    <a class="dropdown-item" href="{{ url_for('web.admin_sellers') }}">
+                      <i class="bi bi-shop"></i> Vendedores
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item" href="{{ url_for('web.admin_categories') }}">
+                      <i class="bi bi-tags"></i> Categorias
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item" href="{{ url_for('web.admin_manufacturers') }}">
+                      <i class="bi bi-building"></i> Fabricantes
+                    </a>
+                  </li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li>
+                    <a class="dropdown-item" href="{{ url_for('web.admin_social_networks') }}">
+                      <i class="bi bi-broadcast"></i> Redes Sociais
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item" href="{{ url_for('web.admin_settings') }}">
+                      <i class="bi bi-sliders"></i> Configurações
+                    </a>
+                  </li>
+                </ul>
+              </li>
+              {% endif %}
+              <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('web.api_documentation') }}">
+                  <i class="bi bi-code-slash"></i> API
+                </a>
+              </li>
             </ul>
             <div class="d-flex align-items-center gap-2">
               {% if current_user.is_authenticated %}
@@ -126,6 +178,127 @@
         <small>API pronta para automações · Compartilhamento rápido para as redes sociais</small>
       </div>
     </footer>
+    
+    <!-- Toast Container -->
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+      <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header" id="toastHeader">
+          <i class="bi me-2" id="toastIcon"></i>
+          <strong class="me-auto" id="toastTitle">Notificação</strong>
+          <small class="text-muted" id="toastTime">agora</small>
+          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Fechar"></button>
+        </div>
+        <div class="toast-body" id="toastBody">
+          Mensagem
+        </div>
+      </div>
+    </div>
+    
+    <style>
+      /* Toast Styles for Dark Theme */
+      .toast {
+        background-color: var(--panel-bg);
+        border: 1px solid var(--border-color);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(10px);
+        border-radius: 12px;
+        overflow: hidden;
+        min-width: 320px;
+      }
+      
+      .toast-header {
+        border-bottom: 1px solid var(--border-color);
+        padding: 12px 16px;
+      }
+      
+      .toast-body {
+        padding: 16px;
+        color: var(--text-color);
+        background-color: var(--panel-bg);
+        font-size: 0.95rem;
+        line-height: 1.5;
+      }
+      
+      /* Success Toast */
+      .toast-header.bg-success {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+      }
+      
+      /* Error Toast */
+      .toast-header.bg-danger {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+      }
+      
+      /* Warning Toast */
+      .toast-header.bg-warning {
+        background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%) !important;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        color: #000 !important;
+      }
+      
+      .toast-header.bg-warning .btn-close {
+        filter: invert(1);
+      }
+      
+      /* Info Toast */
+      .toast-header.bg-info {
+        background: linear-gradient(135deg, #17a2b8 0%, #138496 100%) !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+      }
+      
+      /* Close button for dark backgrounds */
+      .toast-header.bg-success .btn-close,
+      .toast-header.bg-danger .btn-close,
+      .toast-header.bg-info .btn-close {
+        filter: brightness(0) invert(1);
+        opacity: 0.8;
+      }
+      
+      .toast-header.bg-success .btn-close:hover,
+      .toast-header.bg-danger .btn-close:hover,
+      .toast-header.bg-info .btn-close:hover {
+        opacity: 1;
+      }
+      
+      /* Icon styling */
+      .toast-header i.bi {
+        font-size: 1.2rem;
+      }
+      
+      /* Animation */
+      .toast.showing {
+        animation: slideIn 0.3s ease-out;
+      }
+      
+      .toast.hide {
+        animation: slideOut 0.3s ease-in;
+      }
+      
+      @keyframes slideIn {
+        from {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+      
+      @keyframes slideOut {
+        from {
+          transform: translateX(0);
+          opacity: 1;
+        }
+        to {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+      }
+    </style>
+    
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script
       src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
@@ -133,6 +306,70 @@
       crossorigin="anonymous"
     ></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+      // Fix modal scrollbar shift issue
+      document.addEventListener('DOMContentLoaded', function() {
+        // Get scrollbar width
+        const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+        
+        // Listen for modal open events
+        document.addEventListener('show.bs.modal', function() {
+          // Only add padding if there's a scrollbar
+          if (scrollbarWidth > 0) {
+            document.body.style.paddingRight = '0px';
+          }
+        });
+        
+        // Listen for modal close events
+        document.addEventListener('hidden.bs.modal', function() {
+          document.body.style.paddingRight = '';
+        });
+      });
+      
+      // Global toast function
+      window.showToast = function(message, type = 'success', duration = 5000) {
+        const toastEl = document.getElementById('liveToast');
+        const toastHeader = document.getElementById('toastHeader');
+        const toastIcon = document.getElementById('toastIcon');
+        const toastTitle = document.getElementById('toastTitle');
+        const toastBody = document.getElementById('toastBody');
+        const btnClose = toastHeader.querySelector('.btn-close');
+        
+        // Reset classes
+        toastHeader.className = 'toast-header';
+        toastIcon.className = 'bi me-2';
+        
+        // Set type-specific styles
+        if (type === 'success') {
+          toastHeader.classList.add('bg-success', 'text-white');
+          toastIcon.classList.add('bi-check-circle-fill');
+          toastTitle.textContent = 'Sucesso';
+        } else if (type === 'error') {
+          toastHeader.classList.add('bg-danger', 'text-white');
+          toastIcon.classList.add('bi-x-circle-fill');
+          toastTitle.textContent = 'Erro';
+        } else if (type === 'warning') {
+          toastHeader.classList.add('bg-warning', 'text-dark');
+          toastIcon.classList.add('bi-exclamation-triangle-fill');
+          toastTitle.textContent = 'Atenção';
+        } else if (type === 'info') {
+          toastHeader.classList.add('bg-info', 'text-white');
+          toastIcon.classList.add('bi-info-circle-fill');
+          toastTitle.textContent = 'Informação';
+        }
+        
+        // Set message
+        toastBody.textContent = message;
+        
+        // Show toast
+        const toast = new bootstrap.Toast(toastEl, {
+          autohide: true,
+          delay: duration,
+          animation: true
+        });
+        toast.show();
+      };
+    </script>
     <div
       class="modal fade"
       id="confirmModal"

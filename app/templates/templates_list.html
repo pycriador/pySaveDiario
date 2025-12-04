@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block title %}Templates de Compartilhamento{% endblock %}
+
+{% block content %}
+<section>
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+    <div>
+      <p class="eyebrow"><i class="bi bi-file-earmark-richtext-fill"></i> Playbook social</p>
+      <h1 class="mb-0">Templates disponíveis</h1>
+      <p class="muted mb-0">Padronize posts e compartilhe com um clique.</p>
+    </div>
+    {% if can_manage %}
+    <a href="{{ url_for('web.create_template') }}" class="btn btn-primary btn-sm">
+      <i class="bi bi-plus-circle-fill"></i> Novo template
+    </a>
+    {% endif %}
+  </div>
+
+  <div class="grid two">
+    {% for template in templates %}
+    <article class="panel card">
+      <div class="d-flex justify-content-between align-items-start mb-3">
+        <div>
+          <h3>
+            <i class="bi bi-file-earmark-text-fill"></i>
+            {{ template.name }}
+          </h3>
+          <p class="muted">{{ template.description or "Sem descrição." }}</p>
+        </div>
+        <span class="badge bg-primary bg-opacity-25 text-white">
+          <i class="bi bi-share"></i> {{ template.social_networks|length }} {% if template.social_networks|length == 1 %}rede{% else %}redes{% endif %}
+        </span>
+      </div>
+      
+      <div class="mb-3">
+        <small class="text-uppercase text-muted d-block mb-2" style="font-size: 0.7rem; letter-spacing: 0.1em;">
+          <i class="bi bi-broadcast"></i> Redes Sociais
+        </small>
+        <div class="d-flex flex-wrap gap-2">
+          {% if template.social_networks %}
+            {% for network in template.social_networks %}
+            <span class="tag">
+              {% if network.network == 'instagram' %}
+              <i class="bi bi-instagram text-danger"></i>
+              {% elif network.network == 'facebook' %}
+              <i class="bi bi-facebook text-primary"></i>
+              {% elif network.network == 'whatsapp' %}
+              <i class="bi bi-whatsapp text-success"></i>
+              {% elif network.network == 'telegram' %}
+              <i class="bi bi-telegram text-info"></i>
+              {% elif network.network == 'twitter' %}
+              <i class="bi bi-twitter-x"></i>
+              {% else %}
+              <i class="bi bi-share"></i>
+              {% endif %}
+              {{ network.network.title() }}
+            </span>
+            {% endfor %}
+          {% else %}
+            <span class="tag text-muted">
+              <i class="bi bi-exclamation-triangle"></i> Nenhuma rede selecionada
+            </span>
+          {% endif %}
+        </div>
+      </div>
+      
+      <div class="mt-3">
+        <small class="text-uppercase text-muted d-block mb-2" style="font-size: 0.7rem; letter-spacing: 0.1em;">
+          <i class="bi bi-code-square"></i> Corpo do template
+        </small>
+        <pre>{{ template.body }}</pre>
+      </div>
+      
+      {% if can_manage %}
+      <div class="mt-3 d-flex justify-content-end gap-2">
+        <a href="{{ url_for('web.edit_template', template_id=template.id) }}" class="btn btn-sm btn-outline-primary">
+          <i class="bi bi-pencil-square"></i> Editar
+        </a>
+        <button type="button" class="btn btn-sm btn-danger" 
+                onclick="confirmDelete('{{ template.id }}', '{{ template.name }}', 'template')">
+          <i class="bi bi-trash"></i> Deletar
+        </button>
+      </div>
+      {% endif %}
+    </article>
+    {% else %}
+    <div class="col-12">
+      <div class="panel text-center py-5">
+        <i class="bi bi-file-earmark-x" style="font-size: 3rem; color: var(--text-muted);"></i>
+        <p class="mt-3 muted">Nenhum template cadastrado no momento.</p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="background: var(--panel-solid); border: 1px solid var(--border-color);">
+      <div class="modal-header border-0">
+        <h5 class="modal-title">
+          <i class="bi bi-exclamation-triangle-fill text-danger"></i>
+          Confirmar exclusão
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-3">Tem certeza que deseja deletar o template <strong id="deleteItemName"></strong>?</p>
+        <p class="text-danger mb-0">
+          <i class="bi bi-info-circle"></i>
+          Esta ação não pode ser desfeita.
+        </p>
+      </div>
+      <div class="modal-footer border-0">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <form id="deleteForm" method="POST" style="display: inline;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-danger">
+            <i class="bi bi-trash"></i> Deletar
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function confirmDelete(id, name, type) {
+  const modal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+  const deleteForm = document.getElementById('deleteForm');
+  const deleteItemName = document.getElementById('deleteItemName');
+  
+  deleteItemName.textContent = name;
+  
+  if (type === 'template') {
+    deleteForm.action = `/templates/${id}/delete`;
+  }
+  
+  modal.show();
+}
+</script>
+{% endblock %}

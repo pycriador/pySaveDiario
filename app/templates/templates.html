@@ -67,6 +67,13 @@
         </small>
         <pre>{{ template.body }}</pre>
       </div>
+      
+      <div class="mt-3 d-flex justify-content-end">
+        <button type="button" class="btn btn-sm btn-danger" 
+                onclick="confirmDelete('{{ template.id }}', '{{ template.name }}', 'template')">
+          <i class="bi bi-trash"></i> Deletar
+        </button>
+      </div>
     </article>
     {% else %}
     <div class="col-12">
@@ -125,7 +132,36 @@
             <label class="form-label" for="{{ form.body.id }}">
               <i class="bi bi-code-square"></i> Corpo do template
             </label>
-            {{ form.body(class="form-control", rows="6", placeholder="Conteúdo que será usado nas publicações...") }}
+            {{ form.body(class="form-control", rows="6", id="templateBody", placeholder="Conteúdo que será usado nas publicações...") }}
+          </div>
+          
+          <div class="col-12">
+            <div class="alert alert-info d-flex align-items-start gap-2 mb-0">
+              <i class="bi bi-lightbulb-fill fs-5"></i>
+              <div>
+                <strong>Variáveis disponíveis:</strong><br>
+                <small>Clique para inserir no template</small>
+                <div class="d-flex flex-wrap gap-2 mt-2">
+                  {% if namespaces %}
+                    {% for namespace in namespaces %}
+                    <button type="button" 
+                            class="btn btn-sm btn-outline-primary namespace-btn" 
+                            data-namespace="{{ namespace.name }}"
+                            title="{{ namespace.description or namespace.label }}">
+                      <i class="bi bi-braces"></i>
+                      {{ '{' }}{{ namespace.name }}{{ '}' }}
+                      <small class="d-none d-md-inline">- {{ namespace.label }}</small>
+                    </button>
+                    {% endfor %}
+                  {% else %}
+                    <small class="text-muted">
+                      <i class="bi bi-info-circle"></i>
+                      Nenhum namespace cadastrado. Vá em Administração para criar.
+                    </small>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
           </div>
         </form>
       </div>
@@ -133,11 +169,156 @@
         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
           <i class="bi bi-x-circle"></i> Cancelar
         </button>
-        <button type="submit" form="createTemplateForm" class="btn btn-primary">
+        <button type="submit" form="createTemplateForm" name="template-submit_template" class="btn btn-primary">
           <i class="bi bi-check-circle"></i> Criar template
         </button>
       </div>
     </div>
   </div>
 </div>
+
+<!-- Modal: Confirmar Deleção -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title" id="deleteConfirmModalLabel">
+          <i class="bi bi-exclamation-triangle-fill"></i> Confirmar Exclusão
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <div class="text-center py-3">
+          <i class="bi bi-trash text-danger" style="font-size: 4rem;"></i>
+          <h5 class="mt-3 mb-3">Tem certeza que deseja deletar?</h5>
+          <div class="alert alert-warning d-flex align-items-start gap-2">
+            <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+            <div>
+              <strong id="deleteItemName" class="text-break"></strong>
+              <p class="mb-0 mt-2">Esta ação não pode ser desfeita.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          <i class="bi bi-x-circle"></i> Cancelar
+        </button>
+        <form id="deleteForm" method="POST" style="display: inline;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-danger">
+            <i class="bi bi-trash"></i> Sim, deletar
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+</section>
+{% endblock %}
+
+{% block scripts %}
+<style>
+/* Namespace buttons */
+.namespace-btn {
+  transition: all 0.3s ease;
+  font-family: 'Monaco', 'Courier New', monospace;
+  font-size: 0.85rem;
+}
+
+.namespace-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.namespace-btn i {
+  font-size: 0.9rem;
+}
+
+#templateBody {
+  font-family: 'Monaco', 'Courier New', monospace;
+  font-size: 0.9rem;
+}
+</style>
+
+<script>
+  // Close modal and reload page after successful form submission
+  document.addEventListener('DOMContentLoaded', function() {
+    const createTemplateForm = document.getElementById('createTemplateForm');
+    if (createTemplateForm) {
+      createTemplateForm.addEventListener('submit', function(e) {
+        // Form will submit normally, just track it
+        console.log('Template form submitted');
+      });
+    }
+    
+    // Check if there's a success message (template was created)
+    const successAlert = document.querySelector('.alert-success');
+    if (successAlert) {
+      // Close the modal if it's open
+      const modal = bootstrap.Modal.getInstance(document.getElementById('createTemplateModal'));
+      if (modal) {
+        modal.hide();
+      }
+    }
+    
+    // Add event listeners to namespace buttons
+    const namespaceButtons = document.querySelectorAll('.namespace-btn');
+    namespaceButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        const namespace = this.getAttribute('data-namespace');
+        const templateBody = document.getElementById('templateBody');
+        
+        if (templateBody) {
+          // Get cursor position
+          const startPos = templateBody.selectionStart;
+          const endPos = templateBody.selectionEnd;
+          const textBefore = templateBody.value.substring(0, startPos);
+          const textAfter = templateBody.value.substring(endPos);
+          
+          // Insert namespace at cursor position
+          const namespaceText = `{${namespace}}`;
+          templateBody.value = textBefore + namespaceText + textAfter;
+          
+          // Set cursor position after inserted text
+          const newPos = startPos + namespaceText.length;
+          templateBody.selectionStart = newPos;
+          templateBody.selectionEnd = newPos;
+          
+          // Focus back on textarea
+          templateBody.focus();
+          
+          // Visual feedback
+          this.classList.add('btn-success');
+          this.classList.remove('btn-outline-primary');
+          setTimeout(() => {
+            this.classList.remove('btn-success');
+            this.classList.add('btn-outline-primary');
+          }, 500);
+        }
+      });
+    });
+  });
+  
+  // Confirm delete function for templates
+  window.confirmDelete = function(id, name, type) {
+    const modal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+    const deleteForm = document.getElementById('deleteForm');
+    const deleteItemName = document.getElementById('deleteItemName');
+    
+    // Set item name
+    deleteItemName.textContent = name;
+    
+    // Set form action based on type
+    if (type === 'template') {
+      deleteForm.action = `/templates/${id}/delete`;
+    } else if (type === 'offer') {
+      deleteForm.action = `/ofertas/${id}/delete`;
+    }
+    
+    // Show modal
+    modal.show();
+  };
+</script>
 {% endblock %}

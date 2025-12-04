@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}Configurações{% endblock %}
+
+{% block content %}
+<section>
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+    <div>
+      <p class="eyebrow"><i class="bi bi-gear-fill"></i> Administração</p>
+      <h1 class="mb-0">Configurações do Sistema</h1>
+      <p class="muted mb-0">Configure preferências e padrões do aplicativo</p>
+    </div>
+    <div>
+      <a class="btn btn-outline-light btn-sm" href="{{ url_for('web.admin_dashboard') }}">
+        <i class="bi bi-arrow-left"></i> Voltar
+      </a>
+    </div>
+  </div>
+
+  <!-- Settings Form -->
+  <div class="panel">
+    <h3 class="mb-4">
+      <i class="bi bi-currency-exchange"></i> Configurações de Moeda
+    </h3>
+    
+    <form method="post" class="row g-4">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+      
+      <div class="col-md-6">
+        <label class="form-label" for="default_currency">
+          <i class="bi bi-cash-stack"></i> Moeda Padrão
+        </label>
+        <select name="default_currency" id="default_currency" class="form-select">
+          {% for code, name in currencies %}
+          <option value="{{ code }}" {% if code == default_currency %}selected{% endif %}>
+            {{ name }}
+          </option>
+          {% endfor %}
+        </select>
+        <small class="text-muted mt-2 d-block">
+          <i class="bi bi-info-circle"></i>
+          Esta será a moeda pré-selecionada ao criar novas ofertas
+        </small>
+      </div>
+      
+      <div class="col-12">
+        <button type="submit" class="btn btn-primary">
+          <i class="bi bi-check-circle"></i> Salvar Configurações
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Current Settings Info -->
+  <div class="panel mt-4">
+    <h3 class="mb-3">
+      <i class="bi bi-info-circle-fill"></i> Configurações Atuais
+    </h3>
+    
+    <div class="row g-3">
+      <div class="col-md-4">
+        <div class="d-flex align-items-center gap-3">
+          <i class="bi bi-currency-exchange fs-2 text-primary"></i>
+          <div>
+            <small class="text-muted d-block">Moeda Padrão</small>
+            <strong class="fs-4">{{ default_currency }}</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Currency Info -->
+  <div class="panel mt-4">
+    <h3 class="mb-3">
+      <i class="bi bi-list-ul"></i> Moedas Disponíveis
+    </h3>
+    
+    <div class="table-responsive">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Nome</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for code, name in currencies %}
+          <tr>
+            <td><code>{{ code }}</code></td>
+            <td>{{ name }}</td>
+            <td>
+              {% if code == default_currency %}
+              <span class="badge bg-success">
+                <i class="bi bi-check-circle"></i> Padrão
+              </span>
+              {% else %}
+              <span class="badge bg-secondary">Disponível</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+{% endblock %}
+

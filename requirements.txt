@@ -9,4 +9,7 @@ email-validator
 gunicorn
 PyMySQL
 psycopg
+requests
+beautifulsoup4
+lxml
 

@@ -26,9 +26,10 @@ class RoleEnum(str, Enum):
 
 
 class NamespaceScope(str, Enum):
-    PROFILE = "profile"
-    OFFER = "offer"
-    GLOBAL = "global"
+    PROFILE = "PROFILE"
+    OFFER = "OFFER"
+    COUPON = "COUPON"
+    GLOBAL = "GLOBAL"
 
 
 class WishlistVisibility(str, Enum):
@@ -186,10 +187,16 @@ class Offer(TimestampMixin, db.Model):
     product_id = db.Column(db.Integer, db.ForeignKey("products.id"), nullable=False)
     vendor_name = db.Column(db.String(120), nullable=False)
     price = db.Column(db.Numeric(10, 2), nullable=False)
+    old_price = db.Column(db.Numeric(10, 2), nullable=True)
     currency = db.Column(db.String(3), default="BRL")
     offer_url = db.Column(db.String(255))
     expires_at = db.Column(db.DateTime)
     created_by_id = db.Column(db.Integer, db.ForeignKey("users.id"))
+    
+    # New relationships for administration
+    seller_id = db.Column(db.Integer, db.ForeignKey("sellers.id"), nullable=True)
+    category_id = db.Column(db.Integer, db.ForeignKey("categories.id"), nullable=True)
+    manufacturer_id = db.Column(db.Integer, db.ForeignKey("manufacturers.id"), nullable=True)
 
     product = db.relationship("Product", back_populates="offers")
     created_by = db.relationship("User")
@@ -228,6 +235,13 @@ class WishlistItem(TimestampMixin, db.Model):
     )
 
 
+# Association table for Template and SocialNetworkConfig (many-to-many)
+template_social_networks = db.Table('template_social_networks',
+    db.Column('template_id', db.Integer, db.ForeignKey('templates.id'), primary_key=True),
+    db.Column('social_network_id', db.Integer, db.ForeignKey('social_network_configs.id'), primary_key=True)
+)
+
+
 class Template(TimestampMixin, db.Model):
     __tablename__ = "templates"
 
@@ -236,7 +250,12 @@ class Template(TimestampMixin, db.Model):
     slug = db.Column(db.String(120), unique=True, nullable=False)
     description = db.Column(db.Text)
     body = db.Column(db.Text, nullable=False)
-    channels = db.Column(db.String(255), default="instagram,facebook,whatsapp,telegram")
+    channels = db.Column(db.String(255), default="instagram,facebook,whatsapp,telegram")  # Keep for backwards compatibility
+    
+    # Relationship to social networks
+    social_networks = db.relationship('SocialNetworkConfig', 
+                                     secondary=template_social_networks,
+                                     backref=db.backref('templates', lazy='dynamic'))
 
     def to_dict(self) -> dict:
         return {
@@ -245,10 +264,14 @@ class Template(TimestampMixin, db.Model):
             "slug": self.slug,
             "description": self.description,
             "channels": [channel.strip() for channel in self.channels.split(",")],
+            "social_networks": [sn.network for sn in self.social_networks]
         }
 
     @property
     def channel_list(self) -> list[str]:
+        # Return social networks if available, otherwise fall back to channels
+        if self.social_networks:
+            return [sn.network for sn in self.social_networks]
         return [channel.strip() for channel in self.channels.split(",") if channel.strip()]
 
 
@@ -326,5 +349,183 @@ class Publication(TimestampMixin, db.Model):
             "caption": self.caption,
             "channels": self.channels.split(",") if self.channels else [],
             "published_at": self.published_at.isoformat() if self.published_at else None,
+        }
+
+
+class Seller(TimestampMixin, db.Model):
+    """Marketplace sellers/vendors"""
+    __tablename__ = "sellers"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(120), unique=True, nullable=False)
+    slug = db.Column(db.String(120), unique=True, nullable=False)
+    description = db.Column(db.Text)
+    website = db.Column(db.String(255))
+    active = db.Column(db.Boolean, default=True)
+
+    # Relationships
+    offers = db.relationship("Offer", backref="seller", lazy="dynamic")
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "name": self.name,
+            "slug": self.slug,
+            "description": self.description,
+            "website": self.website,
+            "active": self.active,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }
+
+
+class Category(TimestampMixin, db.Model):
+    """Product categories"""
+    __tablename__ = "categories"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(120), unique=True, nullable=False)
+    slug = db.Column(db.String(120), unique=True, nullable=False)
+    description = db.Column(db.Text)
+    icon = db.Column(db.String(50))  # Icon class (e.g., "bi bi-laptop")
+    active = db.Column(db.Boolean, default=True)
+
+    # Relationships
+    offers = db.relationship("Offer", backref="category", lazy="dynamic")
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "name": self.name,
+            "slug": self.slug,
+            "description": self.description,
+            "icon": self.icon,
+            "active": self.active,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }
+
+
+class Manufacturer(TimestampMixin, db.Model):
+    """Product manufacturers/brands"""
+    __tablename__ = "manufacturers"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(120), unique=True, nullable=False)
+    slug = db.Column(db.String(120), unique=True, nullable=False)
+    description = db.Column(db.Text)
+    website = db.Column(db.String(255))
+    logo = db.Column(db.String(255))  # URL or path to logo
+    active = db.Column(db.Boolean, default=True)
+
+    # Relationships
+    offers = db.relationship("Offer", backref="manufacturer", lazy="dynamic")
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "name": self.name,
+            "slug": self.slug,
+            "description": self.description,
+            "website": self.website,
+            "logo": self.logo,
+            "active": self.active,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }
+
+
+class SocialNetworkConfig(db.Model):
+    """Configuration for social network sharing"""
+    __tablename__ = "social_network_configs"
+    
+    id = db.Column(db.Integer, primary_key=True)
+    network = db.Column(db.String(50), unique=True, nullable=False)  # instagram, facebook, whatsapp, telegram
+    prefix_text = db.Column(db.Text, nullable=True)  # Text to add before template content
+    suffix_text = db.Column(db.Text, nullable=True)  # Text to add after template content (hashtags, etc)
+    active = db.Column(db.Boolean, default=True)
+    
+    @staticmethod
+    def get_config(network_name):
+        """Get configuration for a specific network"""
+        config = SocialNetworkConfig.query.filter_by(network=network_name.lower()).first()
+        return config
+    
+    @staticmethod
+    def get_all_configs():
+        """Get all network configurations"""
+        return SocialNetworkConfig.query.filter_by(active=True).all()
+    
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "network": self.network,
+            "prefix_text": self.prefix_text,
+            "suffix_text": self.suffix_text,
+            "active": self.active,
+        }
+
+
+class AppSettings(db.Model):
+    """Application settings/configuration"""
+    __tablename__ = "app_settings"
+    
+    id = db.Column(db.Integer, primary_key=True)
+    key = db.Column(db.String(100), unique=True, nullable=False)
+    value = db.Column(db.Text, nullable=True)
+    description = db.Column(db.Text, nullable=True)
+    
+    @staticmethod
+    def get_default_currency():
+        """Get default currency from settings"""
+        setting = AppSettings.query.filter_by(key='default_currency').first()
+        return setting.value if setting and setting.value else 'BRL'
+    
+    @staticmethod
+    def set_default_currency(currency_code):
+        """Set default currency"""
+        setting = AppSettings.query.filter_by(key='default_currency').first()
+        if not setting:
+            setting = AppSettings(
+                key='default_currency',
+                value=currency_code,
+                description='Moeda padrão do sistema'
+            )
+            db.session.add(setting)
+        else:
+            setting.value = currency_code
+        db.session.commit()
+    
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "key": self.key,
+            "value": self.value,
+            "description": self.description,
+        }
+
+
+class Coupon(TimestampMixin, db.Model):
+    """Discount coupons for sellers"""
+    __tablename__ = "coupons"
+
+    id = db.Column(db.Integer, primary_key=True)
+    seller_id = db.Column(db.Integer, db.ForeignKey("sellers.id"), nullable=False)
+    code = db.Column(db.String(120), nullable=False)
+    active = db.Column(db.Boolean, default=True)
+    expires_at = db.Column(db.DateTime, nullable=True)
+    created_by_id = db.Column(db.Integer, db.ForeignKey("users.id"))
+
+    # Relationships
+    seller = db.relationship("Seller", backref=db.backref("coupons", lazy="dynamic"))
+    created_by = db.relationship("User")
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "seller_id": self.seller_id,
+            "seller_name": self.seller.name if self.seller else None,
+            "code": self.code,
+            "active": self.active,
+            "expires_at": self.expires_at.isoformat() if self.expires_at else None,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
 

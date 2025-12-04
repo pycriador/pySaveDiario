@@ -8,7 +8,9 @@ from sqlalchemy import or_
 
 from ..extensions import db
 from ..models import (
+    Category,
     Group,
+    Manufacturer,
     Namespace,
     NamespaceScope,
     Offer,
@@ -16,6 +18,7 @@ from ..models import (
     Product,
     Publication,
     RoleEnum,
+    Seller,
     Template,
     User,
     Wishlist,
@@ -367,4 +370,283 @@ def publish_offer():
 def list_publications():
     publications = [publication.to_dict() for publication in Publication.query.all()]
     return jsonify(publications)
+
+
+# ========================================
+# SELLERS API
+# ========================================
+
+@api_bp.route("/sellers", methods=["POST"])
+@token_auth.login_required
+@role_required(RoleEnum.ADMIN, RoleEnum.EDITOR)
+def create_seller():
+    """Create a new seller"""
+    data = request.get_json() or {}
+    
+    if not data.get("name") or not data.get("slug"):
+        return {"message": "Name and slug are required."}, 400
+    
+    # Check if slug already exists
+    if Seller.query.filter_by(slug=data["slug"]).first():
+        return {"message": "Seller with this slug already exists."}, 400
+    
+    seller = Seller(
+        name=data["name"],
+        slug=data["slug"],
+        description=data.get("description"),
+        website=data.get("website"),
+        active=data.get("active", True),
+    )
+    
+    db.session.add(seller)
+    db.session.commit()
+    
+    return seller.to_dict(), 201
+
+
+@api_bp.route("/sellers", methods=["GET"])
+def list_sellers():
+    """List all sellers"""
+    active_only = request.args.get("active_only", "false").lower() == "true"
+    
+    query = Seller.query
+    if active_only:
+        query = query.filter_by(active=True)
+    
+    sellers = [seller.to_dict() for seller in query.order_by(Seller.name).all()]
+    return jsonify(sellers)
+
+
+@api_bp.route("/sellers/<int:seller_id>", methods=["GET"])
+def get_seller(seller_id: int):
+    """Get a specific seller"""
+    seller = Seller.query.get_or_404(seller_id)
+    return seller.to_dict()
+
+
+@api_bp.route("/sellers/<int:seller_id>", methods=["PUT"])
+@token_auth.login_required
+@role_required(RoleEnum.ADMIN, RoleEnum.EDITOR)
+def update_seller(seller_id: int):
+    """Update a seller"""
+    seller = Seller.query.get_or_404(seller_id)
+    data = request.get_json() or {}
+    
+    if "name" in data:
+        seller.name = data["name"]
+    if "slug" in data:
+        # Check if new slug already exists (excluding current seller)
+        existing = Seller.query.filter(Seller.slug == data["slug"], Seller.id != seller_id).first()
+        if existing:
+            return {"message": "Seller with this slug already exists."}, 400
+        seller.slug = data["slug"]
+    if "description" in data:
+        seller.description = data["description"]
+    if "website" in data:
+        seller.website = data["website"]
+    if "active" in data:
+        seller.active = data["active"]
+    
+    db.session.commit()
+    
+    return seller.to_dict()
+
+
+@api_bp.route("/sellers/<int:seller_id>", methods=["DELETE"])
+@token_auth.login_required
+@role_required(RoleEnum.ADMIN)
+def delete_seller(seller_id: int):
+    """Delete a seller"""
+    seller = Seller.query.get_or_404(seller_id)
+    db.session.delete(seller)
+    db.session.commit()
+    
+    return {"message": "Seller deleted successfully"}, 200
+
+
+# ========================================
+# CATEGORIES API
+# ========================================
+
+@api_bp.route("/categories", methods=["POST"])
+@token_auth.login_required
+@role_required(RoleEnum.ADMIN, RoleEnum.EDITOR)
+def create_category():
+    """Create a new category"""
+    data = request.get_json() or {}
+    
+    if not data.get("name") or not data.get("slug"):
+        return {"message": "Name and slug are required."}, 400
+    
+    # Check if slug already exists
+    if Category.query.filter_by(slug=data["slug"]).first():
+        return {"message": "Category with this slug already exists."}, 400
+    
+    category = Category(
+        name=data["name"],
+        slug=data["slug"],
+        description=data.get("description"),
+        icon=data.get("icon"),
+        active=data.get("active", True),
+    )
+    
+    db.session.add(category)
+    db.session.commit()
+    
+    return category.to_dict(), 201
+
+
+@api_bp.route("/categories", methods=["GET"])
+def list_categories():
+    """List all categories"""
+    active_only = request.args.get("active_only", "false").lower() == "true"
+    
+    query = Category.query
+    if active_only:
+        query = query.filter_by(active=True)
+    
+    categories = [category.to_dict() for category in query.order_by(Category.name).all()]
+    return jsonify(categories)
+
+
+@api_bp.route("/categories/<int:category_id>", methods=["GET"])
+def get_category(category_id: int):
+    """Get a specific category"""
+    category = Category.query.get_or_404(category_id)
+    return category.to_dict()
+
+
+@api_bp.route("/categories/<int:category_id>", methods=["PUT"])
+@token_auth.login_required
+@role_required(RoleEnum.ADMIN, RoleEnum.EDITOR)
+def update_category(category_id: int):
+    """Update a category"""
+    category = Category.query.get_or_404(category_id)
+    data = request.get_json() or {}
+    
+    if "name" in data:
+        category.name = data["name"]
+    if "slug" in data:
+        # Check if new slug already exists (excluding current category)
+        existing = Category.query.filter(Category.slug == data["slug"], Category.id != category_id).first()
+        if existing:
+            return {"message": "Category with this slug already exists."}, 400
+        category.slug = data["slug"]
+    if "description" in data:
+        category.description = data["description"]
+    if "icon" in data:
+        category.icon = data["icon"]
+    if "active" in data:
+        category.active = data["active"]
+    
+    db.session.commit()
+    
+    return category.to_dict()
+
+
+@api_bp.route("/categories/<int:category_id>", methods=["DELETE"])
+@token_auth.login_required
+@role_required(RoleEnum.ADMIN)
+def delete_category(category_id: int):
+    """Delete a category"""
+    category = Category.query.get_or_404(category_id)
+    db.session.delete(category)
+    db.session.commit()
+    
+    return {"message": "Category deleted successfully"}, 200
+
+
+# ========================================
+# MANUFACTURERS API
+# ========================================
+
+@api_bp.route("/manufacturers", methods=["POST"])
+@token_auth.login_required
+@role_required(RoleEnum.ADMIN, RoleEnum.EDITOR)
+def create_manufacturer():
+    """Create a new manufacturer"""
+    data = request.get_json() or {}
+    
+    if not data.get("name") or not data.get("slug"):
+        return {"message": "Name and slug are required."}, 400
+    
+    # Check if slug already exists
+    if Manufacturer.query.filter_by(slug=data["slug"]).first():
+        return {"message": "Manufacturer with this slug already exists."}, 400
+    
+    manufacturer = Manufacturer(
+        name=data["name"],
+        slug=data["slug"],
+        description=data.get("description"),
+        website=data.get("website"),
+        logo=data.get("logo"),
+        active=data.get("active", True),
+    )
+    
+    db.session.add(manufacturer)
+    db.session.commit()
+    
+    return manufacturer.to_dict(), 201
+
+
+@api_bp.route("/manufacturers", methods=["GET"])
+def list_manufacturers():
+    """List all manufacturers"""
+    active_only = request.args.get("active_only", "false").lower() == "true"
+    
+    query = Manufacturer.query
+    if active_only:
+        query = query.filter_by(active=True)
+    
+    manufacturers = [manufacturer.to_dict() for manufacturer in query.order_by(Manufacturer.name).all()]
+    return jsonify(manufacturers)
+
+
+@api_bp.route("/manufacturers/<int:manufacturer_id>", methods=["GET"])
+def get_manufacturer(manufacturer_id: int):
+    """Get a specific manufacturer"""
+    manufacturer = Manufacturer.query.get_or_404(manufacturer_id)
+    return manufacturer.to_dict()
+
+
+@api_bp.route("/manufacturers/<int:manufacturer_id>", methods=["PUT"])
+@token_auth.login_required
+@role_required(RoleEnum.ADMIN, RoleEnum.EDITOR)
+def update_manufacturer(manufacturer_id: int):
+    """Update a manufacturer"""
+    manufacturer = Manufacturer.query.get_or_404(manufacturer_id)
+    data = request.get_json() or {}
+    
+    if "name" in data:
+        manufacturer.name = data["name"]
+    if "slug" in data:
+        # Check if new slug already exists (excluding current manufacturer)
+        existing = Manufacturer.query.filter(Manufacturer.slug == data["slug"], Manufacturer.id != manufacturer_id).first()
+        if existing:
+            return {"message": "Manufacturer with this slug already exists."}, 400
+        manufacturer.slug = data["slug"]
+    if "description" in data:
+        manufacturer.description = data["description"]
+    if "website" in data:
+        manufacturer.website = data["website"]
+    if "logo" in data:
+        manufacturer.logo = data["logo"]
+    if "active" in data:
+        manufacturer.active = data["active"]
+    
+    db.session.commit()
+    
+    return manufacturer.to_dict()
+
+
+@api_bp.route("/manufacturers/<int:manufacturer_id>", methods=["DELETE"])
+@token_auth.login_required
+@role_required(RoleEnum.ADMIN)
+def delete_manufacturer(manufacturer_id: int):
+    """Delete a manufacturer"""
+    manufacturer = Manufacturer.query.get_or_404(manufacturer_id)
+    db.session.delete(manufacturer)
+    db.session.commit()
+    
+    return {"message": "Manufacturer deleted successfully"}, 200
 

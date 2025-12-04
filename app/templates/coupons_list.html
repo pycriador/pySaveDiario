@@ -1,0 +1,421 @@
+{% extends "base.html" %}
+{% block title %}Cupons de Desconto{% endblock %}
+
+{% block content %}
+<section>
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+    <div>
+      <p class="eyebrow"><i class="bi bi-ticket-perforated-fill"></i> Cupons e Descontos</p>
+      <h1 class="mb-0">Cupons cadastrados</h1>
+      <p class="muted mb-0">Gerencie cupons de desconto dos vendedores.</p>
+    </div>
+    {% if can_manage %}
+    <a href="{{ url_for('web.create_coupon') }}" class="btn btn-primary btn-sm">
+      <i class="bi bi-plus-circle-fill"></i> Novo cupom
+    </a>
+    {% endif %}
+  </div>
+
+  {% if coupons %}
+  <!-- Grid de Cupons -->
+  <div class="grid three">
+    {% for coupon in coupons %}
+    <article class="panel card">
+      <div class="d-flex justify-content-between align-items-start mb-3">
+        <div class="flex-grow-1">
+          <h3 style="font-size: 1.5rem; font-weight: 700; letter-spacing: 0.05em;">
+            <i class="bi bi-ticket-perforated"></i>
+            {{ coupon.code }}
+          </h3>
+          <p class="mb-2 mt-2">
+            <i class="bi bi-shop"></i>
+            <strong class="vendor-name">{{ coupon.seller.name if coupon.seller else 'N/A' }}</strong>
+          </p>
+        </div>
+        <div>
+          {% if coupon.active %}
+          <span class="badge bg-success">
+            <i class="bi bi-check-circle"></i> Ativo
+          </span>
+          {% else %}
+          <span class="badge bg-secondary">
+            <i class="bi bi-x-circle"></i> Inativo
+          </span>
+          {% endif %}
+        </div>
+      </div>
+      
+      {% if coupon.expires_at %}
+      <p class="mb-2 coupon-description">
+        <i class="bi bi-calendar-event"></i>
+        Expira em: {{ coupon.expires_at.strftime('%d/%m/%Y às %H:%M') }}
+      </p>
+      {% else %}
+      <p class="mb-2 coupon-description">
+        <i class="bi bi-infinity"></i>
+        Sem data de expiração
+      </p>
+      {% endif %}
+      
+      <!-- Share Buttons -->
+      <div class="mb-3 mt-3">
+        <small class="text-uppercase text-muted d-block mb-2" style="font-size: 0.7rem; letter-spacing: 0.1em;">
+          <i class="bi bi-share"></i> Compartilhar
+        </small>
+        <div class="d-flex flex-wrap gap-2">
+          <button class="btn btn-sm btn-share btn-instagram" 
+                  data-coupon-id="{{ coupon.id }}"
+                  data-channel="instagram"
+                  data-code="{{ coupon.code|e }}"
+                  data-seller="{{ (coupon.seller.name if coupon.seller else 'N/A')|e }}"
+                  onclick="openShareCouponModal(this)">
+            <i class="bi bi-instagram"></i>
+          </button>
+          <button class="btn btn-sm btn-share btn-facebook" 
+                  data-coupon-id="{{ coupon.id }}"
+                  data-channel="facebook"
+                  data-code="{{ coupon.code|e }}"
+                  data-seller="{{ (coupon.seller.name if coupon.seller else 'N/A')|e }}"
+                  onclick="openShareCouponModal(this)">
+            <i class="bi bi-facebook"></i>
+          </button>
+          <button class="btn btn-sm btn-share btn-whatsapp" 
+                  data-coupon-id="{{ coupon.id }}"
+                  data-channel="whatsapp"
+                  data-code="{{ coupon.code|e }}"
+                  data-seller="{{ (coupon.seller.name if coupon.seller else 'N/A')|e }}"
+                  onclick="openShareCouponModal(this)">
+            <i class="bi bi-whatsapp"></i>
+          </button>
+          <button class="btn btn-sm btn-share btn-telegram" 
+                  data-coupon-id="{{ coupon.id }}"
+                  data-channel="telegram"
+                  data-code="{{ coupon.code|e }}"
+                  data-seller="{{ (coupon.seller.name if coupon.seller else 'N/A')|e }}"
+                  onclick="openShareCouponModal(this)">
+            <i class="bi bi-telegram"></i>
+          </button>
+        </div>
+      </div>
+      
+      <div class="d-flex flex-wrap gap-2 mt-3">
+        {% if can_manage %}
+        <!-- Edit Button -->
+        <a href="{{ url_for('web.edit_coupon', coupon_id=coupon.id) }}" class="btn btn-sm btn-outline-primary">
+          <i class="bi bi-pencil-square"></i> Editar
+        </a>
+        
+        <!-- Toggle Active -->
+        <form method="POST" action="{{ url_for('web.toggle_coupon_active', coupon_id=coupon.id) }}" style="display: inline;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+          {% if coupon.active %}
+          <button type="submit" class="btn btn-sm btn-outline-warning" title="Desativar cupom">
+            <i class="bi bi-pause-circle"></i> Desativar
+          </button>
+          {% else %}
+          <button type="submit" class="btn btn-sm btn-outline-success" title="Ativar cupom">
+            <i class="bi bi-play-circle"></i> Ativar
+          </button>
+          {% endif %}
+        </form>
+        
+        <!-- Delete Button -->
+        <button type="button" 
+                class="btn btn-sm btn-outline-danger" 
+                onclick="confirmDelete('coupon', {{ coupon.id }}, '{{ coupon.code }}')"
+                title="Deletar cupom">
+          <i class="bi bi-trash"></i> Deletar
+        </button>
+        {% endif %}
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="panel text-center" style="padding: 4rem 2rem;">
+    <i class="bi bi-ticket-perforated" style="font-size: 4rem; opacity: 0.3;"></i>
+    <h3 class="mt-3 mb-2">Nenhum cupom cadastrado</h3>
+    <p class="muted mb-4">Comece criando seu primeiro cupom de desconto.</p>
+    {% if can_manage %}
+    <a href="{{ url_for('web.create_coupon') }}" class="btn btn-primary">
+      <i class="bi bi-plus-circle-fill"></i> Criar primeiro cupom
+    </a>
+    {% endif %}
+  </div>
+  {% endif %}
+</section>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="background: var(--panel-solid); border: 1px solid var(--border-color);">
+      <div class="modal-header border-0">
+        <h5 class="modal-title" id="deleteConfirmModalLabel">
+          <i class="bi bi-exclamation-triangle-fill text-danger"></i>
+          Confirmar exclusão
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-3">Tem certeza que deseja deletar o cupom <strong id="deleteItemName"></strong>?</p>
+        <p class="text-danger mb-0">
+          <i class="bi bi-info-circle"></i>
+          Esta ação não pode ser desfeita.
+        </p>
+      </div>
+      <div class="modal-footer border-0">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <form id="deleteForm" method="POST" style="display: inline;">
+          {{ csrf_token() }}
+          <button type="submit" class="btn btn-danger">
+            <i class="bi bi-trash"></i> Deletar
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Share Coupon -->
+<div class="modal fade" id="shareCouponModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content" style="background: var(--panel-solid); border: 1px solid var(--border-color);">
+      <div class="modal-header border-0">
+        <h5 class="modal-title">
+          <i class="bi bi-share"></i> Compartilhar Cupom
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-3">
+          Cupom: <strong id="shareCouponCode"></strong> - <span id="shareCouponSeller"></span>
+        </p>
+        
+        <label class="form-label">
+          <i class="bi bi-file-earmark-text"></i> Selecione um template:
+        </label>
+        
+        <div class="list-group mb-3" id="templateList">
+          {% if templates %}
+            {% for template in templates %}
+            <button type="button" 
+                    class="list-group-item list-group-item-action template-select-btn"
+                    data-template-id="{{ template.id }}"
+                    data-template-name="{{ template.name|e }}"
+                    data-template-body="{{ template.body|e }}"
+                    onclick="selectTemplate(this)">
+              <div class="d-flex justify-content-between align-items-start">
+                <div>
+                  <h6 class="mb-1">
+                    <i class="bi bi-file-earmark-text-fill"></i>
+                    {{ template.name }}
+                  </h6>
+                  <p class="mb-0 text-muted" style="font-size: 0.85rem;">
+                    {{ template.description or 'Sem descrição' }}
+                  </p>
+                </div>
+                <span class="badge bg-primary bg-opacity-25">
+                  <i class="bi bi-share"></i> {{ template.channel_list|length }}
+                </span>
+              </div>
+            </button>
+            {% endfor %}
+          {% else %}
+            <div class="alert alert-warning mb-0">
+              <i class="bi bi-exclamation-triangle"></i>
+              Nenhum template cadastrado. Crie um template primeiro.
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Share Text -->
+<div class="modal fade" id="shareTextModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="background: var(--panel-solid); border: 1px solid var(--border-color);">
+      <div class="modal-header border-0">
+        <h5 class="modal-title">
+          <i class="bi bi-share"></i> Texto para <span id="shareChannel"></span>
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <label class="form-label">Copie o texto abaixo:</label>
+        <textarea id="shareText" class="form-control share-text-area" rows="8" readonly style="background: var(--panel-bg); color: var(--text-primary); border: 1px solid var(--border-color);"></textarea>
+      </div>
+      <div class="modal-footer border-0">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+        <button type="button" class="btn btn-primary" onclick="copyShareText()">
+          <i class="bi bi-clipboard"></i> Copiar texto
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.btn-share {
+  min-width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  border: none;
+  color: white;
+}
+
+.btn-share:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  color: white;
+}
+
+.btn-share i {
+  font-size: 1.1rem;
+}
+
+.btn-instagram {
+  background: linear-gradient(45deg, #f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%);
+}
+
+.btn-facebook {
+  background: #1877f2;
+}
+
+.btn-whatsapp {
+  background: #25d366;
+}
+
+.btn-telegram {
+  background: #0088cc;
+}
+
+.template-select-btn {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.template-select-btn:hover {
+  background-color: var(--bs-primary);
+  color: white;
+  border-color: var(--bs-primary);
+}
+
+.template-select-btn:hover .text-muted {
+  color: rgba(255,255,255,0.8) !important;
+}
+</style>
+
+<script>
+let currentCouponData = {};
+
+// Social network configurations
+const socialNetworkConfigs = {
+  {% if social_configs %}
+  {% for config in social_configs %}
+  '{{ config.network }}': {
+    prefix: {{ (config.prefix_text or '')|tojson }},
+    suffix: {{ (config.suffix_text or '')|tojson }}
+  }{{ ',' if not loop.last else '' }}
+  {% endfor %}
+  {% endif %}
+};
+
+// Share coupon functions
+function openShareCouponModal(button) {
+  // Get data from button attributes
+  const couponId = button.getAttribute('data-coupon-id');
+  const channel = button.getAttribute('data-channel');
+  const code = button.getAttribute('data-code');
+  const seller = button.getAttribute('data-seller');
+  
+  currentCouponData = {
+    id: couponId,
+    channel: channel,
+    code: code,
+    seller: seller
+  };
+  
+  document.getElementById('shareCouponCode').textContent = code;
+  document.getElementById('shareCouponSeller').textContent = seller;
+  
+  const modal = new bootstrap.Modal(document.getElementById('shareCouponModal'));
+  modal.show();
+}
+
+function selectTemplate(button) {
+  // Get data from button attributes
+  let templateBody = button.getAttribute('data-template-body');
+  
+  // Decode HTML entities (because Jinja2 |e escapes them)
+  const textarea = document.createElement('textarea');
+  textarea.innerHTML = templateBody;
+  templateBody = textarea.value;
+  
+  // Replace placeholders with coupon data
+  let text = templateBody;
+  
+  // Coupon code
+  text = text.replace(/{coupon_code}/gi, currentCouponData.code || '');
+  text = text.replace(/{code}/gi, currentCouponData.code || '');
+  text = text.replace(/{cupom}/gi, currentCouponData.code || '');
+  
+  // Seller/Vendor info
+  text = text.replace(/{seller}/gi, currentCouponData.seller || '');
+  text = text.replace(/{seller_name}/gi, currentCouponData.seller || '');
+  text = text.replace(/{vendor}/gi, currentCouponData.seller || '');
+  text = text.replace(/{vendor_name}/gi, currentCouponData.seller || '');
+  text = text.replace(/{loja}/gi, currentCouponData.seller || '');
+  
+  // Apply social network prefix and suffix
+  const channel = currentCouponData.channel.toLowerCase();
+  if (socialNetworkConfigs[channel]) {
+    const config = socialNetworkConfigs[channel];
+    const prefix = config.prefix || '';
+    const suffix = config.suffix || '';
+    text = prefix + text + suffix;
+  }
+  
+  // Show text in modal
+  document.getElementById('shareText').value = text;
+  document.getElementById('shareChannel').textContent = currentCouponData.channel.charAt(0).toUpperCase() + currentCouponData.channel.slice(1);
+  
+  // Hide template selection modal
+  bootstrap.Modal.getInstance(document.getElementById('shareCouponModal')).hide();
+  
+  // Show text modal
+  const textModal = new bootstrap.Modal(document.getElementById('shareTextModal'));
+  textModal.show();
+}
+
+function copyShareText() {
+  const textarea = document.getElementById('shareText');
+  textarea.select();
+  document.execCommand('copy');
+  window.showToast('Texto copiado para a área de transferência!', 'success');
+}
+
+function confirmDelete(type, id, name) {
+  const modal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+  const deleteForm = document.getElementById('deleteForm');
+  const deleteItemName = document.getElementById('deleteItemName');
+  
+  // Set item name
+  deleteItemName.textContent = name;
+  
+  // Set form action
+  if (type === 'coupon') {
+    deleteForm.action = `/cupons/${id}/delete`;
+  }
+  
+  // Show modal
+  modal.show();
+}
+</script>
+{% endblock %}
+

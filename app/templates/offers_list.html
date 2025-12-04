@@ -1,0 +1,438 @@
+{% extends "base.html" %}
+{% block title %}Ofertas{% endblock %}
+
+{% block content %}
+<section>
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+    <div>
+      <p class="eyebrow"><i class="bi bi-tags-fill"></i> Comparador multi lojistas</p>
+      <h1 class="mb-0">Ofertas acompanhadas</h1>
+      <p class="muted mb-0">Filtre via URL ou formulário para descobrir preços por vendedor.</p>
+    </div>
+    {% if can_manage %}
+    <a href="{{ url_for('web.create_offer') }}" class="btn btn-primary btn-sm">
+      <i class="bi bi-plus-circle-fill"></i> Nova oferta
+    </a>
+    {% endif %}
+  </div>
+
+  <!-- Filtros Dinâmicos -->
+  <div class="panel mb-4">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+      <h5 class="mb-0">
+        <i class="bi bi-funnel-fill"></i> Filtros
+      </h5>
+      <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearFilters()">
+        <i class="bi bi-x-circle"></i> Limpar
+      </button>
+    </div>
+    
+    <form id="filterForm" class="row g-3" method="get" action="{{ url_for('web.offers') }}">
+      <!-- Search -->
+      <div class="col-md-6">
+        <label class="form-label" for="search">
+          <i class="bi bi-search"></i> Busca geral
+        </label>
+        <input 
+          class="form-control" 
+          type="text" 
+          name="search" 
+          id="search" 
+          placeholder="Nome, slug ou vendedor..." 
+          value="{{ filters.search or '' }}"
+          autocomplete="off" />
+        <small class="text-muted">
+          <i class="bi bi-info-circle"></i> Busca por nome do produto, slug ou vendedor
+        </small>
+      </div>
+      
+      <!-- Active Only Checkbox -->
+      <div class="col-md-6">
+        <label class="form-label d-block">&nbsp;</label>
+        <div class="form-check form-switch" style="padding-top: 0.5rem;">
+          <input 
+            class="form-check-input" 
+            type="checkbox" 
+            name="active_only" 
+            id="active_only" 
+            value="true"
+            {% if filters.active_only %}checked{% endif %}>
+          <label class="form-check-label" for="active_only">
+            <i class="bi bi-check-circle"></i> Apenas ofertas ativas (não expiradas)
+          </label>
+        </div>
+      </div>
+      
+      <!-- Manufacturer -->
+      <div class="col-md-3">
+        <label class="form-label" for="manufacturer">
+          <i class="bi bi-gear-fill"></i> Fabricante
+        </label>
+        <select class="form-select" name="manufacturer" id="manufacturer">
+          <option value="">Todos</option>
+          {% for mfr in manufacturers %}
+          <option value="{{ mfr.id }}" {% if filters.manufacturer == mfr.id %}selected{% endif %}>
+            {{ mfr.name }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      
+      <!-- Category -->
+      <div class="col-md-3">
+        <label class="form-label" for="category">
+          <i class="bi bi-tags"></i> Categoria
+        </label>
+        <select class="form-select" name="category" id="category">
+          <option value="">Todas</option>
+          {% for cat in categories %}
+          <option value="{{ cat.id }}" {% if filters.category == cat.id %}selected{% endif %}>
+            {{ cat.name }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      
+      <!-- Seller -->
+      <div class="col-md-3">
+        <label class="form-label" for="seller">
+          <i class="bi bi-shop"></i> Vendedor
+        </label>
+        <select class="form-select" name="seller" id="seller">
+          <option value="">Todos</option>
+          {% for s in sellers %}
+          <option value="{{ s.id }}" {% if filters.seller == s.id %}selected{% endif %}>
+            {{ s.name }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      
+      <!-- Price Range -->
+      <div class="col-md-3">
+        <label class="form-label">
+          <i class="bi bi-currency-dollar"></i> Faixa de preço
+        </label>
+        <div class="input-group">
+          <input 
+            class="form-control" 
+            type="number" 
+            step="0.01" 
+            name="min_price" 
+            id="min_price" 
+            placeholder="Min" 
+            value="{{ filters.min_price or '' }}" />
+          <span class="input-group-text">até</span>
+          <input 
+            class="form-control" 
+            type="number" 
+            step="0.01" 
+            name="max_price" 
+            id="max_price" 
+            placeholder="Max" 
+            value="{{ filters.max_price or '' }}" />
+        </div>
+      </div>
+    </form>
+    
+    <!-- Results count -->
+    <div class="mt-3 pt-3" style="border-top: 1px solid var(--border-color);">
+      <p class="mb-0 text-muted">
+        <i class="bi bi-check2-circle"></i> 
+        <strong>{{ offers|length }}</strong> oferta(s) encontrada(s)
+      </p>
+    </div>
+  </div>
+
+  <!-- Grid de Ofertas -->
+  <div class="grid three">
+    {% for offer in offers %}
+    <article class="panel card">
+      <div class="d-flex justify-content-between align-items-start mb-2">
+        <h3 style="font-size: 1.25rem;">
+          <i class="bi bi-box-seam"></i>
+          {{ offer.product.name if offer.product else 'Oferta' }}
+        </h3>
+      </div>
+      
+      <div class="mb-2">
+        {% if offer.old_price %}
+        <div class="text-muted text-decoration-line-through mb-1" style="font-size: 0.9rem;">
+          <i class="bi bi-dash-circle"></i>
+          {{ offer.currency }} {{ '%.2f'|format(offer.old_price) }}
+        </div>
+        {% endif %}
+        <div class="price">
+          <i class="bi bi-tag-fill"></i>
+          {{ offer.currency }} {{ '%.2f'|format(offer.price_value) }}
+          {% if offer.old_price and offer.old_price > offer.price_value %}
+          <span class="badge bg-success ms-2">
+            -{{ '%.0f'|format(((offer.old_price - offer.price_value) / offer.old_price * 100)) }}%
+          </span>
+          {% endif %}
+        </div>
+      </div>
+      
+      <p class="mb-2">
+        <i class="bi bi-shop"></i>
+        <strong class="vendor-name">{{ offer.vendor_name }}</strong>
+      </p>
+      
+      <p class="offer-description" style="font-size: 0.9rem; min-height: 3rem;">
+        {{ offer.product.description if offer.product else "Sem descrição" }}
+      </p>
+      
+      {% if offer.offer_url %}
+      <p class="mb-3">
+        <i class="bi bi-link-45deg"></i>
+        <a href="{{ offer.offer_url }}" target="_blank" rel="noopener noreferrer" style="text-decoration: none;">
+          Ver oferta <i class="bi bi-box-arrow-up-right" style="font-size: 0.8rem;"></i>
+        </a>
+      </p>
+      {% endif %}
+      
+      <!-- Share Button -->
+      <div class="mb-3 mt-3 d-flex gap-2 align-items-center">
+        <a href="{{ url_for('web.share_offer', offer_id=offer.id) }}" 
+           class="btn btn-sm btn-outline-primary">
+          <i class="bi bi-share"></i> Compartilhar
+        </a>
+      </div>
+      
+      <!-- Action buttons -->
+      {% if can_manage %}
+      <div class="mt-3 d-flex justify-content-end gap-2">
+        <a href="{{ url_for('web.edit_offer', offer_id=offer.id) }}" class="btn btn-sm btn-outline-primary">
+          <i class="bi bi-pencil-square"></i> Editar
+        </a>
+        <button type="button" class="btn btn-sm btn-danger" 
+                onclick="confirmDelete({{ offer.id }}, '{{ offer.product.name if offer.product else 'Oferta' }}', 'offer')">
+          <i class="bi bi-trash"></i> Deletar
+        </button>
+      </div>
+      {% endif %}
+    </article>
+    {% else %}
+    <div class="col-12">
+      <div class="panel text-center py-5">
+        <i class="bi bi-inbox" style="font-size: 3rem; color: var(--text-muted);"></i>
+        <p class="mt-3 muted">Nenhuma oferta encontrada para esse filtro.</p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+
+
+<!-- Modal: Confirmar Deleção -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title" id="deleteConfirmModalLabel">
+          <i class="bi bi-exclamation-triangle-fill"></i> Confirmar Exclusão
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <div class="text-center py-3">
+          <i class="bi bi-trash text-danger" style="font-size: 4rem;"></i>
+          <h5 class="mt-3 mb-3">Tem certeza que deseja deletar?</h5>
+          <div class="alert alert-warning d-flex align-items-start gap-2">
+            <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+            <div class="text-start">
+              <strong id="deleteItemName" class="text-break"></strong>
+              <p class="mb-0 mt-2">Esta ação não pode ser desfeita.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          <i class="bi bi-x-circle"></i> Cancelar
+        </button>
+        <form id="deleteForm" method="POST" style="display: inline;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-danger">
+            <i class="bi bi-trash"></i> Sim, deletar
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<style>
+/* Share buttons */
+.btn-share {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  color: white;
+}
+
+.btn-share:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  color: white;
+}
+
+.btn-share i {
+  font-size: 1.1rem;
+}
+
+.btn-instagram {
+  background: linear-gradient(45deg, #f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%);
+}
+
+.btn-facebook {
+  background: #1877f2;
+}
+
+.btn-whatsapp {
+  background: #25d366;
+}
+
+.btn-telegram {
+  background: #0088cc;
+}
+
+.template-select-btn {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.template-select-btn:hover {
+  background-color: var(--bs-primary);
+  color: white;
+  border-color: var(--bs-primary);
+}
+
+.template-select-btn:hover .text-muted {
+  color: rgba(255,255,255,0.8) !important;
+}
+</style>
+
+<script>
+let currentOfferData = {};
+
+// Social network configurations
+const socialNetworkConfigs = {
+  {% if social_configs %}
+  {% for config in social_configs %}
+  '{{ config.network }}': {
+    prefix: {{ (config.prefix_text or '')|tojson }},
+    suffix: {{ (config.suffix_text or '')|tojson }}
+  }{{ ',' if not loop.last else '' }}
+  {% endfor %}
+  {% endif %}
+};
+
+// Confirm delete function for offers
+function confirmDelete(id, name, type) {
+  const modal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+  const deleteForm = document.getElementById('deleteForm');
+  const deleteItemName = document.getElementById('deleteItemName');
+  
+  // Set item name
+  deleteItemName.textContent = name;
+  
+  // Set form action based on type
+  if (type === 'template') {
+    deleteForm.action = `/templates/${id}/delete`;
+  } else if (type === 'offer') {
+    deleteForm.action = `/ofertas/${id}/delete`;
+  }
+  
+  // Show modal
+  modal.show();
+}
+
+// Dynamic filter functionality
+let filterTimeout;
+
+function updateFilters() {
+  clearTimeout(filterTimeout);
+  filterTimeout = setTimeout(() => {
+    applyFilters();
+  }, 500); // 500ms delay after user stops typing
+}
+
+function applyFilters() {
+  const form = document.getElementById('filterForm');
+  const formData = new FormData(form);
+  const params = new URLSearchParams();
+  
+  // Build URL parameters
+  for (const [key, value] of formData.entries()) {
+    if (value && value.trim() !== '') {
+      params.append(key, value);
+    }
+  }
+  
+  // Handle checkbox separately (only add if checked)
+  const activeOnly = document.getElementById('active_only');
+  if (activeOnly.checked) {
+    params.set('active_only', 'true');
+  } else {
+    params.set('active_only', 'false');
+  }
+  
+  // Update URL and reload
+  const newUrl = `${window.location.pathname}?${params.toString()}`;
+  window.location.href = newUrl;
+}
+
+function clearFilters() {
+  // Clear all form fields
+  document.getElementById('search').value = '';
+  document.getElementById('manufacturer').value = '';
+  document.getElementById('category').value = '';
+  document.getElementById('seller').value = '';
+  document.getElementById('min_price').value = '';
+  document.getElementById('max_price').value = '';
+  document.getElementById('active_only').checked = true; // Default checked
+  
+  // Reload without parameters (but keep active_only=true)
+  window.location.href = `${window.location.pathname}?active_only=true`;
+}
+
+// Add event listeners for dynamic filtering
+document.addEventListener('DOMContentLoaded', function() {
+  const searchInput = document.getElementById('search');
+  const manufacturerSelect = document.getElementById('manufacturer');
+  const categorySelect = document.getElementById('category');
+  const sellerSelect = document.getElementById('seller');
+  const minPriceInput = document.getElementById('min_price');
+  const maxPriceInput = document.getElementById('max_price');
+  const activeOnlyCheckbox = document.getElementById('active_only');
+  
+  // Text inputs - update while typing with delay
+  searchInput.addEventListener('input', updateFilters);
+  minPriceInput.addEventListener('input', updateFilters);
+  maxPriceInput.addEventListener('input', updateFilters);
+  
+  // Selects - update immediately
+  manufacturerSelect.addEventListener('change', applyFilters);
+  categorySelect.addEventListener('change', applyFilters);
+  sellerSelect.addEventListener('change', applyFilters);
+  activeOnlyCheckbox.addEventListener('change', applyFilters);
+  
+  // Prevent form submit (we handle it via JS)
+  document.getElementById('filterForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    applyFilters();
+  });
+});
+</script>
+{% endblock %}

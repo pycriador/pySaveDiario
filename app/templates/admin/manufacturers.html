@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+{% block title %}Fabricantes{% endblock %}
+
+{% block content %}
+<section>
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+    <div>
+      <p class="eyebrow"><i class="bi bi-building"></i> Administração</p>
+      <h1 class="mb-0">Fabricantes</h1>
+      <p class="muted mb-0">Gerenciar marcas e fabricantes</p>
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#createManufacturerModal">
+        <i class="bi bi-plus-circle-fill"></i> Novo fabricante
+      </button>
+      <a class="btn btn-outline-light btn-sm" href="{{ url_for('web.admin_dashboard') }}">
+        <i class="bi bi-arrow-left"></i> Voltar
+      </a>
+    </div>
+  </div>
+
+  <div class="grid three">
+    {% for manufacturer in manufacturers %}
+    <article class="panel card">
+      <div class="d-flex justify-content-between align-items-start mb-3">
+        <div class="flex-grow-1">
+          <h3 class="d-flex align-items-center gap-2">
+            <i class="bi bi-building"></i>
+            {{ manufacturer.name }}
+            {% if not manufacturer.active %}
+            <span class="badge bg-danger bg-opacity-25 text-white">Inativo</span>
+            {% else %}
+            <span class="badge bg-success bg-opacity-25 text-white">Ativo</span>
+            {% endif %}
+          </h3>
+          {% if manufacturer.description %}
+          <p class="muted mb-0 small">{{ manufacturer.description }}</p>
+          {% endif %}
+        </div>
+        <div class="d-flex gap-2">
+          {% if current_user.role.value in ['admin', 'editor'] %}
+          <form method="POST" action="{{ url_for('web.admin_manufacturer_toggle', manufacturer_id=manufacturer.id) }}" class="d-inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            {% if manufacturer.active %}
+            <button type="submit" class="btn btn-outline-warning btn-sm" title="Desativar">
+              <i class="bi bi-pause-circle"></i>
+            </button>
+            {% else %}
+            <button type="submit" class="btn btn-outline-success btn-sm" title="Ativar">
+              <i class="bi bi-play-circle"></i>
+            </button>
+            {% endif %}
+          </form>
+          {% endif %}
+          {% if current_user.role.value == 'admin' %}
+          <button type="button" class="btn btn-outline-danger btn-sm" 
+                  onclick="confirmDelete({{ manufacturer.id }}, '{{ manufacturer.name }}', 'manufacturer')"
+                  title="Deletar">
+            <i class="bi bi-trash"></i>
+          </button>
+          {% endif %}
+        </div>
+      </div>
+      
+      <div class="d-flex flex-column gap-2 mt-3">
+        <small class="muted">Slug: <code>{{ manufacturer.slug }}</code></small>
+        {% if manufacturer.website %}
+        <a href="{{ manufacturer.website }}" target="_blank" class="text-decoration-none small">
+          <i class="bi bi-globe"></i> {{ manufacturer.website }}
+        </a>
+        {% endif %}
+      </div>
+    </article>
+    {% else %}
+    <div class="col-12">
+      <div class="panel text-center py-5">
+        <i class="bi bi-building" style="font-size: 3rem; color: var(--text-muted);"></i>
+        <p class="mt-3 muted">Nenhum fabricante cadastrado.</p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- Modal: Create Manufacturer -->
+<div class="modal fade" id="createManufacturerModal" tabindex="-1" aria-labelledby="createManufacturerModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="createManufacturerModalLabel">
+          <i class="bi bi-plus-circle-fill"></i> Novo fabricante
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <form method="post" id="createManufacturerForm" class="row g-3">
+          {{ form.hidden_tag() }}
+          
+          <div class="col-12">
+            <label class="form-label" for="{{ form.name.id }}">
+              <i class="bi bi-building"></i> Nome do fabricante *
+            </label>
+            {{ form.name(class="form-control", placeholder="Ex: Sony") }}
+          </div>
+          
+          <div class="col-12">
+            <label class="form-label" for="{{ form.slug.id }}">
+              <i class="bi bi-link-45deg"></i> Slug *
+            </label>
+            {{ form.slug(class="form-control", placeholder="sony") }}
+          </div>
+          
+          <div class="col-12">
+            <label class="form-label" for="{{ form.description.id }}">
+              <i class="bi bi-text-paragraph"></i> Descrição
+            </label>
+            {{ form.description(class="form-control", rows="2") }}
+          </div>
+          
+          <div class="col-12">
+            <label class="form-label" for="{{ form.website.id }}">
+              <i class="bi bi-globe"></i> Website
+            </label>
+            {{ form.website(class="form-control", placeholder="https://exemplo.com") }}
+          </div>
+          
+          <div class="col-12">
+            <label class="form-label" for="{{ form.logo.id }}">
+              <i class="bi bi-image"></i> URL do logo
+            </label>
+            {{ form.logo(class="form-control", placeholder="https://exemplo.com/logo.png") }}
+          </div>
+          
+          <div class="col-12">
+            <div class="form-check">
+              {{ form.active(class="form-check-input") }}
+              <label class="form-check-label" for="{{ form.active.id }}">
+                Fabricante ativo
+              </label>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+          <i class="bi bi-x-circle"></i> Cancelar
+        </button>
+        <button type="submit" form="createManufacturerForm" name="manufacturer-submit" class="btn btn-info">
+          <i class="bi bi-check-circle"></i> Criar fabricante
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Confirmar Deleção -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title" id="deleteConfirmModalLabel">
+          <i class="bi bi-exclamation-triangle-fill"></i> Confirmar Exclusão
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <div class="text-center py-3">
+          <i class="bi bi-trash text-danger" style="font-size: 4rem;"></i>
+          <h5 class="mt-3 mb-3">Tem certeza que deseja deletar?</h5>
+          <div class="alert alert-warning d-flex align-items-start gap-2">
+            <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+            <div class="text-start">
+              <strong id="deleteItemName" class="text-break"></strong>
+              <p class="mb-0 mt-2">Esta ação não pode ser desfeita.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          <i class="bi bi-x-circle"></i> Cancelar
+        </button>
+        <form id="deleteForm" method="POST" style="display: inline;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-danger">
+            <i class="bi bi-trash"></i> Sim, deletar
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function confirmDelete(id, name, type) {
+  const modal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+  const deleteForm = document.getElementById('deleteForm');
+  const deleteItemName = document.getElementById('deleteItemName');
+  
+  // Set item name
+  deleteItemName.textContent = name;
+  
+  // Set form action based on type
+  if (type === 'category') {
+    deleteForm.action = `/admin/categories/${id}/delete`;
+  } else if (type === 'seller') {
+    deleteForm.action = `/admin/sellers/${id}/delete`;
+  } else if (type === 'manufacturer') {
+    deleteForm.action = `/admin/manufacturers/${id}/delete`;
+  }
+  
+  // Show modal
+  modal.show();
+}
+</script>
+{% endblock %}
+

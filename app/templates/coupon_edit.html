@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Editar Cupom{% endblock %}
+
+{% block content %}
+<section>
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+    <div>
+      <p class="eyebrow"><i class="bi bi-pencil-square"></i> Editar Cupom</p>
+      <h1 class="mb-0">Atualizar Dados</h1>
+      <p class="muted mb-0">Modifique os dados do cupom conforme necessário</p>
+    </div>
+    <a href="{{ url_for('web.coupons') }}" class="btn btn-outline-light btn-sm">
+      <i class="bi bi-arrow-left"></i> Voltar para Lista
+    </a>
+  </div>
+
+  <div class="panel">
+    <form method="post" class="row g-4">
+      {{ form.hidden_tag() }}
+      
+      <div class="col-md-6">
+        <label class="form-label">
+          <i class="bi bi-shop"></i> Vendedor *
+        </label>
+        {{ form.seller_id(class="form-select", id="seller_id") }}
+      </div>
+      
+      <div class="col-md-6">
+        <label class="form-label" for="{{ form.code.id }}">
+          <i class="bi bi-ticket-perforated"></i> Código do Cupom *
+        </label>
+        {{ form.code(class="form-control", placeholder="Ex: SAVE20", required=True, style="text-transform: uppercase;") }}
+        <small class="text-muted">
+          <i class="bi bi-info-circle"></i> Será convertido para maiúsculas automaticamente
+        </small>
+      </div>
+      
+      <div class="col-md-4">
+        <label class="form-label" for="{{ form.expires_date.id }}">
+          <i class="bi bi-calendar-event"></i> Data de expiração
+        </label>
+        {{ form.expires_date(class="form-control") }}
+        <small class="text-muted">
+          <i class="bi bi-info-circle"></i> Opcional
+        </small>
+      </div>
+      
+      <div class="col-md-4">
+        <label class="form-label" for="{{ form.expires_time.id }}">
+          <i class="bi bi-clock"></i> Hora de expiração
+        </label>
+        {{ form.expires_time(class="form-control") }}
+        <small class="text-muted">
+          <i class="bi bi-info-circle"></i> Opcional
+        </small>
+      </div>
+      
+      <div class="col-md-4">
+        <label class="form-label d-block">&nbsp;</label>
+        <div class="form-check form-switch" style="padding-top: 0.5rem;">
+          {{ form.active(class="form-check-input", id="active") }}
+          <label class="form-check-label" for="active">
+            <i class="bi bi-check-circle"></i> Cupom ativo
+          </label>
+        </div>
+      </div>
+      
+      <div class="col-12 mt-4">
+        <hr>
+        <div class="d-flex justify-content-between align-items-center">
+          <button type="button" class="btn btn-outline-secondary" onclick="window.history.back()">
+            <i class="bi bi-x-circle"></i> Cancelar
+          </button>
+          <button type="submit" class="btn btn-primary btn-lg">
+            <i class="bi bi-check-circle"></i> Atualizar Cupom
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+  </section>
+  
+{% endblock %}

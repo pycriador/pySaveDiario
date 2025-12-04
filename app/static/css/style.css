@@ -741,12 +741,32 @@ pre {
 }
 
 .input-group .btn {
-  border-radius: 0 var(--radius-full) var(--radius-full) 0;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
 }
 
 .input-group .form-select,
 .input-group .form-control {
-  border-radius: var(--radius-full) 0 0 var(--radius-full);
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+}
+
+.input-group .input-group-text {
+  border-radius: 0;
+  background: var(--panel-bg);
+  color: var(--text-secondary);
+  border-color: var(--border-color);
+}
+
+/* Price range input group specific styles */
+.input-group .form-control:first-child {
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+}
+
+.input-group .form-control:last-child {
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+.input-group .form-control:not(:first-child):not(:last-child) {
+  border-radius: 0;
 }
 
 /* === Animations === */
@@ -846,6 +866,244 @@ pre {
     width: 100%;
     justify-content: center;
   }
+}
+
+/* === Text Muted Improvements === */
+/* Improve readability of muted text in dark theme */
+:root:not(.light-theme) .text-muted,
+:root:not(.light-theme) small.text-muted {
+  color: var(--text-secondary) !important;
+  opacity: 0.9;
+}
+
+:root:not(.light-theme) .form-label .text-muted,
+:root:not(.light-theme) small.text-muted {
+  color: #cbd5e1 !important;
+}
+
+/* Light theme keeps default bootstrap muted color */
+:root.light-theme .text-muted {
+  color: #6c757d !important;
+}
+
+/* === Vendor Name and Offer Description === */
+/* Ensure vendor name is always visible in dark theme */
+:root:not(.light-theme) .vendor-name {
+  color: var(--text-primary) !important;
+}
+
+:root.light-theme .vendor-name {
+  color: var(--text-primary);
+}
+
+/* Offer description with good contrast in both themes */
+:root:not(.light-theme) .offer-description {
+  color: var(--text-secondary);
+}
+
+:root.light-theme .offer-description {
+  color: var(--text-secondary);
+}
+
+/* Icons in offers list - ensure visibility in dark theme */
+:root:not(.light-theme) .panel.card .bi,
+:root:not(.light-theme) .panel.card i {
+  color: var(--text-primary);
+  opacity: 0.9;
+}
+
+:root.light-theme .panel.card .bi,
+:root.light-theme .panel.card i {
+  color: var(--text-primary);
+  opacity: 0.8;
+}
+
+/* === Modal Fixes === */
+/* Prevent page shift when modal opens (scrollbar issue) */
+body.modal-open {
+  overflow: hidden;
+  padding-right: 0 !important;
+}
+
+.modal-open .site-header,
+.modal-open .navbar {
+  padding-right: 0 !important;
+}
+
+/* Smooth modal transitions */
+.modal.fade .modal-dialog {
+  transition: transform 0.2s ease-out;
+}
+
+.modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+/* === Dropdown Menu Styles === */
+.dropdown-menu {
+  background: var(--panel-solid);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  padding: 0.5rem 0;
+  margin-top: 0.5rem;
+}
+
+.dropdown-item {
+  color: var(--text-primary);
+  padding: 0.75rem 1.5rem;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.dropdown-item i {
+  font-size: 1.1rem;
+  opacity: 0.8;
+  width: 1.2rem;
+  text-align: center;
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus {
+  background: var(--panel-hover);
+  color: var(--accent-primary);
+}
+
+.dropdown-item:hover i {
+  opacity: 1;
+  color: var(--accent-primary);
+}
+
+.dropdown-divider {
+  border-color: var(--border-color);
+  margin: 0.5rem 0;
+  opacity: 0.3;
+}
+
+.dropdown-toggle::after {
+  margin-left: 0.5rem;
+  vertical-align: 0.15em;
+}
+
+/* Light theme dropdown */
+:root.light-theme .dropdown-menu {
+  background: white;
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+:root.light-theme .dropdown-item {
+  color: var(--text-primary);
+}
+
+:root.light-theme .dropdown-item:hover {
+  background: var(--panel-hover);
+}
+
+/* === Coupon Description Colors === */
+/* Better readability for coupon descriptions in dark theme */
+:root:not(.light-theme) .coupon-description {
+  color: var(--text-secondary);
+}
+
+:root.light-theme .coupon-description {
+  color: var(--text-muted);
+}
+
+/* === Datetime Input Improvements === */
+/* Better styling for datetime-local inputs */
+input[type="datetime-local"] {
+  padding: 0.6rem 0.75rem;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
+}
+
+input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
+  background: var(--panel-hover);
+}
+
+/* Dark theme datetime input */
+:root:not(.light-theme) input[type="datetime-local"] {
+  color-scheme: dark;
+  background: var(--panel-bg);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+:root:not(.light-theme) input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  opacity: 0.8;
+}
+
+:root:not(.light-theme) input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+/* Light theme datetime input */
+:root.light-theme input[type="datetime-local"] {
+  color-scheme: light;
+}
+
+/* === Share Buttons === */
+.btn-share {
+  min-width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  border: none;
+  color: white;
+}
+
+.btn-share:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  color: white;
+}
+
+.btn-share i {
+  font-size: 1.1rem;
+}
+
+.btn-instagram {
+  background: linear-gradient(45deg, #f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%);
+}
+
+.btn-facebook {
+  background: #1877f2;
+}
+
+.btn-whatsapp {
+  background: #25d366;
+}
+
+.btn-telegram {
+  background: #0088cc;
+}
+
+.template-select-btn {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.template-select-btn:hover {
+  background-color: var(--bs-primary);
+  color: white;
+  border-color: var(--bs-primary);
+}
+
+.template-select-btn:hover .text-muted {
+  color: rgba(255,255,255,0.8) !important;
 }
 
 /* === Print Styles === */

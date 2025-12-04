@@ -1,0 +1,426 @@
+{% extends "base.html" %}
+{% block title %}Nova Oferta{% endblock %}
+
+{% block content %}
+<section>
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+    <div>
+      <p class="eyebrow"><i class="bi bi-tags-fill"></i> Criar Nova Oferta</p>
+      <h1 class="mb-0">Formulário de Cadastro</h1>
+      <p class="muted mb-0">Preencha os dados para criar uma nova oferta</p>
+    </div>
+    <a href="{{ url_for('web.offers') }}" class="btn btn-outline-light btn-sm">
+      <i class="bi bi-arrow-left"></i> Voltar para Lista
+    </a>
+  </div>
+
+  <div class="panel">
+    <form method="post" class="row g-4">
+      {{ form.hidden_tag() }}
+      
+      <!-- Product Section -->
+      <div class="col-12">
+        <h5 class="text-uppercase text-muted mb-3" style="font-size: 0.85rem; letter-spacing: 0.1em; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+          <i class="bi bi-box"></i> Informações do Produto
+        </h5>
+      </div>
+      
+      <div class="col-md-6">
+        <label class="form-label" for="{{ form.product_name.id }}">
+          <i class="bi bi-box-seam"></i> Nome do produto *
+        </label>
+        {{ form.product_name(class="form-control", placeholder="Ex: iPhone 15 Pro Max", required=True) }}
+      </div>
+      
+      <div class="col-md-6">
+        <label class="form-label" for="{{ form.product_slug.id }}">
+          <i class="bi bi-link-45deg"></i> Slug do produto *
+        </label>
+        {{ form.product_slug(class="form-control", placeholder="iphone-15-pro-max", required=True) }}
+      </div>
+      
+      <div class="col-12">
+        <label class="form-label" for="{{ form.product_description.id }}">
+          <i class="bi bi-text-paragraph"></i> Descrição do produto
+        </label>
+        {{ form.product_description(class="form-control", rows="3", placeholder="Descrição detalhada do produto") }}
+      </div>
+      
+      <!-- Classificação do Produto -->
+      <div class="col-12 mt-4">
+        <h5 class="text-uppercase text-muted mb-3" style="font-size: 0.85rem; letter-spacing: 0.1em; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+          <i class="bi bi-tag"></i> Classificação
+        </h5>
+      </div>
+      
+      <div class="col-md-4">
+        <label class="form-label">
+          <i class="bi bi-tag"></i> Categoria
+        </label>
+        <div class="input-group">
+          {{ form.category_id(class="form-select", id="category_id") }}
+          <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#quickCreateCategoryModal" title="Criar Nova Categoria">
+            <i class="bi bi-plus-circle"></i>
+          </button>
+        </div>
+      </div>
+      
+      <div class="col-md-4">
+        <label class="form-label">
+          <i class="bi bi-building"></i> Fabricante
+        </label>
+        <div class="input-group">
+          {{ form.manufacturer_id(class="form-select", id="manufacturer_id") }}
+          <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#quickCreateManufacturerModal" title="Criar Novo Fabricante">
+            <i class="bi bi-plus-circle"></i>
+          </button>
+        </div>
+      </div>
+      
+      <div class="col-md-4">
+        <label class="form-label">
+          <i class="bi bi-shop"></i> Vendedor
+        </label>
+        <div class="input-group">
+          {{ form.seller_id(class="form-select", id="seller_id") }}
+          <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#quickCreateSellerModal" title="Criar Novo Vendedor">
+            <i class="bi bi-plus-circle"></i>
+          </button>
+        </div>
+      </div>
+      
+      <!-- Preços -->
+      <div class="col-12 mt-4">
+        <h5 class="text-uppercase text-muted mb-3" style="font-size: 0.85rem; letter-spacing: 0.1em; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+          <i class="bi bi-cash"></i> Preços
+        </h5>
+      </div>
+      
+      <div class="col-md-4">
+        <label class="form-label" for="{{ form.price.id }}">
+          <i class="bi bi-cash"></i> Preço Atual *
+        </label>
+        {{ form.price(class="form-control", placeholder="0.00", required=True, step="0.01") }}
+      </div>
+      
+      <div class="col-md-4">
+        <label class="form-label" for="{{ form.old_price.id }}">
+          <i class="bi bi-cash-stack"></i> Preço Antigo
+        </label>
+        {{ form.old_price(class="form-control", placeholder="0.00", step="0.01") }}
+        <small class="text-muted">
+          <i class="bi bi-info-circle"></i> Opcional - Para mostrar desconto
+        </small>
+      </div>
+      
+      <div class="col-md-4">
+        <label class="form-label" for="{{ form.currency.id }}">
+          <i class="bi bi-currency-exchange"></i> Moeda
+        </label>
+        {{ form.currency(class="form-select", id="currency") }}
+      </div>
+      
+      <!-- Validade -->
+      <div class="col-12 mt-4">
+        <h5 class="text-uppercase text-muted mb-3" style="font-size: 0.85rem; letter-spacing: 0.1em; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+          <i class="bi bi-link"></i> Link e Validade
+        </h5>
+      </div>
+      
+      <div class="col-md-12">
+        <label class="form-label" for="{{ form.offer_url.id }}">
+          <i class="bi bi-link"></i> URL da oferta
+        </label>
+        {{ form.offer_url(class="form-control", placeholder="https://...") }}
+      </div>
+      
+      <div class="col-md-6">
+        <label class="form-label" for="{{ form.expires_date.id }}">
+          <i class="bi bi-calendar-event"></i> Data de expiração
+        </label>
+        <input type="date" 
+               id="{{ form.expires_date.id }}" 
+               name="{{ form.expires_date.name }}" 
+               class="form-control">
+        <small class="text-muted">
+          <i class="bi bi-info-circle"></i>
+          Data (opcional)
+        </small>
+      </div>
+      
+      <div class="col-md-6">
+        <label class="form-label" for="{{ form.expires_time.id }}">
+          <i class="bi bi-clock"></i> Hora de expiração
+        </label>
+        <input type="time" 
+               id="{{ form.expires_time.id }}" 
+               name="{{ form.expires_time.name }}" 
+               class="form-control"
+               value="00:00">
+        <small class="text-muted">
+          <i class="bi bi-info-circle"></i>
+          Hora (opcional)
+        </small>
+      </div>
+      
+      <div class="col-12 mt-4">
+        <hr>
+        <div class="d-flex justify-content-between align-items-center">
+          <button type="button" class="btn btn-outline-secondary" onclick="window.history.back()">
+            <i class="bi bi-x-circle"></i> Cancelar
+          </button>
+          <button type="submit" class="btn btn-primary btn-lg">
+            <i class="bi bi-check-circle"></i> Criar Oferta
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</section>
+
+<!-- Modal: Quick Create Seller -->
+<div class="modal fade" id="quickCreateSellerModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="bi bi-shop"></i> Novo Vendedor
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label">Nome *</label>
+          <input type="text" class="form-control" id="quickSellerName" placeholder="Ex: Amazon" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Slug *</label>
+          <input type="text" class="form-control" id="quickSellerSlug" placeholder="amazon" required>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" onclick="quickCreateSeller()">
+          <i class="bi bi-check-circle"></i> Criar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Quick Create Category -->
+<div class="modal fade" id="quickCreateCategoryModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="bi bi-tag"></i> Nova Categoria
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label">Nome *</label>
+          <input type="text" class="form-control" id="quickCategoryName" placeholder="Ex: Eletrônicos" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Slug *</label>
+          <input type="text" class="form-control" id="quickCategorySlug" placeholder="eletronicos" required>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" onclick="quickCreateCategory()">
+          <i class="bi bi-check-circle"></i> Criar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Quick Create Manufacturer -->
+<div class="modal fade" id="quickCreateManufacturerModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="bi bi-building"></i> Novo Fabricante
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label">Nome *</label>
+          <input type="text" class="form-control" id="quickManufacturerName" placeholder="Ex: Sony" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Slug *</label>
+          <input type="text" class="form-control" id="quickManufacturerSlug" placeholder="sony" required>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" onclick="quickCreateManufacturer()">
+          <i class="bi bi-check-circle"></i> Criar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Quick create functions
+async function quickCreateSeller() {
+  const name = document.getElementById('quickSellerName').value;
+  const slug = document.getElementById('quickSellerSlug').value;
+  
+  if (!name || !slug) {
+    window.showToast('Por favor, preencha nome e slug.', 'error');
+    return;
+  }
+  
+  const button = event.target;
+  const originalHTML = button.innerHTML;
+  button.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Criando...';
+  button.disabled = true;
+  
+  try {
+    const response = await fetch('/quick-create/sellers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: name, slug: slug, active: true })
+    });
+    
+    const data = await response.json();
+    
+    if (response.ok) {
+      bootstrap.Modal.getInstance(document.getElementById('quickCreateSellerModal')).hide();
+      const sellerSelect = document.getElementById('seller_id');
+      const newOption = new Option(data.name, data.id, true, true);
+      sellerSelect.add(newOption);
+      document.getElementById('quickSellerName').value = '';
+      document.getElementById('quickSellerSlug').value = '';
+      window.showToast(`Vendedor "${data.name}" criado com sucesso!`, 'success');
+      button.innerHTML = originalHTML;
+      button.disabled = false;
+    } else {
+      window.showToast(data.error || 'Erro ao criar vendedor.', 'error');
+      button.innerHTML = originalHTML;
+      button.disabled = false;
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    window.showToast(`Erro: ${error.message}`, 'error');
+    button.innerHTML = originalHTML;
+    button.disabled = false;
+  }
+}
+
+async function quickCreateCategory() {
+  const name = document.getElementById('quickCategoryName').value;
+  const slug = document.getElementById('quickCategorySlug').value;
+  
+  if (!name || !slug) {
+    window.showToast('Por favor, preencha nome e slug.', 'error');
+    return;
+  }
+  
+  const button = event.target;
+  const originalHTML = button.innerHTML;
+  button.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Criando...';
+  button.disabled = true;
+  
+  try {
+    const response = await fetch('/quick-create/categories', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({ name: name, slug: slug, active: true })
+    });
+    
+    const data = await response.json();
+    
+    if (response.ok) {
+      bootstrap.Modal.getInstance(document.getElementById('quickCreateCategoryModal')).hide();
+      const categorySelect = document.getElementById('category_id');
+      const newOption = new Option(data.name, data.id, true, true);
+      categorySelect.add(newOption);
+      document.getElementById('quickCategoryName').value = '';
+      document.getElementById('quickCategorySlug').value = '';
+      window.showToast(`Categoria "${data.name}" criada com sucesso!`, 'success');
+      button.innerHTML = originalHTML;
+      button.disabled = false;
+    } else {
+      window.showToast(data.error || 'Erro ao criar categoria.', 'error');
+      button.innerHTML = originalHTML;
+      button.disabled = false;
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    window.showToast(`Erro de conexão: ${error.message}`, 'error');
+    button.innerHTML = originalHTML;
+    button.disabled = false;
+  }
+}
+
+async function quickCreateManufacturer() {
+  const name = document.getElementById('quickManufacturerName').value;
+  const slug = document.getElementById('quickManufacturerSlug').value;
+  
+  if (!name || !slug) {
+    window.showToast('Por favor, preencha nome e slug.', 'error');
+    return;
+  }
+  
+  const button = event.target;
+  const originalHTML = button.innerHTML;
+  button.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Criando...';
+  button.disabled = true;
+  
+  try {
+    const response = await fetch('/quick-create/manufacturers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: name, slug: slug, active: true })
+    });
+    
+    const data = await response.json();
+    
+    if (response.ok) {
+      bootstrap.Modal.getInstance(document.getElementById('quickCreateManufacturerModal')).hide();
+      const manufacturerSelect = document.getElementById('manufacturer_id');
+      const newOption = new Option(data.name, data.id, true, true);
+      manufacturerSelect.add(newOption);
+      document.getElementById('quickManufacturerName').value = '';
+      document.getElementById('quickManufacturerSlug').value = '';
+      window.showToast(`Fabricante "${data.name}" criado com sucesso!`, 'success');
+      button.innerHTML = originalHTML;
+      button.disabled = false;
+    } else {
+      window.showToast(data.error || 'Erro ao criar fabricante.', 'error');
+      button.innerHTML = originalHTML;
+      button.disabled = false;
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    window.showToast(`Erro: ${error.message}`, 'error');
+    button.innerHTML = originalHTML;
+    button.disabled = false;
+  }
+}
+
+// Set default currency on load
+document.addEventListener('DOMContentLoaded', function() {
+  const currencySelect = document.getElementById('currency');
+  if (currencySelect && !currencySelect.value) {
+    currencySelect.value = '{{ default_currency }}';
+  }
+});
+</script>
+{% endblock %}
+

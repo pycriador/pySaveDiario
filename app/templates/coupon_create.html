@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+{% block title %}Novo Cupom{% endblock %}
+
+{% block content %}
+<section>
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+    <div>
+      <p class="eyebrow"><i class="bi bi-ticket-perforated-fill"></i> Criar Novo Cupom</p>
+      <h1 class="mb-0">Formulário de Cadastro</h1>
+      <p class="muted mb-0">Preencha os dados para criar um novo cupom de desconto</p>
+    </div>
+    <a href="{{ url_for('web.coupons') }}" class="btn btn-outline-light btn-sm">
+      <i class="bi bi-arrow-left"></i> Voltar para Lista
+    </a>
+  </div>
+
+  <div class="panel">
+    <form method="post" class="row g-4">
+      {{ form.hidden_tag() }}
+      
+      <div class="col-md-6">
+        <label class="form-label">
+          <i class="bi bi-shop"></i> Vendedor *
+        </label>
+        <div class="input-group">
+          {{ form.seller_id(class="form-select", id="seller_id") }}
+          <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#quickCreateSellerModal" title="Criar Novo Vendedor">
+            <i class="bi bi-plus-circle"></i>
+          </button>
+        </div>
+      </div>
+      
+      <div class="col-md-6">
+        <label class="form-label" for="{{ form.code.id }}">
+          <i class="bi bi-ticket-perforated"></i> Código do Cupom *
+        </label>
+        {{ form.code(class="form-control", placeholder="Ex: SAVE20", required=True, style="text-transform: uppercase;") }}
+        <small class="text-muted">
+          <i class="bi bi-info-circle"></i> Será convertido para maiúsculas automaticamente
+        </small>
+      </div>
+      
+      <div class="col-md-4">
+        <label class="form-label" for="{{ form.expires_date.id }}">
+          <i class="bi bi-calendar-event"></i> Data de expiração
+        </label>
+        <input type="date" 
+               id="{{ form.expires_date.id }}" 
+               name="{{ form.expires_date.name }}" 
+               class="form-control">
+        <small class="text-muted">
+          <i class="bi bi-info-circle"></i> Opcional
+        </small>
+      </div>
+      
+      <div class="col-md-4">
+        <label class="form-label" for="{{ form.expires_time.id }}">
+          <i class="bi bi-clock"></i> Hora de expiração
+        </label>
+        <input type="time" 
+               id="{{ form.expires_time.id }}" 
+               name="{{ form.expires_time.name }}" 
+               class="form-control"
+               value="00:00">
+        <small class="text-muted">
+          <i class="bi bi-info-circle"></i> Opcional
+        </small>
+      </div>
+      
+      <div class="col-md-4">
+        <label class="form-label d-block">&nbsp;</label>
+        <div class="form-check form-switch" style="padding-top: 0.5rem;">
+          {{ form.active(class="form-check-input", id="active") }}
+          <label class="form-check-label" for="active">
+            <i class="bi bi-check-circle"></i> Cupom ativo
+          </label>
+        </div>
+      </div>
+      
+      <div class="col-12 mt-4">
+        <hr>
+        <div class="d-flex justify-content-between align-items-center">
+          <button type="button" class="btn btn-outline-secondary" onclick="window.history.back()">
+            <i class="bi bi-x-circle"></i> Cancelar
+          </button>
+          <button type="submit" class="btn btn-primary btn-lg">
+            <i class="bi bi-check-circle"></i> Criar Cupom
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</section>
+
+<!-- Modal: Quick Create Seller -->
+<div class="modal fade" id="quickCreateSellerModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="background: var(--panel-solid); border: 1px solid var(--border-color);">
+      <div class="modal-header border-0">
+        <h5 class="modal-title">
+          <i class="bi bi-shop"></i> Novo Vendedor
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label">Nome do Vendedor</label>
+          <input type="text" class="form-control" id="quickSellerName" placeholder="Ex: Amazon">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Slug</label>
+          <input type="text" class="form-control" id="quickSellerSlug" placeholder="Ex: amazon">
+        </div>
+        <div class="form-check form-switch">
+          <input class="form-check-input" type="checkbox" id="quickSellerActive" checked>
+          <label class="form-check-label" for="quickSellerActive">Ativo</label>
+        </div>
+      </div>
+      <div class="modal-footer border-0">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" onclick="quickCreateSeller()">
+          <i class="bi bi-plus-circle"></i> Criar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Quick create seller
+async function quickCreateSeller() {
+  const name = document.getElementById('quickSellerName').value;
+  const slug = document.getElementById('quickSellerSlug').value;
+  const active = document.getElementById('quickSellerActive').checked;
+  
+  if (!name || !slug) {
+    window.showToast('Preencha nome e slug do vendedor', 'error');
+    return;
+  }
+  
+  try {
+    const response = await fetch('/quick-create/sellers', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ name, slug, active })
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Erro ao criar vendedor');
+    }
+    
+    const seller = await response.json();
+    
+    // Add to dropdown
+    const select = document.getElementById('seller_id');
+    const option = new Option(seller.name, seller.id, true, true);
+    select.add(option);
+    
+    // Close modal
+    bootstrap.Modal.getInstance(document.getElementById('quickCreateSellerModal')).hide();
+    
+    // Clear fields
+    document.getElementById('quickSellerName').value = '';
+    document.getElementById('quickSellerSlug').value = '';
+    document.getElementById('quickSellerActive').checked = true;
+    
+    window.showToast(`Vendedor '${seller.name}' criado com sucesso!`, 'success');
+  } catch (error) {
+    window.showToast(error.message, 'error');
+  }
+}
+
+// Auto-generate slug from name
+document.getElementById('quickSellerName')?.addEventListener('input', function() {
+  const slug = this.value.toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  document.getElementById('quickSellerSlug').value = slug;
+});
+
+</script>
+{% endblock %}
+
