@@ -21,9 +21,6 @@ def create_app(config_name: str | None = None) -> Flask:
     migrations_dir = Path(app.root_path).parent / "migrations"
     if migrations_dir.exists():
         ensure_migrations_applied(app)
-    else:
-        # Run "flask db init" to create the migrations folder, then restart the app
-        pass
     register_blueprints(app)
     register_shellcontext(app)
     register_template_filters(app)
