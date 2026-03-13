@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from flask import Flask
+from flask_migrate import upgrade as migrate_upgrade
 from sqlalchemy.exc import OperationalError
 
 from .config import get_config
@@ -15,12 +16,23 @@ def create_app(config_name: str | None = None) -> Flask:
     app.config.from_object(get_config(config_name))
 
     register_extensions(app)
+    ensure_migrations_applied(app)
     register_blueprints(app)
     register_shellcontext(app)
     register_template_filters(app)
     seed_default_groups(app)
 
     return app
+
+
+def ensure_migrations_applied(app: Flask) -> None:
+    """Run pending Alembic migrations so all tables exist before handling requests."""
+    with app.app_context():
+        try:
+            migrate_upgrade()
+        except Exception:
+            db.session.rollback()
+            raise
 
 
 def register_extensions(app: Flask) -> None:

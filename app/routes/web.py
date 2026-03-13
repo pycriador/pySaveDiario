@@ -10,6 +10,7 @@ from flask_login import current_user, login_required, login_user, logout_user
 from ..extensions import csrf, db
 from ..utils.upload import save_image, delete_image
 from ..forms import (
+    FirstAdminForm,
     GroupCreateForm,
     GroupMemberForm,
     LoginForm,
@@ -41,6 +42,7 @@ from ..models import (
     Wishlist,
 )
 from ..utils import slugify
+from ..utils.setup_state import is_first_admin_created, set_first_admin_created
 
 web_bp = Blueprint("web", __name__)
 
@@ -122,7 +124,52 @@ def login():
             flash("Bem-vindo(a) de volta!", "success")
             return redirect(url_for("web.dashboard"))
         flash("Credenciais inválidas.", "danger")
-    return render_template("login.html", form=form)
+
+    # Show "Create first administrator" only when no admin exists and setup not yet completed
+    admin_count = User.query.filter_by(role=RoleEnum.ADMIN, is_active=True).count()
+    show_setup_first_admin = admin_count == 0 and not is_first_admin_created()
+
+    return render_template(
+        "login.html",
+        form=form,
+        show_setup_first_admin=show_setup_first_admin,
+    )
+
+
+@web_bp.route("/setup-first-admin", methods=["GET", "POST"])
+def setup_first_admin():
+    """Create the first administrator when no admin exists. Controlled by local_setup.ini."""
+    if current_user.is_authenticated:
+        return redirect(url_for("web.dashboard"))
+
+    admin_count = User.query.filter_by(role=RoleEnum.ADMIN, is_active=True).count()
+    if admin_count > 0 or is_first_admin_created():
+        flash("O primeiro administrador já foi configurado. Use a tela de login.", "info")
+        return redirect(url_for("web.login"))
+
+    form = FirstAdminForm()
+    if form.validate_on_submit():
+        email = form.email.data.lower().strip()
+        if User.query.filter_by(email=email).first():
+            flash("Este e-mail já está cadastrado.", "warning")
+            return render_template("setup_first_admin.html", form=form)
+
+        user = User(
+            email=email,
+            display_name=form.display_name.data.strip(),
+            role=RoleEnum.ADMIN,
+        )
+        user.set_password(form.password.data)
+        admin_group = Group.query.filter_by(slug="administradores").first()
+        if admin_group and admin_group not in user.groups:
+            user.groups.append(admin_group)
+        db.session.add(user)
+        db.session.commit()
+        set_first_admin_created()
+        flash("Administrador criado com sucesso. Faça login para continuar.", "success")
+        return redirect(url_for("web.login"))
+
+    return render_template("setup_first_admin.html", form=form)
 
 
 @web_bp.route("/logout")
@@ -1779,6 +1826,55 @@ def admin_social_networks():
                 return redirect(url_for("web.admin_social_networks"))
     
     return render_template("admin/social_networks.html", configs=configs, form=form)
+
+
+@web_bp.route("/admin/social-networks/init-defaults", methods=["POST"])
+@login_required
+def admin_social_networks_init_defaults():
+    """Create default social network configs (Instagram, Facebook, WhatsApp, Telegram) from the browser."""
+    if current_user.role != RoleEnum.ADMIN:
+        flash("Acesso permitido apenas para administradores.", "warning")
+        return redirect(url_for("web.dashboard"))
+
+    defaults = [
+        {
+            "network": "instagram",
+            "prefix_text": "",
+            "suffix_text": "#ofertas #descontos #promoção",
+            "active": True,
+        },
+        {
+            "network": "facebook",
+            "prefix_text": "🔥 OFERTA IMPERDÍVEL!\n\n",
+            "suffix_text": "\n\n👍 Curta nossa página para não perder promoções!",
+            "active": True,
+        },
+        {
+            "network": "whatsapp",
+            "prefix_text": "💰 *PROMOÇÃO*\n\n",
+            "suffix_text": "\n\n_Compartilhe com quem precisa!_",
+            "active": True,
+        },
+        {
+            "network": "telegram",
+            "prefix_text": "📢 NOVA OFERTA!\n\n",
+            "suffix_text": "\n\n🔔 Ative as notificações do canal!",
+            "active": True,
+        },
+    ]
+
+    created = 0
+    for data in defaults:
+        if not SocialNetworkConfig.query.filter_by(network=data["network"]).first():
+            db.session.add(SocialNetworkConfig(**data))
+            created += 1
+    db.session.commit()
+
+    if created:
+        flash(f"Redes sociais iniciais configuradas com sucesso! ({created} rede(s) criada(s)).", "success")
+    else:
+        flash("Todas as redes padrão já existem. Nenhuma alteração feita.", "info")
+    return redirect(url_for("web.admin_social_networks"))
 
 
 @web_bp.route("/admin/social-networks/<int:config_id>/delete", methods=["POST"])

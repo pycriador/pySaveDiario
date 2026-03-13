@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Criar primeiro administrador · pySave Diário{% endblock %}
+
+{% block content %}
+<section class="auth-card">
+  <div class="text-center mb-4">
+    <div style="font-size: 3rem; color: var(--accent-primary); margin-bottom: 1rem;">
+      <i class="bi bi-person-badge-fill"></i>
+    </div>
+    <h1>Criar primeiro administrador</h1>
+    <p class="muted">Não há nenhum administrador no sistema. Crie a primeira conta para acessar o painel.</p>
+  </div>
+
+  <form method="post">
+    {{ form.hidden_tag() }}
+
+    <div class="mb-3">
+      <label for="display_name" class="form-label">
+        <i class="bi bi-person"></i> Nome exibido
+      </label>
+      {{ form.display_name(class="form-control", placeholder="Seu nome") }}
+      {% for error in form.display_name.errors %}
+      <small class="text-danger d-block mt-1">
+        <i class="bi bi-exclamation-circle"></i> {{ error }}
+      </small>
+      {% endfor %}
+    </div>
+
+    <div class="mb-3">
+      <label for="email" class="form-label">
+        <i class="bi bi-envelope"></i> E-mail
+      </label>
+      {{ form.email(class="form-control", placeholder="admin@exemplo.com") }}
+      {% for error in form.email.errors %}
+      <small class="text-danger d-block mt-1">
+        <i class="bi bi-exclamation-circle"></i> {{ error }}
+      </small>
+      {% endfor %}
+    </div>
+
+    <div class="mb-3">
+      <label for="password" class="form-label">
+        <i class="bi bi-lock"></i> Senha
+      </label>
+      {{ form.password(class="form-control", placeholder="Mínimo 6 caracteres") }}
+      {% for error in form.password.errors %}
+      <small class="text-danger d-block mt-1">
+        <i class="bi bi-exclamation-circle"></i> {{ error }}
+      </small>
+      {% endfor %}
+    </div>
+
+    <div class="mb-3">
+      <label for="confirm_password" class="form-label">
+        <i class="bi bi-lock-fill"></i> Confirmar senha
+      </label>
+      {{ form.confirm_password(class="form-control", placeholder="Repita a senha") }}
+      {% for error in form.confirm_password.errors %}
+      <small class="text-danger d-block mt-1">
+        <i class="bi bi-exclamation-circle"></i> {{ error }}
+      </small>
+      {% endfor %}
+    </div>
+
+    {{ form.submit(class="btn btn-primary full") }}
+  </form>
+
+  <div class="text-center mt-4">
+    <a href="{{ url_for('web.login') }}" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-arrow-left"></i> Voltar ao login
+    </a>
+  </div>
+
+  <div class="text-center mt-3">
+    <small class="muted">
+      <i class="bi bi-info-circle"></i>
+      Para exibir esta tela novamente (ex.: se esqueceu a senha), apague o arquivo <code>instance/local_setup.ini</code>.
+    </small>
+  </div>
+</section>
+{% endblock %}

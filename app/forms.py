@@ -14,13 +14,25 @@ from wtforms import (
     TextAreaField,
 )
 from wtforms.fields import DateField, TimeField
-from wtforms.validators import DataRequired, Email, Length, NumberRange, Optional
+from wtforms.validators import DataRequired, Email, EqualTo, Length, NumberRange, Optional
 
 
 class LoginForm(FlaskForm):
     email = StringField("E-mail", validators=[DataRequired(), Email()])
     password = PasswordField("Senha", validators=[DataRequired()])
     submit = SubmitField("Entrar")
+
+
+class FirstAdminForm(FlaskForm):
+    """Form for creating the first administrator (no admin exists yet)."""
+    display_name = StringField("Nome exibido", validators=[DataRequired(), Length(max=120)])
+    email = StringField("E-mail", validators=[DataRequired(), Email(), Length(max=120)])
+    password = PasswordField("Senha", validators=[DataRequired(), Length(min=6)])
+    confirm_password = PasswordField(
+        "Confirmar senha",
+        validators=[DataRequired(), EqualTo("password", message="As senhas devem ser iguais.")],
+    )
+    submit = SubmitField("Criar administrador")
 
 
 class UserActionForm(FlaskForm):

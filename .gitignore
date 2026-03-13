@@ -38,6 +38,8 @@ venv.bak/
 
 # === Flask ===
 instance/
+# Local setup state (first admin created); do not commit - allow re-setup by deleting this file
+instance/local_setup.ini
 .webassets-cache
 
 # === Database ===
@@ -168,6 +170,14 @@ config.local.py
 # === Scraping ===
 # Chrome profile for MercadoLivre scraper (contains session data)
 scripts/chrome_profile/
+scraper/chrome_profile/
+# Temporary HTML dumps for debugging selectors
+scraper/debug_html/
+scraper/shopee_debug_html/
+
+# === Local Files ===
+scraper_old/*
+scripts_old/*
 
 # Scraping output files directory
 result_data/*.json
