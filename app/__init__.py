@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 from flask import Flask
 from flask_migrate import upgrade as migrate_upgrade
 from sqlalchemy.exc import OperationalError
@@ -16,7 +18,12 @@ def create_app(config_name: str | None = None) -> Flask:
     app.config.from_object(get_config(config_name))
 
     register_extensions(app)
-    ensure_migrations_applied(app)
+    migrations_dir = Path(app.root_path).parent / "migrations"
+    if migrations_dir.exists():
+        ensure_migrations_applied(app)
+    else:
+        # Run "flask db init" to create the migrations folder, then restart the app
+        pass
     register_blueprints(app)
     register_shellcontext(app)
     register_template_filters(app)
